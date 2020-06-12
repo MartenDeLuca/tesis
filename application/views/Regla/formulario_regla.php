@@ -16,8 +16,8 @@
 			  	<ul class="nav nav-tabs">
 			    	<li class="active"><a data-step="encabezado_tab" data-toggle="tab" href="#encabezado_tab">Encabezado</a></li>
 			    	<li><a data-step="consulta_tab" data-toggle="tab" href="#consulta_tab">Consulta</a></li>
-			    	<li <?php if(strpos($accion, "Correo") === false){ echo 'style="display:none"'; }?>><a data-step="correo_tab" data-toggle="tab" href="#correo_tab">Correo</a></li>
-			    	<li <?php if(strpos($accion, "Alerta") === false){ echo 'style="display:none"'; }?>><a data-step="alerta_tab" data-toggle="tab" href="#alerta_tab">Alerta</a></li>
+			    	<li id="li_correo_tab" <?php if(strpos($accion, "Correo") === false){ echo 'style="display:none"'; }?>><a data-step="correo_tab" data-toggle="tab" href="#correo_tab">Correo</a></li>
+			    	<li id="li_alerta_tab" <?php if(strpos($accion, "Alerta") === false){ echo 'style="display:none"'; }?>><a data-step="alerta_tab" data-toggle="tab" href="#alerta_tab">Alerta</a></li>
 			    	<div class="pull-right">
 			    		<div class="text-right">
 							<a title="Guardar regla de negocio" onclick="guardar()" class="btn btn-primary btn-form">Guardar</a>
@@ -527,13 +527,15 @@
 	$("#accion").change(function (e) {
 		var accion = this.value;
 		if (accion.indexOf('Correo') == -1){
-			$("[data-step='correo_tab']").hide();
+			$("li [data-step='correo_tab']").hide();
 		}else{
+			$("#li_correo_tab").show();
 			$("[data-step='correo_tab']").show();
 		}
 		if (accion.indexOf('Alerta') == -1){
 			$("[data-step='alerta_tab']").hide();
 		}else{
+			$("#li_alerta_tab").show();
 			$("[data-step='alerta_tab']").show();
 		}	
 	});

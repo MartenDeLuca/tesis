@@ -38,7 +38,7 @@ class Regla extends CI_Controller {
 		if ($this->session->userdata('id_usuario')){
 			$id_regla = isset($_GET["id"])?$_GET["id"]:"";
 			if(!empty($id_regla)){
-				$data = $this->reglaModel->getReglaPorId($id_regla);
+				$data = $this->reglaModel->getReglaPorId($id_regla, '');
 				if(count($data) > 0){
 					$data["array_usuarios"] = $this->usuarioModel->getUsuariosSelectSoloCorreo();
 					//$data["consulta_externa"] = $this->reglaModel->getConsultaExterna();
@@ -244,14 +244,15 @@ class Regla extends CI_Controller {
 	}
 
 	public function reglas_a_ejecutar(){
+		$datos = array();
 	    $registros = $this->reglaModel->reglas_a_ejecutar();
-	    log_message("error", json_encode($registros));
+	    $cont = 0;
 	    foreach($registros as $fila) {
 	    	$id_regla = $fila["id_regla"];
+	    	$datos[$cont] = $id_regla;
 	    	$this->reglaModel->ejecucion_regla_negocio($id_regla);
+	    	$cont++;
 	    }
-	    $datos = array();
-	    $datos['mensaje'] = 'OK';
 	    echo json_encode($datos);
 	}
 

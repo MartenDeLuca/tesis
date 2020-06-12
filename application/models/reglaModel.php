@@ -15,16 +15,13 @@ class ReglaModel extends CI_Model{
 	}
 
 	function getReglaPorId($id_regla, $ejecucion = ''){
-		$id_usuario = $this->session->userdata('id_usuario');
-		$id_licencia = $this->session->userdata('id_licencia');
-
 		$sql_select = 
 		"select * 
 		from reglas
 		inner join reglas_accion on reglas.id_regla = reglas_accion.id_regla 
-		where reglas.id_regla = ? and reglas.id_usuario = ?";
-		$stmt = $this->db->query($sql_select, array($id_regla, $id_usuario));
-		$data = $stmt->result_array();
+		where reglas.id_regla = ?";
+		$stmt = $this->db->query($sql_select, array($id_regla));
+		$data = $stmt->result_array();		
 		if(count($data) > 0){
 			$data = $data[0];
 			$data["id_regla"] = $id_regla;
@@ -39,9 +36,9 @@ class ReglaModel extends CI_Model{
 			foreach ($consultas as $fila) {
 				$consulta .= $fila["consulta"];
 			}		
-			$data["consulta"] = $consulta;
+			$data["consulta"] = $consulta;			
 			if(empty($ejecucion)){
-				$atributos = $this->verificar_consulta($consulta, "1");
+				$atributos = json_decode($this->verificar_consulta($consulta, "1"));
 				$data["atributos"] = $atributos[1];
 			}else{
 				$data["atributos"] = "";
@@ -400,7 +397,7 @@ class ReglaModel extends CI_Model{
 		return $stmt->result_array();
 	}
 
-	function ejecucion_regla_negocio($id_regla){
+	function ejecucion_regla_negocio($id_regla){		
 		$consulta = "";
 		$asunto = ""; 
 		$intervalo = "1000"; 
@@ -420,8 +417,8 @@ class ReglaModel extends CI_Model{
 		$descripcion_alerta = ""; 
 
 		/* TOMO LAS REGLAS DE NEGOCIO CON SUS RESPECTIVOS DATOS*/
-		$data = $this->getReglaPorId($id_regla, '1');
-		if(count($data) > 0){			
+		$data = $this->getReglaPorId($id_regla, '1');		
+		if(count($data) > 0){
 			$asunto = $data["asunto"];
 			$intervalo = $data["intervalo"];
 			$accion = $data["accion"]; 
@@ -482,7 +479,7 @@ class ReglaModel extends CI_Model{
 								$adjunto_procesados = "";
 								$carpeta = $_SERVER['DOCUMENT_ROOT'].'/'.$this->config->item('carpeta_principal').'/Plugin/archivos/'.$id_regla.'/';
 								foreach ($adjuntos as $fila) {
-									$adjunto_procesados = $carpeta.$fila.";";
+									$adjunto_procesados = $carpeta.$fila["adjunto"].";";
 								}
 								$adjunto_procesados = substr($adjunto_procesados, 0, -1);
 
@@ -500,17 +497,15 @@ class ReglaModel extends CI_Model{
 									$post['id_regla'] = $id_regla;
 									$post['puerto'] = $puerto;
 									$post['host'] = $host;
-									$post['correo'] = $correo;									
+									$post['correo'] = $correo;
 									$post['contra'] = $contrasena;
-									$post['seperador'] = ';';
+									$post['separador'] = ";";
 									$post['adjuntos'] = $adjunto_procesados;
 									$post['nombre'] = "";
 									$post['destinatarios'] = $destinatarios;
 								    $post['asunto'] = $asunto_mail;
 								    $post['contenido'] = $contenido_mail;
-								    if(empty($base_url)){
-								    	$base_url = base_url();
-								    }
+								    $base_url = base_url();								   
 									$url = $base_url."correo/enviar";
 								    $curl = curl_init();
 								    curl_setopt($curl, CURLOPT_URL, $url);
@@ -532,25 +527,33 @@ class ReglaModel extends CI_Model{
 					}
 				}
 			}
+			$tm = $this->db->query("UPDATE REGLAS
+				SET fecha = DATE_ADD(NOW(), INTERVAL $intervalo MINUTE)
+				WHERE id_regla = '$id_regla'");
+			if(!$tm){
+	    		$error = $this->db->error();
+	    		$this->db->trans_rollback();
+	    		return $error['message'];
+	    	}			
+		}else{			
+			$tm = $this->db->query("UPDATE REGLAS
+					SET estado = 'Pausada'
+					WHERE id_regla = '$id_regla'");
+			if(!$tm){
+	    		$error = $this->db->error();
+	    		$this->db->trans_rollback();
+	    		return $error['message'];
+	    	}	
 		}
-
-		$tm = $this->db->query("UPDATE REGLAS
-			SET fecha = DATE_ADD(NOW(), INTERVAL $intervalo MINUTE)
-			WHERE id_regla = '$id_regla'");
-		if(!$tm){
-    		$error = $this->db->error();
-    		$this->db->trans_rollback();
-    		return $error['message'];
-    	}
 	}
 
-	function guardarMail($id_regla, $asunto, $mail){
+	function guardarMail($id_regla, $destinatarios, $asunto, $mail){
 		$uid_mail = $mail->getMensajeId();
 		$tm = $this->db->query(
 		"INSERT INTO mails 
-		(id_regla, asunto, uid_mail) 
+		(id_regla, destinatarios, asunto, uid_mail) 
 		VALUES 
-		(?, ?, ?)", array($id_regla, $asunto, $uid_mail));
+		(?, ?, ?, ?)", array($id_regla, $destinatarios, $asunto, $uid_mail));
 		if(!$tm){
     		$error = $this->db->error();
     		return $error['message'];
@@ -591,7 +594,7 @@ class ReglaModel extends CI_Model{
 				foreach($consulta->field_data() as $fieldMetadata) {
 					$resultado .= '<option class="columna_consulta" value="[^*COLUMNA_'.$fieldMetadata->name.'^*]">'.$fieldMetadata->name.'</option>';
 				}
-				return array("OK",$resultado);
+				return json_encode(array("OK",$resultado));
 			}else{
 				return $consulta->result_array();
 			}
