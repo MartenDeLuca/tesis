@@ -1,0 +1,110 @@
+#pager div {
+  display: inline-block;
+}
+
+#pager-container .spacer {
+  padding: 0 5px;
+}
+
+#pager-container,
+#chart-container {
+  text-align: center;
+}
+
+#chart-container > div {
+  display: inline-block;
+}
+
+#chartbar {
+  text-align: center;
+}
+
+#chartbar i.clickable {
+  padding: 0 5px;
+}
+
+i.clickable {
+  cursor: pointer;
+  color: #999;
+}
+
+i.clickable.disabled,
+i.clickable.disabled:hover {
+  cursor: not-allowed;
+  color: #ccc;
+}
+
+i.active.clickable,
+i.clickable:hover {
+  color: #000;
+}
+
+/*** custom css only popup ***/
+.tableButtonWrapper {
+  position: relative;
+  margin: 10px 0;
+  display: inline-block;
+}
+.columnSelector, .hidden, #chart-container {
+  display: none;
+}
+.tableButton {
+  background: #99bfe6;
+  border: #888 1px solid;
+  color: #111;
+  border-radius: 5px;
+  padding: 5px;
+}
+#colSelect:checked + label {
+  background: #d55d4f;
+  border-color: #555;
+}
+#colSelect:checked ~ #columnSelector {
+  display: block;
+}
+#chartSelect:checked + label {
+  background: #d55d4f;
+  border-color: #555;
+}
+.columnSelector {
+  width: 120px;
+  position: absolute;
+  top: 30px;
+  padding: 10px;
+  background: #fff;
+  border: #99bfe6 1px solid;
+  border-radius: 5px;
+  z-index: 1000;
+}
+.columnSelector label {
+  display: block;
+}
+.columnSelector label:nth-child(1) {
+  border-bottom: #99bfe6 solid 1px;
+  margin-bottom: 5px;
+  
+}
+.columnSelector input {
+  margin-right: 5px;
+}
+.columnSelector .disabled {
+  color: #ddd;
+}
+
+.btn-form{
+    background: #eb6456;
+    margin:5px 0 5px 0;
+    padding: 10px;
+    border-radius: inherit !important;
+    border: inherit !important;
+    cursor: pointer;
+}
+
+.btn-form:hover, .btn-form:focus, .btn-form:active{
+    background: #d55d4f !important;
+    border-radius: inherit !important;
+    border: inherit !important;
+    margin:5px 0 5px 0;
+    padding: 10px;
+    cursor: pointer;
+}
