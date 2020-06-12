@@ -624,23 +624,24 @@
 			if(posicionSelect != "0"){
 				marcarError("consulta", "La consulta solo permite SELECT");
 				ok = false;	
-				objeto.tabulador = solapa;
 			}
 		}
 		if(ok){
 			$.ajax({
-				url:document.getElementById("base_url").value+"Regla/verificar_consulta",
+				//url:document.getElementById("base_url").value+"Regla/verificar_consulta",
+				url: "<?php echo $this->session->userdata('dominio') ?>/api/verificar_consulta",
 				type: "POST",
 				async: false, 
-				data:{consulta},
+				data:{consulta, columna:'1'},
 				dataType: "json",
 				success: function(respuesta){
+					console.log(respuesta);
 					if(respuesta[0] == "OK") {
 						$("#atributos option, #atributos_alerta option, #destinatario_columnas option").remove();
 						$("#atributos, #atributos_alerta, #destinatario_columnas").append("<option></option>"+respuesta[1]);
 					}else{
-						marcarError("consulta", respuesta[0]);
-						marcarError("consulta_externa", respuesta[0]);
+						marcarError("consulta", respuesta[1]);
+						marcarError("consulta_externa", respuesta[1]);
 					}
 				}
 			});

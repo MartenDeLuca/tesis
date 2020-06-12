@@ -3,6 +3,11 @@
       <h1>
         <?php echo $asunto; ?>
       </h1>
+      <ol class="breadcrumb">
+        <li><a href="<?php echo base_url() ?>reglas">Reglas de negocio</a></li>
+        <li><a href="<?php echo base_url() ?>modificar-regla?id=<?php echo $id_regla; ?>">Regla</a></li>
+        <li class="active">Detalle Regla</li>
+      </ol>      
   </section>
   <section class="content">
     <div class="nav-tabs-custom">
@@ -22,6 +27,7 @@
             <thead>
               <tr>
                 <th>Asunto</th>
+                <th>Destinatarios</th>
               </tr>
             </thead>
             <tbody>
@@ -29,7 +35,8 @@
               foreach ($mails as $fila) {
               ?>
               <tr>
-                <td><a href="<?php echo base_url() ?>"><?php echo $fila["asunto"]; ?></a></td>
+                <td><a href="<?php echo base_url() ?>detalle-mail?id=<?php echo $fila["id_regla"]; ?>"><?php echo $fila["asunto"]; ?></a></td>
+                <td><?php echo $fila["destinatarios"]; ?></td>
               </tr>
               <?php 
               }

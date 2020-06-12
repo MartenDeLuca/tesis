@@ -33,7 +33,6 @@ class Correo extends CI_Controller {
 		$adjuntos = explode($separador, $adjuntos);
 		$asunto = $_POST['asunto'];
 		$contenido = $_POST['contenido'];
-		log_message("error", "entro 5");
 		$mail->SMTPDebug = 0;
 		$mail->Debugoutput = 'html';
 		if(!isset($_POST['certificado_ssl'])){
@@ -56,7 +55,6 @@ class Correo extends CI_Controller {
 		for($i = 0; $i < count($destinatarios); $i++) { 
 			$correos = $destinatarios[$i];
 			$result = true;//(false !== filter_var($correos, FILTER_VALIDATE_EMAIL));
-			log_message("error", $correos);
 			//if ($result){
 				$mail->addAddress($correos, '');
 				$mail->addBcc($correos);

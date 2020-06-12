@@ -3,17 +3,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Usuario extends CI_Controller {
 
+	
 	public function prueba(){
-		$datos = array();
-		$datos['respuesta'] ='mariano';
-		$datos['estado'] ='anda';
-		echo json_encode($datos);
-	}
-
-	public function prueba1(){
 		$this->load->library('encrypt');
-		$string = '1';
-		echo $this->encrypt->encode($string);
+		$string = '0A+tvQk8PuCbP/sToP3SOtRbZRo8S092Gar643be16pU1Dd8ojcqCvQ346qMaUNkMaJYOsMXD8IykKTlkpcqyA==';
+		echo $this->encrypt->decode($string);
 	}
 
 	public function index(){

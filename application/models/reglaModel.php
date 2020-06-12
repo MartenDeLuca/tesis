@@ -549,6 +549,7 @@ class ReglaModel extends CI_Model{
 
 	function guardarMail($id_regla, $destinatarios, $asunto, $mail){
 		$uid_mail = $mail->getMensajeId();
+		$destinatarios = str_replace(";", "; ", $destinatarios);
 		$tm = $this->db->query(
 		"INSERT INTO mails 
 		(id_regla, destinatarios, asunto, uid_mail) 
@@ -588,7 +589,7 @@ class ReglaModel extends CI_Model{
 		$consulta = $this->sqlserver->query($consulta);
 		$error = $this->sqlserver->error();
 		if($error['message']){
-    		return $error['message'];
+    		return json_encode(array("error",$error['message']));
 	    }else{
 	    	if($columnas == "1"){
 				foreach($consulta->field_data() as $fieldMetadata) {
@@ -599,6 +600,34 @@ class ReglaModel extends CI_Model{
 				return $consulta->result_array();
 			}
 		}
+
+  /*
+		$url =  $this->session->userdata('dominio')."/api/verificar_consulta";
+		log_message('error', $url);
+	    $curl = curl_init();    
+	    $post = array();            
+		$post['columna'] = $columnas;
+		$post['consulta'] = $consulta;
+	    curl_setopt($curl, CURLOPT_URL, $url);
+	    curl_setopt($curl, CURLOPT_POST, TRUE);
+	    curl_setopt($curl, CURLOPT_POSTFIELDS, $post); 
+	    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
+	    curl_setopt($curl, CURLOPT_TIMEOUT, 1); 
+	    curl_setopt($curl, CURLOPT_HEADER, 0);
+	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
+	    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+	    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
+	    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
+	    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+	    $result = curl_exec($curl);
+	    curl_close($curl);
+	    log_message('error','res '. json_encode($result));*/
+	  /*  $result = json_decode($ret,true);
+
+		foreach ($result['data'] as $key => $value)
+		{
+		      //process data from $result
+		}*/
 	}
 	
 	function getConsultaExterna(){

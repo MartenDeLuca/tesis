@@ -3,6 +3,116 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Regla extends CI_Controller {
 
+	public function pruebaCurl(){
+		$columna = '1';
+		$consulta = 'select * from crm_basesd';
+		$post = array();            
+		$post['columna'] = $columna;
+		$post['consulta'] = $consulta;
+		$url ="http://192.168.89.224:3000/api/verificar_consulta";
+		
+		$curl_handle=curl_init();
+curl_setopt($curl_handle, CURLOPT_URL,$url);
+curl_setopt($curl_handle, CURLOPT_CONNECTTIMEOUT, 2);
+curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($curl_handle, CURLOPT_USERAGENT, 'Your application name');
+$query = curl_exec($curl_handle);
+var_dump($query);
+curl_close($curl_handle);
+
+	}
+
+	public function enviar(){
+		ini_set('memory_limit', '2048M');
+		ini_set('max_execution_time', 3000);
+		$this->load->library("phpmailer_library");
+	    $mail = $this->phpmailer_library->load();
+		if (isset($_POST['correo'])){
+			$correo = $_POST['correo'];
+			$contra = $_POST['contra'];	
+			$nombre = $_POST['nombre'];	
+			$host= $_POST['host'];	
+			$puerto= $_POST['puerto'];	
+		} else {
+			$correo = "crmflow2017@gmail.com";
+			$contra = "neestor1";
+			$nombre = 'SIMPLAPP';
+			$host="smtp.gmail.com";
+			$puerto="25";
+		}
+		if(!isset($_POST['separador'])){
+			$separador = '***';
+		}else{
+			$separador = $_POST['separador'];
+		}
+		$destinatarios = 'martin@grupotesys.com.ar';
+		$destinatarios_plano = 'martin@grupotesys.com.ar';
+		$destinatarios = explode($separador, $destinatarios);
+		$adjuntos = '';
+		$adjuntos = explode($separador, $adjuntos);
+		$asunto = 'martin 2';
+		$contenido = 'martin 2';
+		$mail->SMTPDebug = 0;
+		$mail->Debugoutput = 'html';
+		if(!isset($_POST['certificado_ssl'])){
+			$mail->SMTPOptions = array('ssl' => array('verify_peer' => false,'verify_peer_name' => false,'allow_self_signed' => true));
+		}else{
+			if($_POST['certificado_ssl'] == "Si"){
+				$mail->SMTPOptions = array('ssl' => array('verify_peer' => false,'verify_peer_name' => false,'allow_self_signed' => true));
+			}else{
+				$mail->SMTPOptions = array();
+			}
+		}
+		$mail->Host = $host;
+		$mail->Port = $puerto;
+		$mail->isSMTP();
+		$mail->SMTPSecure = 'tls';
+		$mail->SMTPAuth = true;
+		$mail->Username = $correo; 
+		$mail->Password = $contra;
+
+		for($i = 0; $i < count($destinatarios); $i++) { 
+			$correos = $destinatarios[$i];
+			$result = true;//(false !== filter_var($correos, FILTER_VALIDATE_EMAIL));
+			//if ($result){
+				$mail->addAddress($correos, '');
+				$mail->addBcc($correos);
+			//}
+		}
+
+		if(isset($_POST['id_regla'])){
+			$ruta = "";
+		}else{
+			$ruta = $_SERVER['DOCUMENT_ROOT'].'/'.$this->config->item('carpeta_principal').'/Plugin/modulos/correo/archivos/';
+		}
+		for($k=0; $k < count($adjuntos); $k++) { 
+			if ($adjuntos[$k] != ''){
+				$archivo = $ruta.$adjuntos[$k];
+				if(file_exists($archivo)){
+					$mail->addAttachment($archivo);		
+				}
+			}
+		}
+		$contenido = '<img src="http://grupotesys.com.ar/tickets/ticket/tracker?id=1" alt="">'.$contenido;
+		$mail->setFrom($correo, $nombre);
+		$mail->addReplyTo($correo, $nombre);
+		$mail->AddBCC($correo, $name = $nombre);
+		$mail->Sender = $correo;
+		$mail->Subject = $asunto;
+		$mail->msgHTML($contenido);
+		$mail->AltBody = $contenido;
+		$mail->CharSet = 'UTF-8';
+
+		if (!$mail->send()) {
+			echo 'error';	
+		}else {
+			if(isset($_POST['id_regla'])){
+				$this->reglaModel->guardarMail($_POST['id_regla'], $destinatarios_plano, $asunto, $mail);
+			}
+			echo 'OK';
+		}
+	}
+
 	/*REGLAS*/
 	public function reglas(){
 		if ($this->session->userdata('id_usuario')){
@@ -62,6 +172,7 @@ class Regla extends CI_Controller {
 			if(!empty($id_regla)){
 				$data = $this->reglaModel->getReglasPorIdRegla($id_regla);
 				if(count($data) > 0){
+					$data["id_regla"] = $id_regla;
 					$this->configuracionModel->getHeader();
 					$this->load->view('regla/detalle_regla', $data);
 					$this->load->view('menu/footer');
