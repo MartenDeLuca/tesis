@@ -20,6 +20,16 @@ $cantidad_alertas = count($alertas);
 <!DOCTYPE html>
 <html>
 	<head>		
+		<style type="text/css">
+			table tr td {
+				text-align: center;
+				vertical-align: middle;
+			}
+			table tr th {
+				text-align: center;
+				vertical-align: middle;
+			}
+		</style>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<title><?php if ($cantidad_alertas > 0) { echo "(".$cantidad_alertas.") "; } ?> Simplapp</title>

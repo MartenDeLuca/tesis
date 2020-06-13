@@ -3,6 +3,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Configuracion extends CI_Controller {
 
+	
+
 	public function index(){
 		if ($this->session->userdata('id_usuario')){
 			$data["configuracion"] = $this->configuracionModel->getConfiguracion();

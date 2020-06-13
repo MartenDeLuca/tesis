@@ -10,6 +10,7 @@ $route['reglas'] = 'Regla/reglas';
 $route['agregar-regla'] = 'Regla/agregar_regla';
 $route['modificar-regla'] = 'Regla/modificar_regla';
 $route['detalle-regla'] = 'Regla/detalle_regla';
+$route['detalle-correo'] = 'Regla/detalle_correo';
 
 
 $route['alertas'] = 'Regla/alertas';

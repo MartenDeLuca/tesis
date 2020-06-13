@@ -3,56 +3,27 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Regla extends CI_Controller {
 
-	public function prueba(){
-		
-	}
-	
-	public function martin2(){
-		log_message("error", $_GET["hola"]);
-		return $_GET["hola"];
-	}
+	public function pruebaCurl(){
+		$consulta = 'select * from crm_bases';
+		$columnas = '0';
+		$res = $this->reglaModel->verificar_consulta($consulta, $columnas);
+		echo $res;
 
-	public function martin(){
-		$columna = '1';
-		$consulta = 'select from crm_bases';
-				$post = array();
-		$post['columna'] = $columna;
+		/*$columnas = '0';
+		$consulta = 'select * from crm_bases';
+		$post = array();
+		$post['columna'] = $columnas;
 		$post['consulta'] = $consulta;
-        // set url
-        $url = "http://192.168.0.211:3000/api/votos";
+		$url ="http://192.168.0.211:3000/api/verificar_consulta";
 		$curl = curl_init();
 		curl_setopt($curl, CURLOPT_URL, $url);
 		curl_setopt($curl, CURLOPT_POST, TRUE);
 		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
-		curl_setopt($curl, CURLOPT_POSTFIELDS, 'consulta='.$consulta.'&columna='.$columna);
+		curl_setopt($curl, CURLOPT_POSTFIELDS, 'consulta='.$consulta.'&columna='.$columnas);
 	    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
 	    curl_setopt($curl, CURLOPT_TIMEOUT, 2); 
 	    curl_setopt($curl, CURLOPT_HEADER, 0);
-	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
-	    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
-	    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
-	    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
-	    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
-	    $result = curl_exec($curl);
-		echo json_encode($result);
-		
-	}
-
-	public function pruebaCurl(){
-		$columna = '1';
-		$consulta = 'select * from crm_basesd';
-		$post = array();
-		$post['columna'] = $columna;
-		$post['consulta'] = $consulta;
-		$url ="http://192.168.0.211:3000/api/verificar_consulta";
-		$curl = curl_init();
-	    curl_setopt($curl, CURLOPT_URL, $url);
-	    curl_setopt($curl, CURLOPT_POST, TRUE);
-	    curl_setopt($curl, CURLOPT_POSTFIELDS, $post); 
-	    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
-	    curl_setopt($curl, CURLOPT_TIMEOUT, 2); 
-	    curl_setopt($curl, CURLOPT_HEADER, 0);
-	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
+	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 	    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
 	    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
 	    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
@@ -66,98 +37,7 @@ class Regla extends CI_Controller {
 		if (isset($error_msg)) {
 		   var_dump($error_msg);
 		}
-	    log_message('error','res '. json_encode($result));
-	}
-
-	public function enviar(){
-		ini_set('memory_limit', '2048M');
-		ini_set('max_execution_time', 3000);
-		$this->load->library("phpmailer_library");
-	    $mail = $this->phpmailer_library->load();
-		if (isset($_POST['correo'])){
-			$correo = $_POST['correo'];
-			$contra = $_POST['contra'];	
-			$nombre = $_POST['nombre'];	
-			$host= $_POST['host'];	
-			$puerto= $_POST['puerto'];	
-		} else {
-			$correo = "crmflow2017@gmail.com";
-			$contra = "neestor1";
-			$nombre = 'SIMPLAPP';
-			$host="smtp.gmail.com";
-			$puerto="25";
-		}
-		if(!isset($_POST['separador'])){
-			$separador = '***';
-		}else{
-			$separador = $_POST['separador'];
-		}
-		$destinatarios = 'martin@grupotesys.com.ar';
-		$destinatarios_plano = 'martin@grupotesys.com.ar';
-		$destinatarios = explode($separador, $destinatarios);
-		$adjuntos = '';
-		$adjuntos = explode($separador, $adjuntos);
-		$asunto = 'martin 2';
-		$contenido = 'martin 2';
-		$mail->SMTPDebug = 0;
-		$mail->Debugoutput = 'html';
-		if(!isset($_POST['certificado_ssl'])){
-			$mail->SMTPOptions = array('ssl' => array('verify_peer' => false,'verify_peer_name' => false,'allow_self_signed' => true));
-		}else{
-			if($_POST['certificado_ssl'] == "Si"){
-				$mail->SMTPOptions = array('ssl' => array('verify_peer' => false,'verify_peer_name' => false,'allow_self_signed' => true));
-			}else{
-				$mail->SMTPOptions = array();
-			}
-		}
-		$mail->Host = $host;
-		$mail->Port = $puerto;
-		$mail->isSMTP();
-		$mail->SMTPSecure = 'tls';
-		$mail->SMTPAuth = true;
-		$mail->Username = $correo; 
-		$mail->Password = $contra;
-
-		for($i = 0; $i < count($destinatarios); $i++) { 
-			$correos = $destinatarios[$i];
-			$result = true;//(false !== filter_var($correos, FILTER_VALIDATE_EMAIL));
-			//if ($result){
-				$mail->addAddress($correos, '');
-				$mail->addBcc($correos);
-			//}
-		}
-
-		if(isset($_POST['id_regla'])){
-			$ruta = "";
-		}else{
-			$ruta = $_SERVER['DOCUMENT_ROOT'].'/'.$this->config->item('carpeta_principal').'/Plugin/modulos/correo/archivos/';
-		}
-		for($k=0; $k < count($adjuntos); $k++) { 
-			if ($adjuntos[$k] != ''){
-				$archivo = $ruta.$adjuntos[$k];
-				if(file_exists($archivo)){
-					$mail->addAttachment($archivo);		
-				}
-			}
-		}
-		$contenido = '<img src="http://grupotesys.com.ar/tickets/ticket/tracker?id=1" alt="">'.$contenido;
-		$mail->setFrom($correo, $nombre);
-		$mail->addReplyTo($correo, $nombre);
-		$mail->AddBCC($correo, $name = $nombre);
-		$mail->Sender = $correo;
-		$mail->Subject = $asunto;
-		$mail->msgHTML($contenido);
-		$mail->AltBody = $contenido;
-		$mail->CharSet = 'UTF-8';
-
-		if (!$mail->send()) {
-			echo 'error';	
-		}else {
-			if(isset($_POST['id_regla'])){
-				$this->reglaModel->guardarMail($_POST['id_regla'], $destinatarios_plano, $asunto, $mail);
-			}
-			echo 'OK';
-		}
+	    echo json_encode($result);*/
 	}
 
 	/*REGLAS*/
@@ -226,6 +106,22 @@ class Regla extends CI_Controller {
 				}else{
 
 				}
+			}
+		}else{
+			$this->session->set_flashdata('url',current_url());
+			redirect(base_url('login'));
+		}
+	}
+
+	public function detalle_correo(){
+		if ($this->session->userdata('id_usuario')){			
+			$id_correo = isset($_GET["id"])?$_GET["id"]:"";
+			if(!empty($id_correo)){
+				$data = $this->reglaModel->getCorreoPorIdCorreo($id_correo);
+				$data["id_correo"] = $id_correo;
+				$this->configuracionModel->getHeader();
+				$this->load->view('regla/detalle_correo', $data);
+				$this->load->view('menu/footer');
 			}
 		}else{
 			$this->session->set_flashdata('url',current_url());
@@ -315,7 +211,7 @@ class Regla extends CI_Controller {
 			    }
 				$asunto_mail = $_POST['asunto_mail'];
 				$contenido_mail = $_POST['contenido_mail'];
-
+				$contenido_mail.= '<img src="http://190.210.127.181:2052/tesis/correo/correoLeido/[^*DEST_ID^*]/[^*DEST_DESTINATARIO^*]" style="width:1px" />';
 				//alerta
 				$tipo_alerta = $_POST['tipo_alerta'];
 				$descripcion_alerta = $_POST['descripcion_alerta'];					
@@ -426,10 +322,4 @@ class Regla extends CI_Controller {
 			redirect(base_url('login'));
 		}
 	}
-
-	//VIENE DE AFUERA
-	public function verificar_consulta(){
-		if ($this->input->is_ajax_request()) {
-			if ($this->session->userdata('id_usuario')){
-				$consulta = $_POST['consulta'];
-				echo $this->reglaModel->verificar_cons
+}

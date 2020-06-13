@@ -28,6 +28,8 @@ class ConfiguracionModel extends CI_Model{
 	create table alertas(id_alerta int not null AUTO_INCREMENT PRIMARY KEY, descripcion varchar(8000), tipo varchar(50), fecha datetime, leido bit, id_regla int);
 
 	create table mails(id_mail int not null AUTO_INCREMENT PRIMARY KEY, id_regla int, uid_mail varchar(1000), fecha_leido datetime);
+
+	create table mails_contenido(id_mail_contenido int not null AUTO_INCREMENT PRIMARY KEY, id_mail int, contenido varchar(8000));
 	*/
 	
 	function getHeader($id_carpeta_sel = '0'){

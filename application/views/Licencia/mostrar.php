@@ -1,9 +1,4 @@
-<style type="text/css">
-	table tr td {
-		text-align: center;
-  vertical-align: middle;
-	}
-</style>
+
 
 <div class="content-wrapper" style="background: white !important;">
   	<section class="content-header">

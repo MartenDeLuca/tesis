@@ -87,10 +87,14 @@ class Correo extends CI_Controller {
 		if (!$mail->send()) {
 			echo 'error';			
 		}else {
-			if(isset($_POST['id_regla'])){
-				$this->reglaModel->guardarMail($_POST['id_regla'], $destinatarios_plano, $asunto, $mail);
-			}
+			/*if(isset($_POST['id_regla'])){
+				$this->reglaModel->guardarMail($_POST['id_regla'], $destinatarios_plano, $asunto, $contenido,$mail);
+			}*/
 			echo 'OK';
 		}
+	}
+
+	public function correoLeido($id_correo, $destinatario){
+		$this->correoModel->marcarLeido($id_correo,urldecode($destinatario));
 	}
 }

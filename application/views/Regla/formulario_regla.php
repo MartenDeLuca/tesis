@@ -127,6 +127,7 @@
 					    				<div class="col-md-12">
 					    					<label class="lab">Destinatarios por columnas</label>
 					    					<select multiple="multiple" class="form-control input_select2 select2" name="destinatario_columnas[]" id="destinatario_columnas">
+					    						<option></option>
 					    						<?php echo $atributos; ?>
 					    					</select>
 					    					<script type="text/javascript">
@@ -205,7 +206,10 @@
 					    			<div class="row">	
 					    				<div class="col-md-12">
 					    					<label class="lab">Atributos</label>
-					    					<select class="form-control input_select2 select2" name="atributos" id="atributos"></select>
+					    					<select class="form-control input_select2 select2" name="atributos" id="atributos">
+					    						<option></option>
+					    						<?php echo $atributos; ?>
+					    					</select>
 					    					<div class="error_color" id="error_atributos"></div>
 					    				</div>
 					    			</div>
@@ -294,7 +298,7 @@
 							</div>
 							<div class="col-md-6">
 		    					<label class="lab">Atributos</label>
-		    					<select class="form-control input_select2 select2" name="atributos_alerta" id="atributos_alerta"></select>
+		    					<select class="form-control input_select2 select2" name="atributos_alerta" id="atributos_alerta"><option></option><?php echo $atributos; ?></select>
 		    					<div class="error_color" id="error_atributos_alerta"></div>
 		    				</div>
 		    			</div>
@@ -628,7 +632,6 @@
 		}
 		if(ok){
 			$.ajax({
-				//url:document.getElementById("base_url").value+"Regla/verificar_consulta",
 				url: "<?php echo $this->session->userdata('dominio') ?>/api/verificar_consulta",
 				type: "POST",
 				async: false, 

@@ -34,6 +34,15 @@ class CorreoModel extends CI_Model{
 	    curl_close($curl);
 	}
 
+	function marcarLeido($id_correo,$destinatario){
+		$sql = "select id_correo from mails_leidos";
+		$stmt = $this->db->query($sql);
+		$registros = $stmt->result_array();
+		if (count($registros) == 0){
+			$tm = $this->db->query("INSERT INTO mails_leidos (id_correo, destinatario) VALUES (?, ?)", array($id_correo, $destinatario));
+		}
+	}
+
 	function conectar(){
 		$puerto_lectura = "993";
 		$host_lectura = "imap.gmail.com";

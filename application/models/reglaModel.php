@@ -38,7 +38,7 @@ class ReglaModel extends CI_Model{
 			}		
 			$data["consulta"] = $consulta;			
 			if(empty($ejecucion)){
-				$atributos = json_decode($this->verificar_consulta($consulta, "1"));
+				$atributos = json_decode($this->verificar_consulta($consulta, "1", $this->session->userdata('dominio')), true);				
 				$data["atributos"] = $atributos[1];
 			}else{
 				$data["atributos"] = "";
@@ -107,6 +107,38 @@ class ReglaModel extends CI_Model{
 			$stmt = $this->db->query($sql, array($id_regla, $id_usuario));
 			$data["mails"] = $stmt->result_array();
 		}
+		return $data;
+	}
+
+	function getCorreoPorIdCorreo($id_correo){
+		$data =array();
+		//faltan los adjuntos
+		$sql = "select mails.*, reglas.asunto as reglaAsunto 
+			from mails 
+			inner join reglas on reglas.id_regla = mails.id_regla 
+			where mails.id_mail = $id_correo";
+			$stmt = $this->db->query($sql);
+		$data['correo']= $stmt->result_array()[0];
+
+		$sql = "select * from mails_leidos
+			where id_correo = $id_correo";
+		$stmt = $this->db->query($sql);
+		$leidos =$stmt->result_array();
+		$data['leidos'] = array();
+		if (count($leidos)){
+			$data['leidos']= $leidos; 	
+		}
+		
+
+		$sql_select = "select contenido from mails_contenido where id_mail = $id_correo";
+		$stmt = $this->db->query($sql_select);
+		$consultas_externas = $stmt->result_array();
+		$contenido_mail = '';
+		foreach ($consultas_externas as $fila) {
+			$contenido_mail .= $fila["contenido"];
+		}
+		$data["contenido_mail"] = $contenido_mail;
+
 		return $data;
 	}
 
@@ -419,6 +451,7 @@ class ReglaModel extends CI_Model{
 		/* TOMO LAS REGLAS DE NEGOCIO CON SUS RESPECTIVOS DATOS*/
 		$data = $this->getReglaPorId($id_regla, '1');		
 		if(count($data) > 0){
+			$id_licencia = $data["id_licencia"];
 			$asunto = $data["asunto"];
 			$intervalo = $data["intervalo"];
 			$accion = $data["accion"]; 
@@ -443,7 +476,18 @@ class ReglaModel extends CI_Model{
 			$descripcion_alerta_fijo = $descripcion_alerta;
 			$destinatarios_columnas_fijo = $destinatarios_columnas;
 			if(!empty($consulta)){
-				$sql_columnas = $this->verificar_consulta($consulta, "0");
+				$dominio = "";
+				$sql = 
+			    "SELECT dominio
+		        FROM licencias
+		        WHERE id_licencia = ?";
+				$stmt = $this->db->query($sql, array($id_licencia));
+				$licencias = $stmt->result_array();
+				foreach ($licencias as $licencia) {
+					$dominio = $licencia["dominio"];
+				}
+
+				$sql_columnas = json_decode($this->verificar_consulta($consulta, "0", $dominio),true);
 				if(count($sql_columnas) > 0){
 					$keys = array_keys($sql_columnas[0]);
 					$cantidad_key = count($keys);
@@ -493,6 +537,7 @@ class ReglaModel extends CI_Model{
 									}
 									$destinatarios .= $destinatarios_fijos;
 								}
+								$id_correo_bd =$this->reglaModel->guardarMail($id_regla, $destinatarios, $asunto_mail,$contenido_mail);
 								if(!empty($destinatarios)){
 									$post['id_regla'] = $id_regla;
 									$post['puerto'] = $puerto;
@@ -502,25 +547,33 @@ class ReglaModel extends CI_Model{
 									$post['separador'] = ";";
 									$post['adjuntos'] = $adjunto_procesados;
 									$post['nombre'] = "";
-									$post['destinatarios'] = $destinatarios;
-								    $post['asunto'] = $asunto_mail;
-								    $post['contenido'] = $contenido_mail;
-								    $base_url = base_url();								   
-									$url = $base_url."correo/enviar";
-								    $curl = curl_init();
-								    curl_setopt($curl, CURLOPT_URL, $url);
-								    curl_setopt($curl, CURLOPT_POST, TRUE);
-								    curl_setopt($curl, CURLOPT_POSTFIELDS, $post); 
-								    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
-								    curl_setopt($curl, CURLOPT_TIMEOUT, 1); 
-								    curl_setopt($curl, CURLOPT_HEADER, 0);
-								    curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
-								    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
-								    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
-								    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
-								    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
-								    curl_exec($curl);
-								    curl_close($curl);
+									$post['asunto'] = $asunto_mail;
+									//src="http://190.210.127.181:2052/tesis/correo/correoLeido/[^*DEST_ID^*]/[^*DEST_DESTINATARIO^*]"
+									$contenido_mail = str_replace ('[^*DEST_ID^*]', $id_correo_bd, $contenido_mail);
+									$destinatarios = explode('***', $destinatarios);
+									for($x = 0; $x < count($destinatarios); $x++) { 
+										$contenido_mail_particular = $contenido_mail; 
+										$dest = $destinatarios[$x];
+										$contenido_mail_particular = str_replace ('[^*DEST_DESTINATARIO^*]', urlencode($dest), $contenido_mail_particular);
+										$post['contenido'] = $contenido_mail_particular;
+										$post['destinatarios'] = $dest;
+									    $base_url = base_url();								   
+										$url = $base_url."correo/enviar";
+									    $curl = curl_init();
+									    curl_setopt($curl, CURLOPT_URL, $url);
+									    curl_setopt($curl, CURLOPT_POST, TRUE);
+									    curl_setopt($curl, CURLOPT_POSTFIELDS, $post); 
+									    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
+									    curl_setopt($curl, CURLOPT_TIMEOUT, 1); 
+									    curl_setopt($curl, CURLOPT_HEADER, 0);
+									    curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
+									    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+									    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
+									    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
+									    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+									    curl_exec($curl);
+									    curl_close($curl);
+									}
 								}
 							}
 						}
@@ -547,8 +600,11 @@ class ReglaModel extends CI_Model{
 		}
 	}
 
-	function guardarMail($id_regla, $destinatarios, $asunto, $mail){
-		$uid_mail = $mail->getMensajeId();
+	function guardarMail($id_regla, $destinatarios, $asunto,  $contenido,$mail =''){
+		$uid_mail ='';
+		if ($uid_mail != ''){
+			$uid_mail = $mail->getMensajeId();	
+		}
 		$destinatarios = str_replace(";", "; ", $destinatarios);
 		$tm = $this->db->query(
 		"INSERT INTO mails 
@@ -559,7 +615,23 @@ class ReglaModel extends CI_Model{
     		$error = $this->db->error();
     		return $error['message'];
     	}
-    	return "OK";
+		$id_mail = $this->db->insert_id();
+
+    	while(!empty($contenido)) {
+    		$descripcion_aux = substr($contenido, 0, 8000);
+    		$tm = $this->db->query(
+			"INSERT INTO mails_contenido 
+			(id_mail, contenido) 
+			VALUES 
+			(?, ?)", array($id_mail, $descripcion_aux));
+			if(!$tm){
+	    		$error = $this->db->error();
+	    		$this->db->trans_rollback();
+	    		return array($error['message']);
+	    	}
+	    	$contenido = substr($contenido, 8000);
+    	} 
+    	return $id_mail;
 	}
 
 	function getAlertas(){
@@ -583,51 +655,24 @@ class ReglaModel extends CI_Model{
 	}
 
 	//FUNCIONES QUE VIENEN DE SQL SERVER	
-	function verificar_consulta($consulta, $columnas){
-		$diccionario = $this->session->userdata('diccionario');		
-		$resultado = "";
-		$consulta = $this->sqlserver->query($consulta);
-		$error = $this->sqlserver->error();
-		if($error['message']){
-    		return json_encode(array("error",$error['message']));
-	    }else{
-	    	if($columnas == "1"){
-				foreach($consulta->field_data() as $fieldMetadata) {
-					$resultado .= '<option class="columna_consulta" value="[^*COLUMNA_'.$fieldMetadata->name.'^*]">'.$fieldMetadata->name.'</option>';
-				}
-				return json_encode(array("OK",$resultado));
-			}else{
-				return $consulta->result_array();
-			}
-		}
-
-  /*
-		$url =  $this->session->userdata('dominio')."/api/verificar_consulta";
-		log_message('error', $url);
-	    $curl = curl_init();    
-	    $post = array();            
-		$post['columna'] = $columnas;
-		$post['consulta'] = $consulta;
-	    curl_setopt($curl, CURLOPT_URL, $url);
-	    curl_setopt($curl, CURLOPT_POST, TRUE);
-	    curl_setopt($curl, CURLOPT_POSTFIELDS, $post); 
+	function verificar_consulta($consulta, $columnas, $dominio){		
+		$curl = curl_init();		
+		$url = $dominio."/api/verificar_consulta";
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_POST, TRUE);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+		curl_setopt($curl, CURLOPT_POSTFIELDS, 'consulta='.$consulta.'&columna='.$columnas);
 	    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
-	    curl_setopt($curl, CURLOPT_TIMEOUT, 1); 
+	    curl_setopt($curl, CURLOPT_TIMEOUT, 2); 
 	    curl_setopt($curl, CURLOPT_HEADER, 0);
-	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
+	    //tuve que poner true aca porque sino hacia echo y no lo guardaba en la variable result
+	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 	    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
 	    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
 	    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
 	    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
 	    $result = curl_exec($curl);
-	    curl_close($curl);
-	    log_message('error','res '. json_encode($result));*/
-	  /*  $result = json_decode($ret,true);
-
-		foreach ($result['data'] as $key => $value)
-		{
-		      //process data from $result
-		}*/
+	    return $result;
 	}
 	
 	function getConsultaExterna(){

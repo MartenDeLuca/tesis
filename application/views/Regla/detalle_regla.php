@@ -35,7 +35,7 @@
               foreach ($mails as $fila) {
               ?>
               <tr>
-                <td><a href="<?php echo base_url() ?>detalle-mail?id=<?php echo $fila["id_regla"]; ?>"><?php echo $fila["asunto"]; ?></a></td>
+                <td><a href="<?php echo base_url() ?>detalle-correo?id=<?php echo $fila["id_mail"]; ?>"><?php echo $fila["asunto"]; ?></a></td>
                 <td><?php echo $fila["destinatarios"]; ?></td>
               </tr>
               <?php 
