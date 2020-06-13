@@ -3,23 +3,70 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Regla extends CI_Controller {
 
+	public function prueba(){
+		
+	}
+	
+	public function martin2(){
+		log_message("error", $_GET["hola"]);
+		return $_GET["hola"];
+	}
+
+	public function martin(){
+		$columna = '1';
+		$consulta = 'select from crm_bases';
+				$post = array();
+		$post['columna'] = $columna;
+		$post['consulta'] = $consulta;
+        // set url
+        $url = "http://192.168.0.211:3000/api/votos";
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_POST, TRUE);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+		curl_setopt($curl, CURLOPT_POSTFIELDS, 'consulta='.$consulta.'&columna='.$columna);
+	    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
+	    curl_setopt($curl, CURLOPT_TIMEOUT, 2); 
+	    curl_setopt($curl, CURLOPT_HEADER, 0);
+	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
+	    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+	    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
+	    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
+	    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+	    $result = curl_exec($curl);
+		echo json_encode($result);
+		
+	}
+
 	public function pruebaCurl(){
 		$columna = '1';
 		$consulta = 'select * from crm_basesd';
-		$post = array();            
+		$post = array();
 		$post['columna'] = $columna;
 		$post['consulta'] = $consulta;
-		$url ="http://192.168.89.224:3000/api/verificar_consulta";
-		
-		$curl_handle=curl_init();
-curl_setopt($curl_handle, CURLOPT_URL,$url);
-curl_setopt($curl_handle, CURLOPT_CONNECTTIMEOUT, 2);
-curl_setopt($curl_handle, CURLOPT_RETURNTRANSFER, 1);
-curl_setopt($curl_handle, CURLOPT_USERAGENT, 'Your application name');
-$query = curl_exec($curl_handle);
-var_dump($query);
-curl_close($curl_handle);
+		$url ="http://192.168.0.211:3000/api/verificar_consulta";
+		$curl = curl_init();
+	    curl_setopt($curl, CURLOPT_URL, $url);
+	    curl_setopt($curl, CURLOPT_POST, TRUE);
+	    curl_setopt($curl, CURLOPT_POSTFIELDS, $post); 
+	    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
+	    curl_setopt($curl, CURLOPT_TIMEOUT, 2); 
+	    curl_setopt($curl, CURLOPT_HEADER, 0);
+	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
+	    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+	    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
+	    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
+	    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+	    $result = curl_exec($curl);
+	    if (curl_errno($curl)) {
+		    $error_msg = curl_error($curl);
+		}
+		curl_close($curl);
 
+		if (isset($error_msg)) {
+		   var_dump($error_msg);
+		}
+	    log_message('error','res '. json_encode($result));
 	}
 
 	public function enviar(){
@@ -385,8 +432,4 @@ curl_close($curl_handle);
 		if ($this->input->is_ajax_request()) {
 			if ($this->session->userdata('id_usuario')){
 				$consulta = $_POST['consulta'];
-				echo $this->reglaModel->verificar_consulta($consulta, "1");
-			}
-		}
-	}
-}
+				echo $this->reglaModel->verificar_cons
