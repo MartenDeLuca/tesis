@@ -87,9 +87,6 @@ class Correo extends CI_Controller {
 		if (!$mail->send()) {
 			echo 'error';			
 		}else {
-			/*if(isset($_POST['id_regla'])){
-				$this->reglaModel->guardarMail($_POST['id_regla'], $destinatarios_plano, $asunto, $contenido,$mail);
-			}*/
 			echo 'OK';
 		}
 	}

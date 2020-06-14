@@ -1,4 +1,7 @@
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@1.1.1/dist/gridstack.min.css" />
+<style type="text/css">
+.row { min-height: 100px; border: 1px #777 dashed; }
+
+</style>
 <div class="content-wrapper" style="background: white !important;">
   <section class="content-header">
       <h1 id="h1_tablero">
@@ -11,6 +14,7 @@
 	<section class="content">
     
     <?php if($carpeta["id_padre"] != "0"){ ?>
+      <a class="btn btn-primary btn-form hidden-xs" onclick="cambiar_diseno()">Cambiar diseño</a> 
       <a class="btn btn-primary btn-form hidden-xs" onclick="renombrar_carpeta()">Renombrar carpeta</a> 
       <a class="btn btn-primary btn-form hidden-xs" onclick="mover_carpeta()">Mover carpeta</a> 
       <?php if($array_usuarios != "<option></option>"){ ?>
@@ -35,36 +39,39 @@
     </div>
     <br>
     <br>
-    <div class="grid-stack">
+    <div id="main" class="container">
+      <div class="row">
         <?php
+        $tamanoTotal=0;
+        $fila = 0;
         foreach ($graficos as $filaGraficos) {
-          $x = $filaGraficos['x'];
-          $y = $filaGraficos['y'];
-          $ancho = $filaGraficos['ancho'];
-          $alto = $filaGraficos['alto'];
+          $tamano = $filaGraficos['tamano'];
+          $tamanoTotal = $tamano + $tamanoTotal;
+          if ($tamanoTotal > 12){
+            $tamanoTotal =$tamanoTotal - 12; ?>
+            </div>
+            <div class="row">  
+          <?php }
         ?>
-            <div class="grid-stack-item" data-gs-id="<?php echo $filaGraficos['id_grafico'] ?>" data-gs-x="<?php echo $x ?>" data-gs-y="<?php echo $y ?>" data-gs-width="<?php echo $ancho ?>" data-gs-height="<?php echo $ancho ?>">
-              <div class="grid-stack-item-content">
-                <div class="box" id="<?php echo $filaGraficos['id_grafico'] ?>">
-                  <div class="box-header with-border" >
-                    <h3 class="box-title"><?php echo $filaGraficos['nombre'] ?></h3>
-                    <div class="box-tools pull-right">
-                      <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
-                    </div>
+            <div class="col-md-<?php echo $tamano ?> block">
+              <div class="box" id="<?php echo $filaGraficos['id_grafico'] ?>">
+                <div class="box-header with-border" >
+                  <h3 class="box-title"><?php echo $filaGraficos['nombre'] ?></h3>
+                  <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
                   </div>
-                  <div class="box-body">
-                    <div class="row">
-                      <div class="col-md-12">
-                          
-                      </div>            
-                    </div>
-                  </div>        
                 </div>
+                <div class="box-body">
+                  <div class="row">
+                    <div class="col-md-12">
+                    </div>            
+                  </div>
+                </div>        
               </div>
             </div>
         <?php }
         ?>
-
+      </div>
     </div> 
   </section>
 </div>
@@ -171,32 +178,94 @@
 <input type="hidden" id="carpeta_hidden" value="<?php echo $carpeta["nombre"]; ?>">
 <input type="hidden" id="es_padre_hidden" value="<?php echo $carpeta["es_padre"]; ?>">
 <input type="hidden" id="id_carpeta_hidden" value="<?php echo $carpeta["id_carpeta"]; ?>">
-<script src="https://cdn.jsdelivr.net/npm/gridstack@1.1.1/dist/gridstack.all.js"></script>
-<script type="text/javascript">
-  var grid = GridStack.init();
-  grid.on('change', function(event, items) {
-    for (let i=0; i< items.length; i++){
-      var element = items[i];
-      console.log(element);
-      let x = element.x;
-      let id_grafico = element.id;
-      let y = element.y;
-      let alto = element.height;
-      let ancho = element.width;
-      let data = new Object();
-      data.x = x;
-      data.y = y;
-      data.ancho = ancho;
-      data.alto = alto;
-      $.ajax({
-        url:"<?php echo base_url() ?>tablero/modificarGrafico",
-        type:"POST",
-        data:{id_grafico:id_grafico,data:JSON.stringify(data)}
-      });
-    }
-    
-  });
+<!--<script src="<?php echo base_url('plugin') ?>/jquery-ui/actualizado.js"></script>-->
 
+
+<script src='https://cdnjs.cloudflare.com/ajax/libs/dragula/3.5.2/dragula.min.js'></script>
+
+
+<script type="text/javascript">
+/*Drag and drop*/
+  var COL_WIDTH = 62 // should be calculated dynamically, and recalculated at window resize
+var GUTTER_WIDTH = 30
+
+var COL_WIDTHS = {
+  750: 62,
+  970: 81,
+  1170: 97
+}
+
+$(function() {
+  
+  var d = dragula({
+    invalid: function(el, target) {
+      return $(el).hasClass('ui-resizable-handle')
+    }
+  })
+  $('.row').each(function() {
+    d.containers.push(this)
+  })
+
+  $('.block').resizable({
+    grid: COL_WIDTH - GUTTER_WIDTH,
+    handles: 'se',
+    resize: function(e, ui) {
+      console.log('resized', ui.size)
+      $(this).css('width', '').removeClass(function(index, css) {
+        return (css.match (/(^|\s)col-sm-\S+/g) || []).join(' ')
+      })
+      .addClass('col-sm-' + Math.max(1, Math.round(ui.size.width / COL_WIDTH)))
+    }
+  })
+  
+  var colWidth = COL_WIDTHS[$('.container').width()] || COL_WIDTHS[0]
+  $(window).resize(function() {
+    colWidth = COL_WIDTHS[$('.container').width()] || COL_WIDTHS[0]
+    console.log('set colWidth to', colWidth, $('.container').width())
+  })
+  
+})
+/*Fin drag and drop*/
+ /* var columnaVieja = '';
+  var id_grafico_viejo = '';
+  $(function () {
+     // Make the dashboard widgets sortable Using jquery UI
+    $('.connectedSortable').sortable({
+      placeholder         : 'sort-highlight',
+      connectWith         : '.connectedSortable',
+      handle              : '.box-header',
+      forcePlaceholderSize: true,
+      zIndex              : 999999,
+      start: function(event, ui) {
+        columnaVieja = $(this).data('columna');
+        //id_grafico_viejo = $(this).data('id_grafico');
+      },
+      update: function(event, ui) {
+        let columnaNueva = $(this).data('columna');
+        //let id_grafico_nuevo = $(this).data('id_grafico');
+        if (columnaNueva != columnaVieja){
+          guardarColumnas(columnaVieja, columnaNueva);
+        }
+        
+      }
+    })
+    $('.box-header').css('cursor', 'move');
+
+  });*/
+
+
+
+
+  function guardarColumnas(vieja, nueva){
+    let arrayVieja = new Array();
+    let arrayNueva = new Array();
+    $("[data-columna='"+vieja+"']").children('.box').each(function( i ) {
+      arrayVieja.push(this.id);
+    });
+    $("[data-columna='"+nueva+"']").children('.box').each(function( i ) {
+      arrayNueva.push(this.id);
+    });
+  }
 
   var array_usuarios = `<?php echo $array_usuarios; ?>`;
 
@@ -215,6 +284,16 @@
     $("#modal_carpeta").val("");
     $("#modalCarpeta_title").html("Crear carpeta");
     $("#modalCarpeta_guardar").attr("onclick","crear_carpeta_final()");
+    $("#modalCarpeta").modal("show");
+  }
+
+  function cambiar_diseno(){
+    $(".vistas, .listas_carpetas, .compartir_carpetas, .carpetas").hide();
+    $(".diseno_modal").show();
+    
+    $("#modal_carpeta").val("");
+    $("#modalCarpeta_title").html("Cambiar Diseño");
+    $("#modalCarpeta_guardar").attr("onclick","cambiar_diseno_bd()");
     $("#modalCarpeta").modal("show");
   }
 

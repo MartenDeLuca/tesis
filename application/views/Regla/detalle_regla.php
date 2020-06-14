@@ -27,6 +27,7 @@
             <thead>
               <tr>
                 <th>Asunto</th>
+                <th>Fecha</th>
                 <th>Destinatarios</th>
               </tr>
             </thead>
@@ -36,6 +37,7 @@
               ?>
               <tr>
                 <td><a href="<?php echo base_url() ?>detalle-correo?id=<?php echo $fila["id_mail"]; ?>"><?php echo $fila["asunto"]; ?></a></td>
+                <td><?php echo $fila["fecha2"]; ?></td>
                 <td><?php echo $fila["destinatarios"]; ?></td>
               </tr>
               <?php 

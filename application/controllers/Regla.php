@@ -3,43 +3,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Regla extends CI_Controller {
 
-	public function pruebaCurl(){
-		$consulta = 'select * from crm_bases';
-		$columnas = '0';
-		$res = $this->reglaModel->verificar_consulta($consulta, $columnas);
-		echo $res;
-
-		/*$columnas = '0';
-		$consulta = 'select * from crm_bases';
-		$post = array();
-		$post['columna'] = $columnas;
-		$post['consulta'] = $consulta;
-		$url ="http://192.168.0.211:3000/api/verificar_consulta";
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_POST, TRUE);
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
-		curl_setopt($curl, CURLOPT_POSTFIELDS, 'consulta='.$consulta.'&columna='.$columnas);
-	    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
-	    curl_setopt($curl, CURLOPT_TIMEOUT, 2); 
-	    curl_setopt($curl, CURLOPT_HEADER, 0);
-	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-	    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
-	    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
-	    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
-	    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
-	    $result = curl_exec($curl);
-	    if (curl_errno($curl)) {
-		    $error_msg = curl_error($curl);
-		}
-		curl_close($curl);
-
-		if (isset($error_msg)) {
-		   var_dump($error_msg);
-		}
-	    echo json_encode($result);*/
-	}
-
 	/*REGLAS*/
 	public function reglas(){
 		if ($this->session->userdata('id_usuario')){
@@ -58,9 +21,8 @@ class Regla extends CI_Controller {
 			$data = array("id_regla" => "", "asunto" => "", "intervalo" => "", "accion" => "Correo y Alerta", "estado" => "", "tipo_consulta" => "", "consulta" => "", 
 			"correo" => "", "contrasena" => "", "puerto" => "", "host" => "", "destinatarios_columnas" => "",
 			"destinatarios_fijos" => "", "atributos" => "", "asunto_mail" => "", "contenido_mail" => "", 
-			"adjuntos" => array(), "tipo_alerta" => "", "descripcion_alerta" => "");
+			"adjuntos" => array(), "tipo_alerta" => "", "descripcion_alerta" => "","fechaInicio" =>'',"fechaExpiracion" =>'');
 			$data["array_usuarios"] = $this->usuarioModel->getUsuariosSelectSoloCorreo();
-			//$data["consulta_externa"] = $this->reglaModel->getConsultaExterna();
 			$data["instancia"] = "Agregar";
 			$this->configuracionModel->getHeader();
 			$this->load->view('regla/formulario_regla', $data);
@@ -76,6 +38,7 @@ class Regla extends CI_Controller {
 			$id_regla = isset($_GET["id"])?$_GET["id"]:"";
 			if(!empty($id_regla)){
 				$data = $this->reglaModel->getReglaPorId($id_regla, '');
+				log_message('error', json_encode($data));
 				if(count($data) > 0){
 					$data["array_usuarios"] = $this->usuarioModel->getUsuariosSelectSoloCorreo();
 					//$data["consulta_externa"] = $this->reglaModel->getConsultaExterna();
@@ -177,6 +140,22 @@ class Regla extends CI_Controller {
 				//encabezado
 				$asunto = $_POST['asunto'];
 				$intervalo = $_POST['intervalo'];
+				$tipoIntervalo = $_POST['tipoIntervalo'];
+				if ($tipoIntervalo == "Horas"){
+					$intervalo = $intervalo * 60;
+				} else if ($tipoIntervalo == "Dias"){
+					$intervalo = $intervalo * 60 * 24;
+				} else if ($tipoIntervalo == "Semanas"){
+					$intervalo = $intervalo * 60 * 24 * 7;
+				} else if ($tipoIntervalo == "Meses"){
+					$intervalo = $intervalo * 60 * 24 * 30;
+				}
+
+				$fechaInicio = $_POST['fechaInicio'];
+				$fechaInicio =date('Y-m-d h:i:s', strtotime($fechaInicio));
+				$fechaExpiracion = $_POST['fechaExpiracion'];
+				$fechaExpiracion =date('Y-m-d h:i:s', strtotime($fechaExpiracion));
+				
 				$accion = $_POST['accion'];
 				$estado = $_POST['estado'];
 				
@@ -221,7 +200,7 @@ class Regla extends CI_Controller {
 				$asunto, $intervalo, $accion, $estado, 
 				$consulta, 
 				$correo, $contrasena, $puerto, $host, $certificado_ssl, $destinatario_fijos, $destinatario_columnas, $asunto_mail, $contenido_mail, 
-				$tipo_alerta, $descripcion_alerta
+				$tipo_alerta, $descripcion_alerta, $fechaInicio, $fechaExpiracion
 				);
 				if($respuesta[0] == "ok"){
 					if(isset($_POST['archivos_subidos'])){

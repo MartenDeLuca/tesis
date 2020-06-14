@@ -34,8 +34,45 @@
 		    					<div class="error_color" id="error_asunto"></div>
 		    				</div>
 		    				<div class="col-md-6">
-		    					<label class="lab">Intervalo (Min)</label>
-		    					<input type="text" class="form-control int" placeholder="Intervalo (Min)" name="intervalo" id="intervalo" value="<?php echo $intervalo; ?>">
+		    					<label class="lab">Estado</label>
+		    					<select class="form-control select2 input_select2" name="estado" id="estado">
+		    						<option <?php if($estado == "Activa"){ echo 'selected'; }?>>Activa</option>
+		    						<option <?php if($estado == "Pausada"){ echo 'selected'; }?>>Pausada</option>
+		    					</select>
+		    					<div class="error_color" id="error_estado"></div>
+		    				</div>
+		    			</div>
+		    			<div class="row">	
+		    				<div class="col-md-6">
+		    					<label class="lab">Fecha de Inicio</label>
+		    					<input type="datetime-local" class="form-control" placeholder="Fecha de Inicio" name="fechaInicio" id="fechaInicio" value="<?php 
+		    					$fechaInicio = str_replace (' ' , 'T' , $fechaInicio );
+		    					echo $fechaInicio; ?>">
+		    					<div class="error_color" id="error_fechaInicio"></div>
+		    				</div>
+		    				<div class="col-md-6">
+		    					<label class="lab">Fecha de Expiracion</label>
+		    					<input type="datetime-local" class="form-control" placeholder="Fecha de Expiracion" name="fechaExpiracion" id="fechaExpiracion" value="<?php 
+		    					$fechaExpiracion = str_replace (' ' , 'T' , $fechaExpiracion );
+		    					echo $fechaExpiracion; ?>">
+		    					<div class="error_color" id="error_fechaExpiracion"></div>
+		    				</div>
+		    			</div>
+		    			<div class="row">	
+		    				<div class="col-md-6">
+		    					<label class="lab">Tipo de Intervalo</label>
+		    					<select class="form-control" name="tipoIntervalo" id="tipoIntervalo">
+		    						<option value="Minutos">Minutos</option>
+		    						<option value="Horas">Horas</option>
+		    						<option value="Dias">Dias</option>
+		    						<option value="Semanas">Semanas</option>
+		    						<option value="Meses">Meses</option>
+		    					</select>
+		    					<div class="error_color" id="error_tipoIntervalo"></div>
+		    				</div>
+		    				<div class="col-md-6">
+		    					<label class="lab">Intervalo</label>
+		    					<input type="text" class="form-control int" placeholder="Intervalo" name="intervalo" id="intervalo" value="<?php echo $intervalo; ?>">
 		    					<div class="error_color" id="error_intervalo"></div>
 		    				</div>
 		    			</div>
@@ -48,14 +85,6 @@
 		    						<option <?php if($accion == "Alerta"){ echo 'selected'; }?>>Alerta</option>
 		    					</select>
 		    					<div class="error_color" id="error_accion"></div>
-		    				</div>
-		    				<div class="col-md-6">
-		    					<label class="lab">Estado</label>
-		    					<select class="form-control select2 input_select2" name="estado" id="estado">
-		    						<option <?php if($estado == "Activa"){ echo 'selected'; }?>>Activa</option>
-		    						<option <?php if($estado == "Pausada"){ echo 'selected'; }?>>Pausada</option>
-		    					</select>
-		    					<div class="error_color" id="error_estado"></div>
 		    				</div>
 		    			</div>
 					</div>
@@ -353,23 +382,35 @@
 
 	function guardar(){
 		var tab = "";
-		var ok = true;
+		var ok = false;
 		var asunto = $("#asunto").val();
 		if(asunto == ""){
 			ok = false;
 			if(tab == "") {tab = "encabezado_tab";}
 			marcarError("asunto", "Campo obligatorio");
 		}
+		var fechaInicio = $("#fechaInicio").val();
+		if(fechaInicio == ""){
+			ok = false;
+			if(tab == "") {tab = "encabezado_tab";}
+			marcarError("fechaInicio", "Campo obligatorio");
+		}
+		var fechaExpiracion = $("#fechaExpiracion").val();
+		if(fechaExpiracion == ""){
+			ok = false;
+			if(tab == "") {tab = "encabezado_tab";}
+			marcarError("fechaExpiracion", "Campo obligatorio");
+		}
 		var intervalo = $("#intervalo").val();
 		if(intervalo == ""){
 			ok = false;
 			if(tab == "") {tab = "encabezado_tab";}
 			marcarError("intervalo", "Campo obligatorio");
-		}else if((parseInt(intervalo)/5) - Math.trunc(parseInt(intervalo)/5) > 0){
+		}/*else if((parseInt(intervalo)/5) - Math.trunc(parseInt(intervalo)/5) > 0){
 			ok = false;
 			if(tab == "") {tab = "encabezado_tab";}
 			marcarError("intervalo", "Debe ser multiplo de 5");
-		}
+		}*/
 		var consulta = $("#consulta").val();
 		if(consulta == ""){
 			ok = false;
@@ -520,12 +561,12 @@
 		intervalo_focus = this.value;
 	});
 
-	$("#intervalo").blur(function (e) {
+	/*$("#intervalo").blur(function (e) {
 		if($(this).val() % 5 > 0){
 			$(this).val(intervalo_focus);
 			marcarError("intervalo", "Debe ser multiplo de 5");
 		}
-	});
+	});*/
 
 	/*Ocultar solapas dependiendo la accion elegida*/
 	$("#accion").change(function (e) {

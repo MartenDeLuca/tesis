@@ -5,16 +5,15 @@ class Usuario extends CI_Controller {
 
 	
 	public function prueba(){
-		$this->load->library('encrypt');
-		$string = '0A+tvQk8PuCbP/sToP3SOtRbZRo8S092Gar643be16pU1Dd8ojcqCvQ346qMaUNkMaJYOsMXD8IykKTlkpcqyA==';
-		echo $this->encrypt->decode($string);
+		$yourDate ='2020-06-13T05:17';
+		echo date('Y-m-d h:i:s', strtotime($yourDate));
 	}
 
 	public function index(){
-		if (!$this->session->userdata('id_usuario')){
-			$this->load->view('usuario/login');
-		} else {
+		if ($this->session->userdata('id_usuario')){
 			redirect(base_url('tablero'));
+		} else {
+			$this->load->view('usuario/login');			
 		}
 	}
 
@@ -337,7 +336,7 @@ class Usuario extends CI_Controller {
 
 	public function cerrar_sesion(){
 		$this->session->sess_destroy();
-		redirect(base_url());
+		redirect(base_url('login'));
 	}
 
 	public function cambiarContrasena(){	
@@ -353,26 +352,36 @@ class Usuario extends CI_Controller {
 	}
 
 	public function licencias(){
-		if ($this->session->userdata('permiso') == 'administrador'){
-			$datos = array();
-			$datos['licencias'] = $this->usuarioModel->getLicencias();
-			$datos['usuarios'] = $this->usuarioModel->getUsuarios();
-			$this->configuracionModel->getHeader();	
-			$this->load->view('licencia/mostrar', $datos);
-		} else {
-			$this->load->view('sin_acceso');
+		if ($this->session->userdata('id_usuario')){
+			if ($this->session->userdata('permiso') == 'administrador'){
+				$datos = array();
+				$datos['licencias'] = $this->usuarioModel->getLicencias();
+				$datos['usuarios'] = $this->usuarioModel->getUsuarios();
+				$this->configuracionModel->getHeader();	
+				$this->load->view('licencia/mostrar', $datos);
+			} else {
+				$this->load->view('sin_acceso');
+			}
+		}else{
+			$this->session->set_userdata("id_usuario", "1");
+			$this->session->set_flashdata('url',current_url());
+			redirect(base_url('login'));
 		}
-
 	}
 
 	public function agregar_licencia(){
-		if ($this->session->userdata('permiso') == 'administrador'){
-			$this->configuracionModel->getHeader();
-			$this->load->view('licencia/alta');
-		} else {
-			$this->load->view('sin_acceso');
-		}
-
+		if ($this->session->userdata('id_usuario')){
+			if ($this->session->userdata('permiso') == 'administrador'){
+				$this->configuracionModel->getHeader();
+				$this->load->view('licencia/alta');
+			} else {
+				$this->load->view('sin_acceso');
+			}
+		}else{
+			$this->session->set_userdata("id_usuario", "1");
+			$this->session->set_flashdata('url',current_url());
+			redirect(base_url('login'));
+		}	
 	}
 
 	public function licencia_bd_modificar(){

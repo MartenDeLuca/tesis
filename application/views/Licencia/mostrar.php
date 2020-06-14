@@ -19,7 +19,7 @@
 		  	</ul>
 		  	<div class="tab-content">
 	    		<div id="licencia" class="tab-pane fade in active">		
-					<table class="table table-bordered" id="tabla">
+					<table class="table table-striped table-bordered dt-responsive nowrap" id="tabla">
 						<thead>
 							<tr>
 								<th>Licencia</th>
@@ -52,7 +52,7 @@
 					</table>
 				</div>
 				<div id="usuario" class="tab-pane fade">		
-					<table class="table table-bordered" id="tablaUsuarios">
+					<table class="table table-striped table-bordered dt-responsive nowrap" id="tablaUsuarios">
 						<thead>
 							<tr>
 								<th>Nombre</th>

@@ -6,6 +6,15 @@ body .datepicker {
     z-index: 10000 !important;
 }
 
+a{
+    cursor: pointer;
+}
+
+.node-checked{
+    background: #3c8dbc !important;
+    color: white !important;
+}
+
 .error_color{
     color: red;
 }

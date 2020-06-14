@@ -99,7 +99,7 @@ class ReglaModel extends CI_Model{
 			$stmt = $this->db->query($sql, array($id_regla, $id_usuario));
 			$data["alertas"] = $stmt->result_array();
 
-			$sql = "select mails.*
+			$sql = "select mails.*, DATE_FORMAT(mails.fecha, '%d/%m/%Y %T') fecha2
 			from reglas 
 			inner join mails on reglas.id_regla = mails.id_regla 
 			where reglas.id_regla = ? and id_usuario = ?
@@ -190,18 +190,13 @@ class ReglaModel extends CI_Model{
 		$asunto, $intervalo, $accion, $estado, 
 		$consulta, 
 		$correo, $contrasena, $puerto, $host, $certificado_ssl, $destinatario_fijos, $destinatario_columnas, $asunto_mail, $contenido_mail,
-		$tipo_alerta, $descripcion_alerta
+		$tipo_alerta, $descripcion_alerta, $fechaInicio, $fechaExpiracion 
 	){
 		$this->db->trans_begin();
 		$id_usuario = $this->session->userdata('id_usuario');
 		$id_licencia = $this->session->userdata('id_licencia');
-
-		$fecha = strtotime(date('Y-m-d H:i:s')); 
-		$fecha = strtotime('+'.$intervalo.' minute', $fecha); 
-		$fecha = date('Y-d-m H:i:s' , $fecha); 
-
 		//encabezado
-		$objeto = array("asunto" => $asunto, "intervalo" => $intervalo, "fecha" => $fecha, "accion" => $accion, "estado" => $estado, "id_usuario" => $id_usuario, "id_licencia" => $id_licencia);
+		$objeto = array("asunto" => $asunto, "intervalo" => $intervalo, "fecha" => $fechaInicio, "accion" => $accion, "estado" => $estado, "id_usuario" => $id_usuario, "id_licencia" => $id_licencia,"fechaExpiracion" => $fechaExpiracion,"fechaInicio" => $fechaInicio);
 		if($instancia == "Agregar"){
 			//inserto a la regla
 			$tm = $this->db->insert("reglas", $objeto);
@@ -212,6 +207,8 @@ class ReglaModel extends CI_Model{
 	    	}
 	    	$id_regla = $this->db->insert_id();
 	    }else{
+	    	unset($objeto['fecha']);
+	    	unset($objeto['fechaInicio']);
 	    	//modifico a la regla
 	    	$this->db->where('id_regla', $id_regla);
 			$tm = $this->db->update("reglas", $objeto);
@@ -580,6 +577,9 @@ class ReglaModel extends CI_Model{
 					}
 				}
 			}
+
+		
+
 			$tm = $this->db->query("UPDATE REGLAS
 				SET fecha = DATE_ADD(NOW(), INTERVAL $intervalo MINUTE)
 				WHERE id_regla = '$id_regla'");
@@ -587,7 +587,16 @@ class ReglaModel extends CI_Model{
 	    		$error = $this->db->error();
 	    		$this->db->trans_rollback();
 	    		return $error['message'];
+	    	}	
+
+	    	$tm = $this->db->query("update reglas set estado='Pausada' where fecha > fechaExpiracion and estado <>'Pausada'");
+			if(!$tm){
+	    		$error = $this->db->error();
+	    		$this->db->trans_rollback();
+	    		return $error['message'];
 	    	}			
+
+	    	
 		}else{			
 			$tm = $this->db->query("UPDATE REGLAS
 					SET estado = 'Pausada'
@@ -608,9 +617,9 @@ class ReglaModel extends CI_Model{
 		$destinatarios = str_replace(";", "; ", $destinatarios);
 		$tm = $this->db->query(
 		"INSERT INTO mails 
-		(id_regla, destinatarios, asunto, uid_mail) 
+		(id_regla, destinatarios, asunto, uid_mail, fecha) 
 		VALUES 
-		(?, ?, ?, ?)", array($id_regla, $destinatarios, $asunto, $uid_mail));
+		(?, ?, ?, ?, NOW())", array($id_regla, $destinatarios, $asunto, $uid_mail));
 		if(!$tm){
     		$error = $this->db->error();
     		return $error['message'];

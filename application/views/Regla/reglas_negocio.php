@@ -19,7 +19,7 @@
 		  	</ul>
 		  	<div class="tab-content">
 	    		<div id="reglas" class="tab-pane fade in active">		
-					<table class="table" id="tabla">
+					<table class="table table-striped table-bordered dt-responsive nowrap" id="tabla">
 						<thead>
 							<tr>
 								<th></th>
@@ -35,7 +35,7 @@
 							foreach ($reglas as $fila) {
 							?>
 							<tr>
-								<td><a onclick="eliminarFila(this, <?php echo $fila["id_regla"]; ?>)"><span class="glyphicon glyphicon-trash"></span></a> <a href="<?php echo base_url(); ?>modificar-regla?id=<?php echo $fila["id_regla"]; ?>"><span class="glyphicon glyphicon-pencil"></span></a></td>
+								<td><a onclick="eliminarFila(this, <?php echo $fila["id_regla"]; ?>)"><span class="glyphicon glyphicon-trash"></span></a>&nbsp;&nbsp;&nbsp; <a href="<?php echo base_url(); ?>modificar-regla?id=<?php echo $fila["id_regla"]; ?>"><span class="glyphicon glyphicon-pencil"></span></a></td>
 								<td><a href="<?php echo base_url(); ?>detalle-regla?id=<?php echo $fila["id_regla"]; ?>"><?php echo $fila["asunto"]; ?></a></td>
 								<td><?php echo $fila["intervalo"]; ?></td>
 								<td><?php echo $fila["fecha2"]; ?></td>

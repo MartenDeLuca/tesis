@@ -49,7 +49,7 @@
               </a>
             </div>
           </div>
-          <div class="col-xs-7">
+          <div class="col-xs-7" style="padding-left: 0px !important;">
             <div class="checkbox icheck pull-right">
               <a style="cursor:pointer;" onclick="modalRecupero()">
                 ¿Has olvidado la contraseña?
@@ -101,6 +101,9 @@
   <?php $this->view('menu/js'); ?>
   
   <script>
+  $(document).ready(function(){
+    $("#correo").focus();
+  })
   $("#password, #correo").keypress(function(e){
     if(e.keyCode == 13){
       login();

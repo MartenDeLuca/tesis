@@ -7,11 +7,13 @@ class Tablero extends CI_Controller {
 			$id_carpeta = isset($_GET["id"])?$_GET["id"]:$this->session->userdata('id_carpeta');
 			if($id_carpeta){
 				$carpeta = $this->tableroModel->getCarpetaPorId($id_carpeta);
+				$graficos = $this->tableroModel->getGraficosPorCarpeta($id_carpeta);
 				if(count($carpeta) == 0){
 					$carpeta = $this->tableroModel->getCarpetaPorId($this->session->userdata('id_carpeta'));
 				}
 				if(count($carpeta) > 0){
 					$data["carpeta"] = $carpeta[0];
+					$data["graficos"] = $graficos;
 					$data["array_usuarios"] = $this->usuarioModel->getUsuariosSelect();
 					$this->configuracionModel->getHeader($id_carpeta);
 					$this->load->view('tablero/tablero', $data);
@@ -24,6 +26,12 @@ class Tablero extends CI_Controller {
 			$this->session->set_flashdata('url',current_url());
 			redirect(base_url('login'));
 		}	
+	}
+
+	public function modificarGrafico(){
+		$id_grafico = $_POST['id_grafico'];
+		$data = json_decode(isset($_POST["data"])?$_POST["data"]:"", true);
+		$this->tableroModel->modificarGrafico($id_grafico, $data);
 	}
 
 	public function crear_carpeta(){

@@ -44,6 +44,17 @@ class TableroModel extends CI_Model{
 		return $data;
 	}
 
+	function modificarGrafico($id_grafico, $data){
+		$this->db->where('id_grafico', $id_grafico);
+		$this->db->update('graficos', $data);
+	}
+	function getGraficosPorCarpeta($id_carpeta){
+		$sql_select = "select * from graficos where id_carpeta = ?";
+		$stmt = $this->db->query($sql_select, array($id_carpeta));
+		$registros = $stmt->result_array();
+		return $registros;
+	}
+
 	function getCarpetaPorId($id_carpeta){
 		$id_usuario = $this->session->userdata('id_usuario');
 		$id_licencia = $this->session->userdata('id_licencia');
