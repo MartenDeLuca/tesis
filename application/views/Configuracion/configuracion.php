@@ -70,6 +70,7 @@ if(isset($configuracion[0])){
       		<div class="nav-tabs-custom">
 			  	<ul class="nav nav-tabs">
 			    	<li class="active"><a data-toggle="tab" href="#general">Configuracion</a></li>
+			    	<li><a data-toggle="tab" href="#mail">Mail</a></li>
 			    	<li><a data-toggle="tab" href="#tablero">Tablero</a></li>
 			  	</ul>
 			  	<div class="tab-content">
@@ -259,6 +260,9 @@ if(isset($configuracion[0])){
 								</div>
 							</div>
 						</div>
+					</div>
+					<div id="mail" class="tab-pane fade in">
+
 					</div>
 					<div id="tablero" class="tab-pane fade in">
 						<div class="acordeon">

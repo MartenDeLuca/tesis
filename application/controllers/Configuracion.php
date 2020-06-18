@@ -35,4 +35,12 @@ class Configuracion extends CI_Controller {
 			}
 		}
 	}
+
+	public function vaciarNotificaciones(){
+		if ($this->input->is_ajax_request()) {
+			if ($this->session->userdata('id_usuario')){
+				echo $this->configuracionModel->vaciarNotificaciones();
+			}
+		}
+	}
 }

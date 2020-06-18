@@ -3,41 +3,28 @@ class ConfiguracionModel extends CI_Model{
 	function __construct(){
 		parent::__construct();
 	}
-
-	/* SQL:
-	create table licencias(id_licencia int not null AUTO_INCREMENT PRIMARY KEY, licencia varchar(8), dominio varchar(1000), puerto int, usuario varchar(300), contrasena varchar(300), diccionario varchar(400));
-
-	create table usuarios (id_usuario int not null AUTO_INCREMENT PRIMARY KEY, correo varchar(300), contrasena varchar(1000), menu_fijo varchar(2), menu_color varchar(25), id_carpeta int, id_licencia int);
-
-	create table usuarios_config(
-	id_configuracion int not null AUTO_INCREMENT PRIMARY KEY, id_usuario int, cantidad_decimales int, separador_decimales varchar(1), separador_miles varchar(1), formato_negativo bit, ubicacion_unidad varchar(1), unidad varchar(5), tamano_texto varchar(1), alineacion_texto varchar(1), formato_fecha varchar(15), separador_fecha varchar(1), formato_hora varchar(10), tamano_fecha varchar(1), alineacion_fecha varchar(1)
-	);
-
-	create table carpetas (id_carpeta int not null AUTO_INCREMENT PRIMARY KEY, nombre varchar(100), id_padre int, es_padre bit, id_usuario int, id_licencia int);
-
-	create table reglas(id_regla int not null AUTO_INCREMENT PRIMARY KEY, asunto varchar(100), intervalo int, fecha datetime, accion varchar(100), estado varchar(15), id_usuario int, id_licencia int);
-
-	create table reglas_consulta(id_regla_consulta int not null AUTO_INCREMENT PRIMARY KEY, id_regla int, consulta varchar(8000));
-
-	create table reglas_accion(id_regla_accion int not null AUTO_INCREMENT PRIMARY KEY, id_regla int, correo varchar(1000), nombre varchar(1000), contra varchar(1000), puerto int, host varchar(200), destinatario_consulta varchar(1000), destanitario_fijo varchar(1000), asunto_mail varchar(1000), tipo_alerta varchar(50));
-
-	create table reglas_adjunto(id_regla_adjunto int not null AUTO_INCREMENT PRIMARY KEY, id_regla int, adjunto varchar(8000));
-	
-	create table reglas_contenido(id_regla_contenido int not null AUTO_INCREMENT PRIMARY KEY, id_regla int, relacionado varchar(20), consulta varchar(8000));
-
-	create table alertas(id_alerta int not null AUTO_INCREMENT PRIMARY KEY, descripcion varchar(8000), tipo varchar(50), fecha datetime, leido bit, id_regla int);
-
-	create table mails(id_mail int not null AUTO_INCREMENT PRIMARY KEY, id_regla int, uid_mail varchar(1000), fecha_leido datetime);
-
-	create table mails_contenido(id_mail_contenido int not null AUTO_INCREMENT PRIMARY KEY, id_mail int, contenido varchar(8000));
-	*/
 	
 	function getHeader($id_carpeta_sel = '0'){
 		$data["id_carpeta"] = $this->session->userdata('id_carpeta');
 		$data["id_carpeta_sel"] = $id_carpeta_sel;
-		$data["alertas"] = array();
+		$data["actividades_no_leidas"] = $this->actividades_no_leidas();
+		$data["empresas"] = $this->usuarioModel->empresasPorUsuario($this->session->userdata('id_usuario'));
 		$data["carpetas"] = $this->tableroModel->getCarpetas();
 		$this->load->view('Menu/header', $data);
+	}
+
+	function actividades_no_leidas(){
+		$id_usuario = $this->session->userdata('id_usuario');
+		$id_empresa = $this->session->userdata('id_empresa');
+		
+		$sql_select = "select actividades.asunto, actividades.id_actividad
+		from actividades
+		inner join actividades_asociacion on actividades.id_actividad = actividades_asociacion.id_actividad
+		where actividades_asociacion.id_usuario = '$id_usuario' and actividades.id_empresa = '$id_empresa' and ifnull(actividades_asociacion.leido, 0) = 0
+		order by actividades.fecha desc";
+		$stmt = $this->db->query($sql_select);
+		$registros = $stmt->result_array();
+		return $registros;
 	}
 
 	function cambiar_menu($columna, $valor){
@@ -70,6 +57,20 @@ class ConfiguracionModel extends CI_Model{
 			$objeto[$columna] = $valor;
 			$tm = $this->db->insert("usuarios_config", $objeto);
 		}
+	}
+
+	function vaciarNotificaciones(){
+		$id_usuario = $this->session->userdata('id_usuario');
+
+		$tm = $this->db->query("update actividades_asociacion
+		set leido = '1'
+		where id_usuario = ?", array($id_usuario));
+		if(!$tm){
+    		$error = $this->db->error();
+    		$this->db->trans_rollback();
+    		return $error['message'];
+    	}
+    	return "OK";
 	}
 
 	function getConfiguracion(){

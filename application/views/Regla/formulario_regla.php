@@ -17,7 +17,7 @@
 			    	<li class="active"><a data-step="encabezado_tab" data-toggle="tab" href="#encabezado_tab">Encabezado</a></li>
 			    	<li><a data-step="consulta_tab" data-toggle="tab" href="#consulta_tab">Consulta</a></li>
 			    	<li id="li_correo_tab" <?php if(strpos($accion, "Correo") === false){ echo 'style="display:none"'; }?>><a data-step="correo_tab" data-toggle="tab" href="#correo_tab">Correo</a></li>
-			    	<li id="li_alerta_tab" <?php if(strpos($accion, "Alerta") === false){ echo 'style="display:none"'; }?>><a data-step="alerta_tab" data-toggle="tab" href="#alerta_tab">Alerta</a></li>
+			    	<li id="li_actividad_tab" <?php if(strpos($accion, "Actividad") === false){ echo 'style="display:none"'; }?>><a data-step="actividad_tab" data-toggle="tab" href="#actividad_tab">Actividad</a></li>
 			    	<div class="pull-right">
 			    		<div class="text-right">
 							<a title="Guardar regla de negocio" onclick="guardar()" class="btn btn-primary btn-form">Guardar</a>
@@ -46,15 +46,23 @@
 		    				<div class="col-md-6">
 		    					<label class="lab">Fecha de Inicio</label>
 		    					<input type="datetime-local" class="form-control" placeholder="Fecha de Inicio" name="fechaInicio" id="fechaInicio" value="<?php 
-		    					$fechaInicio = str_replace (' ' , 'T' , $fechaInicio );
-		    					echo $fechaInicio; ?>">
+		    					$fechaInicio = str_replace (' ' , 'T' , $fechaInicio);
+		    					if($fechaInicio == '1969-12-31 09:00'){
+		    						echo '';
+		    					}else{
+		    						echo $fechaInicio;
+		    					}?>">
 		    					<div class="error_color" id="error_fechaInicio"></div>
 		    				</div>
 		    				<div class="col-md-6">
 		    					<label class="lab">Fecha de Expiracion</label>
 		    					<input type="datetime-local" class="form-control" placeholder="Fecha de Expiracion" name="fechaExpiracion" id="fechaExpiracion" value="<?php 
-		    					$fechaExpiracion = str_replace (' ' , 'T' , $fechaExpiracion );
-		    					echo $fechaExpiracion; ?>">
+		    					$fechaExpiracion = str_replace (' ' , 'T' , $fechaExpiracion);
+		    					if($fechaExpiracion == '1969-12-31 09:00'){
+		    						echo $fechaExpiracion;	
+		    					}else{
+		    						echo '';
+		    					}?>">
 		    					<div class="error_color" id="error_fechaExpiracion"></div>
 		    				</div>
 		    			</div>
@@ -62,11 +70,11 @@
 		    				<div class="col-md-6">
 		    					<label class="lab">Tipo de Intervalo</label>
 		    					<select class="form-control" name="tipoIntervalo" id="tipoIntervalo">
-		    						<option value="Minutos">Minutos</option>
-		    						<option value="Horas">Horas</option>
-		    						<option value="Dias">Dias</option>
-		    						<option value="Semanas">Semanas</option>
-		    						<option value="Meses">Meses</option>
+		    						<option <?php if ($tipoIntervalo == 'Minutos'){ echo 'selected';} ?> value="Minutos">Minutos</option>
+		    						<option <?php if ($tipoIntervalo == 'Horas'){ echo 'selected'; } ?> value="Horas">Horas</option>
+		    						<option <?php if ($tipoIntervalo == 'Dias'){ echo 'selected';} ?> value="Dias">Dias</option>
+		    						<option <?php if ($tipoIntervalo == 'Semanas'){ echo 'selected';} ?> value="Semanas">Semanas</option>
+		    						<option <?php if ($tipoIntervalo == 'Meses'){ echo 'selected';} ?> value="Meses">Meses</option>
 		    					</select>
 		    					<div class="error_color" id="error_tipoIntervalo"></div>
 		    				</div>
@@ -80,9 +88,9 @@
 		    				<div class="col-md-6">
 		    					<label class="lab">Accion</label>
 		    					<select class="form-control select2 input_select2" name="accion" id="accion" placeholder="Accion">
-		    						<option <?php if($accion == "Correo y Alerta"){ echo 'selected'; }?>>Correo y Alerta</option>
+		    						<option <?php if($accion == "Correo y Actividad"){ echo 'selected'; }?>>Correo y Actividad</option>
 		    						<option <?php if($accion == "Correo"){ echo 'selected'; }?>>Correo</option>
-		    						<option <?php if($accion == "Alerta"){ echo 'selected'; }?>>Alerta</option>
+		    						<option <?php if($accion == "Actividad"){ echo 'selected'; }?>>Actividad</option>
 		    					</select>
 		    					<div class="error_color" id="error_accion"></div>
 		    				</div>
@@ -152,6 +160,24 @@
 									<div style="text-align:left;">Destinatarios <span style="float:right;"><span id="icon1" class="glyphicon glyphicon glyphicon-chevron-down"></span></span></div>
 								</label>
 								<div class="acordeon__contenido">
+									<div class="row">
+										<div class="col-md-12">
+											<label class="lab">Cliente</label>
+											<select type="text" class="form-control" name="cliente_mail" id="cliente_mail">												
+					    						<?php echo $atributos; ?>	
+					    					</select>
+					    					<div class="error_color" id="error_cliente_mail"></div>
+					    					<script type="text/javascript">
+					    					$(document).ready(function(){
+											  	<?php 
+												if(!empty($cliente)){ ?>
+													$('#cliente_mail').val('<?php echo $cliente_mail ?>');
+												<?php }
+												?>
+											});
+											</script>
+										</div>
+									</div>
 					    			<div class="row">
 					    				<div class="col-md-12">
 					    					<label class="lab">Destinatarios por columnas</label>
@@ -316,50 +342,106 @@
 					    	</div>
 					    </div>			
 					</div>
-					<div id="alerta_tab" class="tab-pane fade in">
+					<div id="actividad_tab" class="tab-pane fade in">
 						<div class="row">
 							<div class="col-md-6">
-								<label class="lab">Tipo</label>
-								<select class="form-control" name="tipo_alerta" id="tipo_alerta">
-									<option <?php if($tipo_alerta == "Notificación"){ echo 'selected'; } ?>>Notificación</option>
-									<option <?php if($tipo_alerta == "Comprobante"){ echo 'selected'; } ?>>Comprobante</option>
-								</select>
+								<label class="lab">Cliente</label>
+								<select type="text" class="form-control" name="cliente" id="cliente">
+		    						<?php echo $atributos; ?>	
+		    					</select>
+		    					<div class="error_color" id="error_cliente"></div>
+		    					<script type="text/javascript">
+		    					$(document).ready(function(){
+								  	<?php 
+									if(!empty($cliente)){ ?>
+										$('#cliente').val('<?php echo $cliente ?>');
+									<?php }
+									?>
+								});
+								</script>
 							</div>
 							<div class="col-md-6">
+								<label class="lab">Contacto</label>
+								<select type="text" class="form-control" name="contacto" id="contacto">
+		    						<?php echo $atributos; ?>	
+		    					</select>
+		    					<div class="error_color" id="error_contacto"></div>
+		    					<script type="text/javascript">
+		    					$(document).ready(function(){
+								  	<?php 
+									if(!empty($contacto)){ ?>
+										$('#contacto').val('<?php echo $contacto ?>');
+									<?php }
+									?>
+								});
+								</script>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<label class="lab">Asignados</label>
+		    					<select multiple class="form-control input_select2 select2" name="asignados_actividad[]" id="asignados_actividad">
+		    						<?php echo $array_asignados; ?>	
+		    					</select>
+		    					<div class="error_color" id="error_asignados_actividad"></div>
+							</div>
+							<script type="text/javascript">
+
+								$(document).ready(function(){
+									<?php 
+									$asignados_actividad = explode("***", $asignados_actividad);
+									foreach ($asignados_actividad as $fila) {
+									?>
+										$("#asignados_actividad option[value='<?php echo $fila; ?>']").attr("selected", true);
+									<?php
+									}
+									?>
+								});
+							</script>
+						</div>
+						<div class="row">
+							<div class="col-md-6">
 		    					<label class="lab">Atributos</label>
-		    					<select class="form-control input_select2 select2" name="atributos_alerta" id="atributos_alerta"><option></option><?php echo $atributos; ?></select>
-		    					<div class="error_color" id="error_atributos_alerta"></div>
+		    					<select class="form-control input_select2 select2" name="atributos_actividad" id="atributos_actividad">
+		    						<option></option>
+		    						<?php echo $atributos; ?>	
+		    					</select>
+		    					<div class="error_color" id="error_atributos_actividad"></div>
 		    				</div>
+							<div class="col-md-6">
+								<label class="lab">Asunto</label>
+								<input type="text" class="form-control" name="asunto_actividad" id="asunto_actividad" value="<?php echo $asunto_actividad; ?>">
+							</div>
 		    			</div>
 		    			<div class="row">	
 							<div class="col-md-12">
 								<label class="lab">Descripción</label>
-								<textarea class="form-control" name="descripcion_alerta" id="descripcion_alerta">
-									<?php echo htmlspecialchars($descripcion_alerta) ?>
+								<textarea class="form-control" name="descripcion_actividad" id="descripcion_actividad">
+									<?php echo htmlspecialchars($descripcion_actividad) ?>
 								</textarea>
-								<div class="error_color" id="error_descripcion_alerta"></div>
+								<div class="error_color" id="error_descripcion_actividad"></div>
 							</div>
 					 		<script>
-				 				CKEDITOR.replace('descripcion_alerta');
+				 				CKEDITOR.replace('descripcion_actividad');
 				 				CKEDITOR.add
 
-								if (CKEDITOR.instances['descripcion_alerta']) {						
-									CKEDITOR.instances['descripcion_alerta'].on('blur', function(event) {
-										validoCkeditor('descripcion_alerta');
+								if (CKEDITOR.instances['descripcion_actividad']) {						
+									CKEDITOR.instances['descripcion_actividad'].on('blur', function(event) {
+										validoCkeditor('descripcion_actividad');
 									});
 								}
 
-								CKEDITOR.on('descripcion_alerta', function(e) {
-									e.CKEDITOR.instances['descripcion_alerta'].addCss( 'body { background-color: red; }' );
+								CKEDITOR.on('descripcion_actividad', function(e) {
+									e.CKEDITOR.instances['descripcion_actividad'].addCss( 'body { background-color: red; }' );
 								});
 
-								CKEDITOR.instances['descripcion_alerta'].on('contentDom', function() {
-									CKEDITOR.instances['descripcion_alerta'].document.on('keyup', function(event) {
-								        $('#cke_descripcion_alerta').children(".cke_inner").children('.cke_top').css('border','1px solid #d2d6de');
-			       						$('#cke_descripcion_alerta').children(".cke_inner").children('.cke_contents').css('border-left','1px solid #d2d6de');
-			       						$('#cke_descripcion_alerta').children(".cke_inner").children('.cke_contents').css('border-right','1px solid #d2d6de');
-			       						$('#cke_descripcion_alerta').children(".cke_inner").children('.cke_contents').css('border-bottom','1px solid #d2d6de');	
-										document.getElementById("error_descripcion_alerta").innerHTML = '';
+								CKEDITOR.instances['descripcion_actividad'].on('contentDom', function() {
+									CKEDITOR.instances['descripcion_actividad'].document.on('keyup', function(event) {
+								        $('#cke_descripcion_actividad').children(".cke_inner").children('.cke_top').css('border','1px solid #d2d6de');
+			       						$('#cke_descripcion_actividad').children(".cke_inner").children('.cke_contents').css('border-left','1px solid #d2d6de');
+			       						$('#cke_descripcion_actividad').children(".cke_inner").children('.cke_contents').css('border-right','1px solid #d2d6de');
+			       						$('#cke_descripcion_actividad').children(".cke_inner").children('.cke_contents').css('border-bottom','1px solid #d2d6de');	
+										document.getElementById("error_descripcion_actividad").innerHTML = '';
 									});
 								});
 							</script>
@@ -382,7 +464,7 @@
 
 	function guardar(){
 		var tab = "";
-		var ok = false;
+		var ok = true;
 		var asunto = $("#asunto").val();
 		if(asunto == ""){
 			ok = false;
@@ -390,27 +472,28 @@
 			marcarError("asunto", "Campo obligatorio");
 		}
 		var fechaInicio = $("#fechaInicio").val();
-		if(fechaInicio == ""){
-			ok = false;
-			if(tab == "") {tab = "encabezado_tab";}
-			marcarError("fechaInicio", "Campo obligatorio");
-		}
 		var fechaExpiracion = $("#fechaExpiracion").val();
-		if(fechaExpiracion == ""){
-			ok = false;
-			if(tab == "") {tab = "encabezado_tab";}
-			marcarError("fechaExpiracion", "Campo obligatorio");
+		if(fechaInicio != "" && fechaExpiracion != ""){
+			fechaInicio = fechaInicio.replace(/-/gi, '');
+			fechaInicio = fechaInicio.replace(/ /gi, '');
+			fechaInicio = fechaInicio.replace(/:/gi, '');
+
+			fechaExpiracion = fechaExpiracion.replace(/-/gi, '');
+			fechaExpiracion = fechaExpiracion.replace(/ /gi, '');
+			fechaExpiracion = fechaExpiracion.replace(/:/gi, '');
+			if(fechaInicio > fechaExpiracion){
+				ok = false;
+				if(tab == "") {tab = "encabezado_tab";}
+				marcarError("fechaInicio", "No puede ser mayor a la de fin");
+			}
 		}
+
 		var intervalo = $("#intervalo").val();
 		if(intervalo == ""){
 			ok = false;
 			if(tab == "") {tab = "encabezado_tab";}
 			marcarError("intervalo", "Campo obligatorio");
-		}/*else if((parseInt(intervalo)/5) - Math.trunc(parseInt(intervalo)/5) > 0){
-			ok = false;
-			if(tab == "") {tab = "encabezado_tab";}
-			marcarError("intervalo", "Debe ser multiplo de 5");
-		}*/
+		}
 		var consulta = $("#consulta").val();
 		if(consulta == ""){
 			ok = false;
@@ -467,12 +550,24 @@
 				marcarError("asunto_mail", "Campo obligatorio");
 			}
 		}
-		if(tipo.indexOf("Alerta") > -1){
-			var descripcion_alerta = CKEDITOR.instances["descripcion_alerta"].getData();
-			if(descripcion_alerta == ""){
+		if(tipo.indexOf("Actividad") > -1){
+			var descripcion_actividad = CKEDITOR.instances["descripcion_actividad"].getData();
+			if(descripcion_actividad == ""){
 				ok = false;
-				if(tab == "") {tab = "alerta_tab";}
-				marcarError("descripcion_alerta", "Campo obligatorio");
+				if(tab == "") {tab = "actividad_tab";}
+				marcarError("descripcion_actividad", "Campo obligatorio");
+			}
+			var asunto_actividad = $("#asunto_actividad").val();
+			if(asunto_actividad == ""){
+				ok = false;
+				if(tab == "") {tab = "actividad_tab";}
+				marcarError("asunto_actividad", "Campo obligatorio");
+			}
+			var cliente = $("#cliente").val();
+			if(cliente == ""){
+				ok = false;
+				if(tab == "") {tab = "actividad_tab";}
+				marcarError("cliente", "Campo obligatorio");
 			}
 		}	
 
@@ -577,11 +672,11 @@
 			$("#li_correo_tab").show();
 			$("[data-step='correo_tab']").show();
 		}
-		if (accion.indexOf('Alerta') == -1){
-			$("[data-step='alerta_tab']").hide();
+		if (accion.indexOf('Actividad') == -1){
+			$("[data-step='actividad_tab']").hide();
 		}else{
-			$("#li_alerta_tab").show();
-			$("[data-step='alerta_tab']").show();
+			$("#li_actividad_tab").show();
+			$("[data-step='actividad_tab']").show();
 		}	
 	});
 
@@ -650,7 +745,7 @@
 			$("#consulta").closest("div").show();
 			$("#consulta").val("");
 		}
-		$("#atributos option, #atributos_alerta option, #destinatario_columnas option").remove();
+		$("#atributos option, #atributos_actividad option, #destinatario_columnas option").remove();
 	})
 
 	$("#consulta").blur(function(){
@@ -681,8 +776,8 @@
 				success: function(respuesta){
 					console.log(respuesta);
 					if(respuesta[0] == "OK") {
-						$("#atributos option, #atributos_alerta option, #destinatario_columnas option").remove();
-						$("#atributos, #atributos_alerta, #destinatario_columnas").append("<option></option>"+respuesta[1]);
+						$("#atributos option, #atributos_actividad option, #destinatario_columnas option").remove();
+						$("#atributos, #atributos_actividad, #destinatario_columnas, #contacto, #cliente").append("<option></option>"+respuesta[1]);
 					}else{
 						marcarError("consulta", respuesta[1]);
 						marcarError("consulta_externa", respuesta[1]);
@@ -718,10 +813,27 @@
 		}
 	});
 
-	$("#atributos_alerta").change(function(){
+	var focoActividad = "";
+	$("#asunto_actividad").focus(function() {
+		focoActividad = this.id;
+	});
+
+	if (CKEDITOR.instances['descripcion_actividad']) {
+		CKEDITOR.instances['descripcion_actividad'].on('focus', function(event) {
+			focoActividad = 'descripcion_actividad';
+		});
+	}
+
+	$("#atributos_actividad").change(function(){
 		var atributos = this.value;
 		if(atributos != ""){
-			CKEDITOR.instances['descripcion_alerta'].insertText(atributos);
+			if (focoActividad == "asunto_actividad"){
+				var con = $("#"+focoActividad).val()+atributos;
+				$("#"+focoActividad).val(con);
+				quitarError(focoActividad);
+			} else {
+				CKEDITOR.instances['descripcion_actividad'].insertText(atributos);
+			}
 			$(this).val("");
 			$(this).trigger('change');
 		}

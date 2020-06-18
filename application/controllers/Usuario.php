@@ -2,13 +2,6 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Usuario extends CI_Controller {
-
-	
-	public function prueba(){
-		$yourDate ='2020-06-13T05:17';
-		echo date('Y-m-d h:i:s', strtotime($yourDate));
-	}
-
 	public function index(){
 		if ($this->session->userdata('id_usuario')){
 			redirect(base_url('tablero'));
@@ -24,13 +17,14 @@ class Usuario extends CI_Controller {
 	}
 
 	public function login(){
-		$correo= $this->input->post('correo');
-		$contra= $this->input->post('password');
-		$datos =array();
+		$correo = $this->input->post('correo');
+		$contra = $this->input->post('password');
+		$datos = array();
 		$resultado = $this->usuarioModel->login($correo,$contra);
-		if ($resultado != null){
+		if(isset($resultado->id_usuario)){
 			if ($resultado->confirmado == 'si'){
 				if ($resultado->estado == 'Habilitado'){
+					$empresa = $this->usuarioModel->empresasPorUsuario($resultado->id_usuario);
 					$ses = array(
 						'correo' => $resultado->correo,
 						'id_usuario' => $resultado->id_usuario,
@@ -41,13 +35,26 @@ class Usuario extends CI_Controller {
 						'id_carpeta' => $resultado->id_carpeta,
 						'dominio' => $resultado->dominio,
 						'puerto' => $resultado->puerto,
-						'empresa' => $resultado->empresa,
 						'diccionario' => $resultado->diccionario,
 						'permiso' => $resultado->permiso,
 						'ingreso' => true
 					);
 					$this->session->set_userdata($ses);
-					$datos['mensaje'] = 'OK';
+					if(count($empresa) == 1){
+						$this->session->set_userdata("id_empresa", $empresa[0]["id_empresa"]);
+						$this->session->set_userdata("empresa", $empresa[0]["empresa"]);						
+						$datos['mensaje'] = 'OK';
+					}else if(count($empresa) > 1){
+						$opciones = "";
+						foreach ($empresa as $fila) {
+							$opciones .= "<option value=".$fila["id_empresa"].">".$fila["empresa"]."</option>";
+						}
+						$datos["empresas"] = $opciones;
+						$datos['mensaje'] = 'empresas';						
+					}else if(count($empresa) == 0){
+						$datos['mensaje'] = 'error';
+						$datos['error'] = 'El usuario administrador debe asignarle al menos una empresa';
+					}
 				} else {
 					$datos['mensaje'] = 'error';
 					$datos['error'] = 'Cuenta deshabilitada';	
@@ -56,10 +63,19 @@ class Usuario extends CI_Controller {
 				$datos['mensaje'] = 'error';
 				$datos['error'] = 'Cuenta no confirmada';
 			}
-		} else{
+		}else{
 			$datos['mensaje'] = 'error';
-			$datos['error'] = 'Usuario/Contraseña incorrecta. Intente nuevamente';
+			$datos['error'] = $resultado;
 		}
+		echo json_encode($datos);
+	}
+
+	public function empresas(){
+		$id_empresa = $this->input->post('id_empresa');
+		$empresa = $this->input->post('empresa');
+		$this->session->set_userdata("id_empresa", $id_empresa);
+		$this->session->set_userdata("empresa", $empresa);
+		$datos['mensaje'] = 'OK';
 		echo json_encode($datos);
 	}
 
@@ -98,7 +114,8 @@ class Usuario extends CI_Controller {
 		$id = decrypt_url($id);
 		$fecha_confirmacion = substr($this->config->item('url_normal'), strripos($this->config->item('url_normal'), '&fecha=')+7);
 		$fecha_confirmacion = decrypt_url($fecha_confirmacion);
-
+		/*$id = '44';
+		$fecha_confirmacion = '20200615202714';*/
 		if(is_numeric($id)){
 			$usuario = $this->usuarioModel->getUsuarioPorIdYFecha($id, $fecha_confirmacion);
 			if (count($usuario) > 0){
@@ -141,6 +158,7 @@ class Usuario extends CI_Controller {
 				);
 				$id_usuario = $this->usuarioModel->usuario_bd_alta($data);
 				if ($id_usuario != 'error'){
+					$id_usuario_2 = $id_usuario;
 					$id_usuario = encrypt_url($id_usuario);
 					$fecha = encrypt_url($fecha);
 					$body = 
@@ -224,6 +242,99 @@ class Usuario extends CI_Controller {
 					$this->correoModel->enviarCorreo('Confirmacion de cuenta', $body, $correo, '');
 					$datos['mensaje'] = 'OK';
 					$datos['error'] = '';
+
+					$empresas = $this->usuarioModel->empresasPorLicencia($id_licencia);
+					if(count($empresas) > 1){
+						$correo = $this->usuarioModel->getCorreoAdministrador($id_licencia);
+						if(!empty($correo)){
+							$correo = substr($correo, 0, -3);
+							$body = 
+							'<div id=":q0" class="a3s aXjCH "><u></u>
+								<div style="margin:0;padding:0">
+									<table width="100%" cellpadding="0" cellspacing="0" style="padding:0;margin:0">
+										<tbody>
+										    <tr>
+										      	<td bgcolor="#3c8dbc" style="font-size:0"><span></span></td>
+										      	<td bgcolor="#3c8dbc" valign="middle" align="center" style="width:640px">
+											        <table cellpadding="0" cellspacing="0" style="padding:0;margin:0">
+											            <tbody>
+												            <tr>
+												              <td style="padding-bottom:47px;">
+												              </td>
+												            </tr>
+											        	</tbody>
+											        </table>
+										      	</td>
+										      	<td bgcolor="#3c8dbc" style="font-size:0"><span></span></td>
+										    </tr>
+										    <tr>
+										      	<td bgcolor="#3c8dbc" valign="top" align="left" style="font-size:0;vertical-align:top">
+										            <table width="100%" cellpadding="0" cellspacing="0" style="padding:0;margin:0;background-color:#3c8dbc">
+										              	<tbody>
+											              	<tr>
+											                  <td id="m_164980699160561934side-bg" height="256" style="min-width:10px">
+											                      <span></span>
+											                  </td>
+											              	</tr>
+										            	</tbody>
+										            </table>
+										      	</td>
+
+											    <td bgcolor="#3c8dbc" valign="top" align="left" style="width:640px;padding-bottom:47px;" id="m_164980699160561934content-block">
+										          	<table width="100%" bgcolor="#FFFFFF" cellpadding="0" cellspacing="0" style="padding:0;margin:0;border:0">
+										            	<tbody>
+										              	<tr>
+										                	<td style="border:1px solid #e5e5e5;padding:7.4% 9.8% 6.4% 9.8%" id="m_164980699160561934main-pad">
+										                    
+											                    <img width="100px" src="www.grupotesys.com.ar/tickets/plugin/imagenes/logo.png">
+											                    <h1 style="font-family:Helvetica,Arial,sans-serif;font-size:24px;line-height:32px;color:#333333;padding:0;margin:0 0 31px 0;font-weight:400;text-align:left">  Se ha registrado un nuevo usuario en <span class="il">SIMPLAPP</span>
+											                    </h1>
+
+											                    <p style="font-family:Helvetica,Arial,sans-serif;font-size:16px;line-height:20px;color:#333333;padding:0;margin:0 0 20px 0;text-align:left">
+											                    	El usuario con el nombre "'.$nombre.'" se registro en el sistema y debes asignarles al menos una empresa.
+											                    </p>
+
+											                   <table cellpadding="0" cellspacing="0" style="padding:0;margin:0;border:0;width:213px">
+											                        <tbody><tr>
+											                          <td id="m_164980699160561934bottom-button-bg" valign="top" align="center" style="border-radius:3px;padding:12px 20px 16px 20px;background-color:#3c8dbc">
+											                              <a id="m_164980699160561934bottom-button" href="'.base_url().'usuarios" style="font-family:Helvetica,Arial,sans-serif;font-size:16px;color:#ffffff;background-color:#3c8dbc;border-radius:3px;text-align:center;text-decoration:none;display:block;margin:0" target="_blank"  >
+											                                Ver usuarios
+											                              </a>
+											                          </td>
+											                        </tr>
+											                    </tbody>
+											                  </table>
+											                </td> 
+										              	</tr>
+										          		</tbody>
+										          	</table>
+										      	</td>
+
+										      	<td bgcolor="#3c8dbc" valign="top" align="left" style="font-size:0;vertical-align:top">
+										            <table width="100%" cellpadding="0" cellspacing="0" style="padding:0;margin:0;background-color:#3c8dbc">
+										              	<tbody>
+											              	<tr>
+											                  <td id="m_164980699160561934side-bg" height="256" style="min-width:10px">
+											                      <span></span>
+											                  </td>
+											              	</tr>
+										            	</tbody>
+										            </table>
+										      	</td>
+										  	</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>';
+							$this->correoModel->enviarCorreo('Se registro un usuario nuevo', $body, $correo, '');							
+						}
+					}else if(count($empresas) == 1){
+						$id_empresa = $this->usuarioModel->usuario_empresa_bd_alta(array("id_usuario" => $id_usuario_2, "id_empresa" => $empresas[0]["id_empresa"]));
+						if ($id_empresa == 'error'){
+							$datos['mensaje'] = 'error';
+							$datos['error'] = 'Ha ocurrido un error';
+						}
+					}
 				}else{
 					$datos['mensaje'] = 'error';
 					$datos['error'] = 'Ha ocurrido un error';
@@ -351,12 +462,19 @@ class Usuario extends CI_Controller {
 		echo $this->usuarioModel->cambiarContrasena($id_usuario,$nuevaContra, $contraActual);
 	}
 
-	public function licencias(){
+	public function licencias($tipo){
 		if ($this->session->userdata('id_usuario')){
-			if ($this->session->userdata('permiso') == 'administrador'){
+			if ($this->session->userdata('permiso') == 'licencia' || $this->session->userdata('permiso') == 'administrador'){
+				$id_licencia = '';
+				$empresas = array();
 				$datos = array();
+				if ($tipo == "1"){
+					$id_licencia = $this->session->userdata('id_licencia');
+					$empresas = $this->usuarioModel->getEmpresasLicencia($id_licencia);
+				}
 				$datos['licencias'] = $this->usuarioModel->getLicencias();
-				$datos['usuarios'] = $this->usuarioModel->getUsuarios();
+				$datos['usuarios'] = $this->usuarioModel->getUsuarios($id_licencia);
+				$datos['empresasGeneral'] = $empresas;
 				$this->configuracionModel->getHeader();	
 				$this->load->view('licencia/mostrar', $datos);
 			} else {
@@ -371,7 +489,7 @@ class Usuario extends CI_Controller {
 
 	public function agregar_licencia(){
 		if ($this->session->userdata('id_usuario')){
-			if ($this->session->userdata('permiso') == 'administrador'){
+			if ($this->session->userdata('permiso') == 'licencia'){
 				$this->configuracionModel->getHeader();
 				$this->load->view('licencia/alta');
 			} else {
@@ -403,13 +521,21 @@ class Usuario extends CI_Controller {
 		$empresa = $_POST['empresa'];
 		$diccionario = $_POST['diccionario'];
 		$dominio = $_POST['dominio'];
+		$usuario_administrador = $_POST['usuario_administrador'];
+		$correo_administrador = $_POST['correo_administrador'];
 		$data = array(
 			'licencia' => $licencia,
-			'empresa' => $empresa,
 			'diccionario' => $diccionario,
 			'estado' => 'Habilitado',
 			'dominio' => $dominio
 		);
-		echo $this->usuarioModel->licencia_bd_alta($data);
+		echo $this->usuarioModel->licencia_bd_alta($data, $empresa, $usuario_administrador, $correo_administrador);
+	}
+
+	public function guardar_empresas(){
+		$id_usuario = $_POST['id_usuario'];
+		$empresas = $_POST['empresas'];
+		log_message('error', $id_usuario.' - '.json_encode($empresas));
+		echo $this->usuarioModel->guardar_empresas($id_usuario, $empresas);
 	}
 }

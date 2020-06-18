@@ -28,30 +28,70 @@
 	    					<div class="error_color" id="error_licencia"></div>
 	    				</div>
 	    				<div class="col-md-6">
-	    					<label class="lab">Empresa</label>
-	    					<input type="text" class="form-control" placeholder="Empresa" name="empresa" id="empresa">
-	    					<div class="error_color" id="error_empresa		"></div>
+	    					<label class="lab">Dominio</label>
+	    					<input type="text" onblur="getBases()" class="form-control" placeholder="Dominio" name="dominio" id="dominio">
+	    					<div class="error_color" id="error_dominio"></div>
 	    				</div>
 	    			</div>
 	    			<div class="row">
 	    				<div class="col-md-6">
-	    					<label class="lab">Dominio</label>
-	    					<input type="text" class="form-control" placeholder="Dominio" name="dominio" id="dominio" >
-	    					<div class="error_color" id="error_licencia"></div>
+	    					<label class="lab">Diccionario</label>
+	    					<input type="text" onblur="getBases()" class="form-control" placeholder="Diccionario" name="diccionario" id="diccionario">
+	    					<div class="error_color" id="error_diccionario"></div>
 	    				</div>
 	    				<div class="col-md-6">
-	    					<label class="lab">Diccionario</label>
-	    					<input type="text" class="form-control" placeholder="Diccionario" name="diccionario" id="diccionario">
-	    					<div class="error_color" id="error_empresa		"></div>
+	    					<label class="lab">Empresa</label>
+	    					<select type="text" class="form-control select2" multiple="multiple" placeholder="Empresa" name="empresa" id="empresa">
+	    					</select>
+	    					<div class="error_color" id="error_empresa"></div>
 	    				</div>
 	    			</div>
-	    			
+	    			<div class="row">
+	    				<div class="col-md-6">
+	    					<label class="lab">Nombre Administrador</label>
+	    					<input type="text" class="form-control" placeholder="Administrador" name="usuario_administrador" id="usuario_administrador">
+	    					<div class="error_color" id="error_usuario_administrador"></div>
+	    				</div>
+	    				<div class="col-md-6">
+	    					<label class="lab">Correo Administrador</label>
+	    					<input type="text" class="form-control" placeholder="Correo administrador" name="correo_administrador" id="correo_administrador">
+	    					<div class="error_color" id="error_correo_administrador"></div>
+	    				</div>
+	    			</div>
 				</div>
 			</div>
 		</div>
 	</section>
 </div>
 <script type="text/javascript">
+	$('document').ready(function(){
+		$(".select2").select2();
+	});
+
+	function getBases(){
+		let dominio=  $('#dominio').val();
+		let diccionario=  $('#diccionario').val();
+		if (diccionario !='' && dominio!=''){
+			$.ajax({
+				url: dominio+"/api/get_bases",
+				type: "POST",
+				async: false, 
+				data:{diccionario:diccionario},
+				dataType: "json",
+				success: function(respuesta){
+					if(respuesta.length > 0) {
+						let opciones = '';
+						$("#empresa option").remove();
+						for (var i = 0; i < respuesta.length; i++) {
+							opciones +=`<option class="columna_consulta" value="${respuesta[i]['NombreBD']}">${respuesta[i]['NombreBD']}</option>`;	
+						}
+						$("#empresa").append("<option></option>"+opciones);
+					}
+				}
+			});		
+		}
+	}
+	
 
 	function guardar(){
 		var ok = true;
@@ -74,12 +114,22 @@
 		if(dominio == ""){
 			ok = false;
 			marcarError("dominio", "Campo obligatorio");
+		}
+		var usuario_administrador = $("#usuario_administrador").val();
+		if(usuario_administrador == ""){
+			ok = false;
+			marcarError("usuario_administrador", "Campo obligatorio");
+		}		
+		var correo_administrador = $("#correo_administrador").val();
+		if(correo_administrador == ""){
+			ok = false;
+			marcarError("correo_administrador", "Campo obligatorio");
 		}		
 		if(ok){
 			$.ajax({
 				type: "POST",
 				url: document.getElementById("base_url").value+"Usuario/licencia_bd_alta",
-				data:{licencia:licencia, empresa:empresa, diccionario:diccionario, dominio:dominio},
+				data:{licencia:licencia, empresa:empresa, diccionario:diccionario, dominio:dominio, usuario_administrador:usuario_administrador, correo_administrador:correo_administrador},
 				success: function (respuesta) {
 					if(respuesta == "OK"){
 						location.href = document.getElementById("base_url").value+"licencias";

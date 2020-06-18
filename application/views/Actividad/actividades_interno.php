@@ -5,10 +5,12 @@
           $array_colores = array("red", "blue", "green", "yellow");
           $contador = 0;
           $fecha_anterior = "";
-          foreach ($alertas as $fila) {
-            $mensaje_leido = "";
-            if($fila["leido"] != "1"){
-              $mensaje_leido = "Primera vez que se lee";
+          foreach ($actividades as $fila) {
+            $id_actividad = $fila['id_actividad'];
+            $estado = $fila['estado'];
+            $estadoSpan = '<span class="time"><small class="label pull-right bg-red">Pendiente</small></span>';
+            if ($estado == 'Realizado'){
+              $estadoSpan ='<span class="time"><small class="label pull-right bg-green">Realizado</small></span>';
             }
             if($fecha_anterior != $fila["fecha"]){
           ?>
@@ -26,11 +28,14 @@
               }
             }
             ?>  
-            <li title="<?php echo $mensaje_leido; ?>">
+            <li style="cursor: pointer" onclick="javascript:location.href='<?php echo base_url() ?>modificar-actividad?id=<?php echo $id_actividad ?>'">
               <i class="fa fa-bell bg-yellow"></i>
-              <div class="timeline-item">
+              <div class="timeline-item" <?php if($fila["leido"] == "1"){ ?> style="background-color:#f0f0f0;" <?php } ?>>
                 <span class="time"><i class="fa fa-clock-o"></i> <?php echo $fila["hora"]; ?></span>
-                <div class="timeline-header"><?php echo $fila["descripcion"]; ?></div>
+                <?php echo $estadoSpan ?>
+                <div class="timeline-header">
+                  <b><?php echo $fila["asunto"]; ?></b>
+                </div>
               </div>
             </li>        
           <?php 

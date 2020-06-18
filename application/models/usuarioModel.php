@@ -4,7 +4,6 @@ class UsuarioModel extends CI_Model{
 		parent::__construct();	
 	}
 
-
 	public function confirmar($data, $id, $fecha_confirmacion){
 		$this->db->where('fechaConfirmacion', $fecha_confirmacion);
 		$this->db->where('id_usuario', $id);
@@ -17,6 +16,19 @@ class UsuarioModel extends CI_Model{
 
 	}
 
+	public function getCorreoAdministrador($id_licencia){
+		$query = "select correo
+		from usuarios
+		where id_licencia = ? and permiso = 'administrador'";
+		$stmt = $this->db->query($query, array($id_licencia));
+		$administradores = $stmt->result_array();
+		$correos = "";
+		foreach ($administradores as $fila) {
+			$correos .= $fila["correo"]."***";
+		}
+		return $correos;
+	}
+
 	public function getUsuarioPorCorreo($correo){
 		$this->load->library('encrypt');
 		$query = "select * from usuarios  
@@ -27,7 +39,24 @@ class UsuarioModel extends CI_Model{
 			return $user;
 		} else {
 			return null;
-		} 			
+		}
+	}
+
+	public function empresasPorLicencia($id_licencia){
+		$query = "select empresas.* 
+		from empresas  
+		where id_licencia = ?";
+		$stmt = $this->db->query($query, array($id_licencia));
+		return $stmt->result_array();
+	}
+
+	public function empresasPorUsuario($id_usuario){
+		$query = "select empresas.* 
+		from empresas_usuarios  
+		inner join empresas on empresas.id_empresa = empresas_usuarios.id_empresa
+		where id_usuario = ?";
+		$stmt = $this->db->query($query, array($id_usuario));
+		return $stmt->result_array();
 	}
 
 	public function getUsuarioPorIdYFecha($id, $fecha_confirmacion){
@@ -40,7 +69,7 @@ class UsuarioModel extends CI_Model{
 	public function login($correo, $contra){
 		$this->load->library('encrypt');
 		$query = 
-		"select us.*, li.dominio, li.puerto, li.empresa, li.diccionario 
+		"select us.*, li.dominio, li.puerto, li.diccionario 
 		from tesis.usuarios us
 		left join tesis.licencias li on li.id_licencia = us.id_licencia
 		where correo = ?";
@@ -48,12 +77,16 @@ class UsuarioModel extends CI_Model{
 		if ($usuario->num_rows() > 0){
 			$user = $usuario->row();
 			$contraBd =$this->encrypt->decode($user->contrasena);
-			if ($contraBd == $contra){
+			if($contraBd == ""){
+				return "Debe cambiar su contraseña.";
+			}else if ($contraBd == $contra){
 				$user->contra = $contraBd;
 				return $user;
+			}else{
+				return 'Usuario/Contraseña incorrecta. Intente nuevamente';	
 			}
 		} else {
-			return null;
+			return 'Usuario/Contraseña incorrecta. Intente nuevamente';
 		} 
 	}
 
@@ -96,6 +129,16 @@ class UsuarioModel extends CI_Model{
 		    $this->db->trans_commit();
 		    return $id_usuario;
 		}
+	}
+
+	public function usuario_empresa_bd_alta($data){
+		$tm =$this->db->insert('empresas_usuarios',$data);
+		if(!$tm){
+    		$error = $this->db->error();
+    		$this->db->trans_rollback();
+    		return 'error';
+    	}
+		return $this->db->insert_id();
 	}
 
 	function validarLicencia($licencia){
@@ -184,14 +227,33 @@ class UsuarioModel extends CI_Model{
 	function getLicencias(){
 		$query = "select * from licencias";
 		$tm =  $this->db->query($query);
+		$registros = $tm->result('usuarioModel');
+		return $registros;
+	}	
+
+
+	function getEmpresasLicencia($id_licencia){
+		$query = "select * from empresas where id_licencia = $id_licencia";
+		$tm =  $this->db->query($query);
+		$registros = $tm->result_array();
+		return $registros;
+	}
+
+	function getEmpresasPorUsuario($id_usuario){
+		$query = "select * from empresas_usuarios where id_usuario = $id_usuario";
+		$tm =  $this->db->query($query);
 		$registros = $tm->result_array();
 		return $registros;
 	}	
 
-	function getUsuarios(){
-		$query = "select us.*, li.empresa from usuarios us left join licencias li on li.id_licencia = us.id_licencia ";
+	function getUsuarios($id_licencia){
+		$where= '';
+		if ($id_licencia != ''){
+			$where = " where us.id_licencia = $id_licencia";
+		}
+		$query = "select us.* from usuarios us left join licencias li on li.id_licencia = us.id_licencia $where";
 		$tm =  $this->db->query($query);
-		$registros = $tm->result_array();
+		$registros = $tm->result('usuarioModel');
 		return $registros;
 	}	
 
@@ -225,14 +287,143 @@ class UsuarioModel extends CI_Model{
 
 	}
 
-	function licencia_bd_alta($data){
+	function guardar_empresas($id_usuario, $empresas){
+		$query = "delete from empresas_usuarios where id_usuario = $id_usuario";
+		$tm =  $this->db->query($query);
+		for ($i=0; $i < count($empresas); $i++) { 
+			$empresa = $empresas[$i];
+			$dataUsuarioEmpresa = array(
+				'id_usuario' => $id_usuario,
+				'id_empresa' => $empresa
+			);
+    		$tm =$this->db->insert('empresas_usuarios',$dataUsuarioEmpresa);
+    	}
+    	echo 'OK';
+	}
+
+	function licencia_bd_alta($data, $empresas, $nombre, $correo_administrador){
 		$tm =$this->db->insert('licencias',$data);
 		if(!$tm){
     		$error = $this->db->error();
     		$this->db->trans_rollback();
     		return 'error';
     	}
+    	$id_licencia = $this->db->insert_id();
+    	$fecha = date('YmdHis');
+		$dataUsuario = array(
+			'nombre' => $nombre,
+			'correo' => $correo_administrador, 
+			'estado' => 'Habilitado', 
+			'permiso' => 'administrador', 
+			'contrasena' => '',
+			'id_licencia' => $id_licencia,
+			'menu_fijo' => 'no',
+			'confirmado' => 'si',
+			'menu_color' => 'blue',
+			'fechaConfirmacion' => $fecha
+		);
+
+		$id_usuario = $this->usuarioModel->usuario_bd_alta($dataUsuario);
+    	for ($i=0; $i < count($empresas); $i++) { 
+    		$dataEmpresa = array(
+				'id_licencia' => $id_licencia,
+				'empresa' => $empresas[$i]
+			);
+    		$tm =$this->db->insert('empresas', $dataEmpresa);
+    		$id_empresa = $this->db->insert_id();	
+
+			$dataUsuarioEmpresa = array(
+				'id_usuario' => $id_usuario,
+				'id_empresa' => $id_empresa
+			);
+    		$tm =$this->db->insert('empresas_usuarios',$dataUsuarioEmpresa);
+    		$id_empresa = $this->db->insert_id();	    		
+
+    	}
+    	$id_usuario = encrypt_url($id_usuario);
+		$fecha = encrypt_url($fecha);
+
+		$body = 
+			'<div id=":q0" class="a3s aXjCH ">
+				<u></u>
+				<div style="margin:0;padding:0">
+					<table width="100%" cellpadding="0" cellspacing="0" style="padding:0;margin:0">
+					  	<tbody>
+						    <tr>
+						      <td bgcolor="#3c8dbc" style="font-size:0"><span></span></td>
+						      	<td bgcolor="#3c8dbc" valign="middle" align="center" style="width:640px">
+							        <table cellpadding="0" cellspacing="0" style="padding:0;margin:0">
+							            <tbody>
+								            <tr>
+								              	<td style="padding-bottom:47px">
+								              	</td>
+								            </tr>
+							          	</tbody>
+							        </table>
+						      	</td>
+						      	<td bgcolor="#3c8dbc" style="font-size:0"><span></span></td>
+						    </tr>
+						    <tr>
+						      	<td bgcolor="#3c8dbc" valign="top" align="left" style="font-size:0;vertical-align:top">
+						            <table width="100%" cellpadding="0" cellspacing="0" style="padding:0;margin:0;background-color:#3c8dbc">
+						              	<tbody>
+							              	<tr>
+							                  <td id="m_164980699160561934side-bg" height="256" style="min-width:10px">
+							                      <span></span>
+							                  </td>
+							              	</tr>
+						            	</tbody>
+						            </table>
+						      	</td>
+
+						      	<td bgcolor="#3c8dbc" valign="top" align="left" style="width:640px;padding-bottom:47px" id="m_164980699160561934content-block">
+							        <table width="100%" bgcolor="#FFFFFF" cellpadding="0" cellspacing="0" style="padding:0;margin:0;border:0">
+							            <tbody>
+							              	<tr>
+							                	<td style="border:1px solid #e5e5e5;padding:7.4% 9.8% 6.4% 9.8%" id="m_164980699160561934main-pad">
+							                    
+								                    <img width="100px" src="www.grupotesys.com.ar/tickets/plugin/imagenes/logo.png">
+								                    <h1 style="font-family:Helvetica,Arial,sans-serif;font-size:24px;line-height:32px;color:#333333;padding:0;margin:0 0 31px 0;font-weight:400;text-align:left"><span class="il">SIMPLAPP</span>
+								                    </h1>
+
+								                    <p style="font-family:Helvetica,Arial,sans-serif;font-size:16px;line-height:20px;color:#333333;padding:0;margin:0 0 20px 0;text-align:left">
+								                      Hola '.$nombre.'. Por favor, utilice el siguiente boton para restablecer su Contraseña.
+								                    </p>
+
+								                   	<table cellpadding="0" cellspacing="0" style="padding:0;margin:0;border:0;width:213px">
+								                        <tbody>
+									                        <tr>
+									                          <td id="m_164980699160561934bottom-button-bg" valign="top" align="center" style="border-radius:3px;padding:12px 20px 16px 20px;background-color:#3c8dbc">
+									                              <a id="m_164980699160561934bottom-button" href="'.base_url().'restablecer?id='.$id_usuario.'&fecha='.$fecha.'" style="font-family:Helvetica,Arial,sans-serif;font-size:16px;color:#ffffff;background-color:#3c8dbc;border-radius:3px;text-align:center;text-decoration:none;display:block;margin:0" target="_blank"  >
+									                                Restablecer contraseña
+									                              </a>
+									                          </td>
+									                        </tr>
+								                    	</tbody>
+								                  	</table>
+								                </td> 	
+							              	</tr>
+							          	</tbody>
+							        </table>
+						      	</td>
+
+							    <td bgcolor="#3c8dbc" valign="top" align="left" style="font-size:0;vertical-align:top">
+						            <table width="100%" cellpadding="0" cellspacing="0" style="padding:0;margin:0;background-color:#3c8dbc">
+						              	<tbody>
+							              	<tr>
+							                  <td id="m_164980699160561934side-bg" height="256" style="min-width:10px">
+							                      <span></span>
+							                  </td>
+							              	</tr>
+						            	</tbody>
+						            </table>
+							    </td>
+						  	</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>';
+		$this->correoModel->enviarCorreo('Restablecer Contraseña', $body, $correo_administrador, '');
     	return 'OK';
 	}
 }
-

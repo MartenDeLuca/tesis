@@ -5,25 +5,44 @@ class ReglaModel extends CI_Model{
 		$this->sqlserver = $this->load->database('sqlsrv',TRUE);
 	}
 
-	function getReglas(){
-		$id_usuario = $this->session->userdata('id_usuario');
+	function getUsuariosParaSelect(){
 		$id_licencia = $this->session->userdata('id_licencia');
-		$sql = "select *, DATE_FORMAT(fecha, '%d/%m/%Y %T') fecha2 from reglas where id_licencia = ? and id_usuario = ?";
-		$stmt = $this->db->query($sql, array($id_licencia, $id_usuario));
+		$sql = "select id_usuario, nombre, correo from usuarios where id_licencia = ?";
+		$stmt = $this->db->query($sql, array($id_licencia));
+		$array_usuarios = $stmt->result_array();
+		return $array_usuarios;
+	}	
+
+	function getReglas(){
+		$id_empresa = $this->session->userdata('id_empresa');
+		$sql = "select *, DATE_FORMAT(fecha, '%d/%m/%Y %T') fecha2 from reglas where id_empresa = ?";
+		$stmt = $this->db->query($sql, array($id_empresa));
 		$reglas = $stmt->result_array();
 		return $reglas;
 	}
 
-	function getReglaPorId($id_regla, $ejecucion = ''){
+	function getReglaPorId($id_regla, $where_empresa, $ejecucion){
 		$sql_select = 
 		"select * 
 		from reglas
 		inner join reglas_accion on reglas.id_regla = reglas_accion.id_regla 
-		where reglas.id_regla = ?";
+		where reglas.id_regla = ? $where_empresa";
 		$stmt = $this->db->query($sql_select, array($id_regla));
 		$data = $stmt->result_array();		
 		if(count($data) > 0){
 			$data = $data[0];
+			$intervalo = $data["intervalo"];
+			$tipoIntervalo = $data["tipoIntervalo"];
+			if ($tipoIntervalo == "Horas"){
+				$intervalo = $intervalo / 60;
+			} else if ($tipoIntervalo == "Dias"){
+				$intervalo = $intervalo / 60 / 24;
+			} else if ($tipoIntervalo == "Semanas"){
+				$intervalo = $intervalo / 60 / 24 / 7;
+			} else if ($tipoIntervalo == "Meses"){
+				$intervalo = $intervalo / 60 / 24 / 30;
+			}
+			$data["intervalo"] = $intervalo;
 			$data["id_regla"] = $id_regla;
 
 			$consulta = "";
@@ -52,17 +71,17 @@ class ReglaModel extends CI_Model{
 			$adjuntos = $stmt->result_array();
 			$data["adjuntos"] = $adjuntos;
 
-			$descripcion_alerta = "";
+			$descripcion_actividad = "";
 			$sql_select = 
 			"select consulta 
 			from reglas_contenido
-			where id_regla = ? and relacionado = 'Alerta'";
+			where id_regla = ? and relacionado = 'Actividad'";
 			$stmt = $this->db->query($sql_select, array($id_regla));
-			$alertas = $stmt->result_array();
-			foreach ($alertas as $fila) {
-				$descripcion_alerta .= $fila["consulta"];
+			$actividades = $stmt->result_array();
+			foreach ($actividades as $fila) {
+				$descripcion_actividad .= $fila["consulta"];
 			}		
-			$data["descripcion_alerta"] = $descripcion_alerta;
+			$data["descripcion_actividad"] = $descripcion_actividad;
 
 			$contenido_mail = "";
 			$sql_select = 
@@ -80,56 +99,61 @@ class ReglaModel extends CI_Model{
 	}
 
 	function getReglasPorIdRegla($id_regla){
+		$id_empresa = $this->session->userdata('id_empresa');
 		$id_usuario = $this->session->userdata('id_usuario');
 
 		$sql = "select reglas.asunto
 		from reglas
-		where reglas.id_regla = ? and id_usuario = ?";
-		$stmt = $this->db->query($sql, array($id_regla, $id_usuario));		
+		where reglas.id_regla = ? and id_empresa = ?";
+		$stmt = $this->db->query($sql, array($id_regla, $id_empresa));
 		$reglas = $stmt->result_array();
 		$data = array();
 		if(count($reglas) > 0){
 			$data["asunto"] = $reglas[0]["asunto"];
 
-			$sql = "select alertas.descripcion, DATE_FORMAT(alertas.fecha, '%d/%m/%Y') fecha, DATE_FORMAT(alertas.fecha, '%T') hora, alertas.leido
+			$sql = "select DATE_FORMAT(actividades.fecha, '%d/%m/%Y') fecha, DATE_FORMAT(actividades.fecha, '%T') hora, actividades.asunto, actividades.estado, actividades.id_actividad, ifnull(actividades_asociacion.leido, 0) leido
 			from reglas 
-			inner join alertas on reglas.id_regla = alertas.id_regla 
-			where reglas.id_regla = ? and id_usuario = ?
-			order by alertas.fecha desc";
-			$stmt = $this->db->query($sql, array($id_regla, $id_usuario));
-			$data["alertas"] = $stmt->result_array();
+			inner join actividades on reglas.id_regla = actividades.id_regla 
+			inner join actividades_asociacion on actividades.id_actividad = actividades_asociacion.id_actividad
+			where reglas.id_regla = ?
+			order by actividades.fecha desc";
+			$stmt = $this->db->query($sql, array($id_regla));
+			$data["actividades"] = $stmt->result_array();
 
 			$sql = "select mails.*, DATE_FORMAT(mails.fecha, '%d/%m/%Y %T') fecha2
 			from reglas 
 			inner join mails on reglas.id_regla = mails.id_regla 
-			where reglas.id_regla = ? and id_usuario = ?
+			where reglas.id_regla = ?
 			order by mails.id_mail desc";
-			$stmt = $this->db->query($sql, array($id_regla, $id_usuario));
+			$stmt = $this->db->query($sql, array($id_regla));
 			$data["mails"] = $stmt->result_array();
 		}
 		return $data;
 	}
 
 	function getCorreoPorIdCorreo($id_correo){
+		$id_empresa = $this->session->userdata('id_empresa');
 		$data =array();
 		//faltan los adjuntos
 		$sql = "select mails.*, reglas.asunto as reglaAsunto 
-			from mails 
-			inner join reglas on reglas.id_regla = mails.id_regla 
-			where mails.id_mail = $id_correo";
-			$stmt = $this->db->query($sql);
-		$data['correo']= $stmt->result_array()[0];
+		from mails 
+		inner join reglas on reglas.id_regla = mails.id_regla 
+		where mails.id_mail = '$id_correo' and reglas.id_empresa = '$id_empresa'";
+		$stmt = $this->db->query($sql);
+		$correos = $stmt->result_array();
+		if(count($correos) > 0){
+			$data['correo'] = $correos[0];	
+		}
 
 		$sql = "select * from mails_leidos
 			where id_correo = $id_correo";
 		$stmt = $this->db->query($sql);
 		$leidos =$stmt->result_array();
 		$data['leidos'] = array();
-		if (count($leidos)){
-			$data['leidos']= $leidos; 	
+		if (count($leidos) > 0){
+			$data['leidos'] = $leidos;
 		}
 		
-
 		$sql_select = "select contenido from mails_contenido where id_mail = $id_correo";
 		$stmt = $this->db->query($sql_select);
 		$consultas_externas = $stmt->result_array();
@@ -187,16 +211,16 @@ class ReglaModel extends CI_Model{
 
 	function regla_bd(
 		$instancia, $id_regla, 
-		$asunto, $intervalo, $accion, $estado, 
+		$asunto, $intervalo, $accion, $estado, $fechaInicio, $fechaExpiracion , $tipoIntervalo,
 		$consulta, 
 		$correo, $contrasena, $puerto, $host, $certificado_ssl, $destinatario_fijos, $destinatario_columnas, $asunto_mail, $contenido_mail,
-		$tipo_alerta, $descripcion_alerta, $fechaInicio, $fechaExpiracion 
+		$asunto_actividad, $descripcion_actividad, $asignados_actividad, $cliente, $contacto
 	){
 		$this->db->trans_begin();
-		$id_usuario = $this->session->userdata('id_usuario');
-		$id_licencia = $this->session->userdata('id_licencia');
+		$id_empresa = $this->session->userdata('id_empresa');
 		//encabezado
-		$objeto = array("asunto" => $asunto, "intervalo" => $intervalo, "fecha" => $fechaInicio, "accion" => $accion, "estado" => $estado, "id_usuario" => $id_usuario, "id_licencia" => $id_licencia,"fechaExpiracion" => $fechaExpiracion,"fechaInicio" => $fechaInicio);
+		$objeto = array("asunto" => $asunto, "intervalo" => $intervalo, "fecha" => $fechaInicio, "accion" => $accion, "estado" => $estado, "id_empresa" => $id_empresa,"fechaExpiracion" => $fechaExpiracion,"fechaInicio" => $fechaInicio, "tipoIntervalo" => $tipoIntervalo);
+
 		if($instancia == "Agregar"){
 			//inserto a la regla
 			$tm = $this->db->insert("reglas", $objeto);
@@ -261,9 +285,9 @@ class ReglaModel extends CI_Model{
 		//correo
 		$tm = $this->db->query(
 		"INSERT INTO reglas_accion 
-		(id_regla, correo, contra, puerto, host, destinatario_columnas, destinatario_fijos, asunto_mail, tipo_alerta) 
+		(id_regla, correo, contra, puerto, host, destinatario_columnas, destinatario_fijos, asunto_mail, asunto_actividad, cliente, contacto, asignados_actividad) 
 		VALUES 
-		(?, ?, ?, ?, ?, ?, ?, ?, ?)", array($id_regla, $correo, $contrasena, $puerto, $host, $destinatario_columnas, $destinatario_fijos, $asunto_mail, $tipo_alerta));
+		(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", array($id_regla, $correo, $contrasena, $puerto, $host, $destinatario_columnas, $destinatario_fijos, $asunto_mail, $asunto_actividad, $cliente, $contacto, $asignados_actividad));
 		if(!$tm){
     		$error = $this->db->error();
     		$this->db->trans_rollback();
@@ -285,20 +309,20 @@ class ReglaModel extends CI_Model{
 	    	$contenido_mail = substr($contenido_mail, 8000);
     	} 	
 
-    	//alerta
-    	while(!empty($descripcion_alerta)) {
-    		$descripcion_aux = substr($descripcion_alerta, 0, 8000);
+    	//actividad
+    	while(!empty($descripcion_actividad)) {
+    		$descripcion_aux = substr($descripcion_actividad, 0, 8000);
     		$tm = $this->db->query(
 			"INSERT INTO reglas_contenido 
 			(id_regla, consulta, relacionado) 
 			VALUES 
-			(?, ?, 'Alerta')", array($id_regla, $descripcion_aux));
+			(?, ?, 'Actividad')", array($id_regla, $descripcion_aux));
 			if(!$tm){
 	    		$error = $this->db->error();
 	    		$this->db->trans_rollback();
 	    		return array($error['message']);
 	    	}
-	    	$descripcion_alerta = substr($descripcion_alerta, 8000);
+	    	$descripcion_actividad = substr($descripcion_actividad, 8000);
     	}
 
 		if ($this->db->trans_status() === FALSE){
@@ -421,12 +445,20 @@ class ReglaModel extends CI_Model{
         FROM reglas
         WHERE
 	    (TIMESTAMPDIFF(MINUTE, fecha, NOW()) = 0 or TIMESTAMPDIFF(MINUTE, fecha, NOW()) > 60) 
-	    AND IFNULL(estado, '') <> 'Pausada'";
+	    AND IFNULL(estado, '') <> 'Pausada' 
+	    AND
+		    DATEDIFF(
+		    (CASE WHEN IFNULL(fechaInicio, NOW()) = '1969-12-31 09:00:00' THEN NOW() ELSE fechaInicio END), NOW()
+		    ) <= 0
+	    AND 
+		    DATEDIFF(
+		    (CASE WHEN IFNULL(fechaExpiracion, NOW()) = '1969-12-31 09:00:00' THEN NOW() ELSE fechaExpiracion END), NOW()
+		    ) >= 0";
 		$stmt = $this->db->query($sql);
 		return $stmt->result_array();
 	}
 
-	function ejecucion_regla_negocio($id_regla){		
+	function ejecucion_regla_negocio($id_regla){
 		$consulta = "";
 		$asunto = ""; 
 		$intervalo = "1000"; 
@@ -442,13 +474,17 @@ class ReglaModel extends CI_Model{
 		$asunto_mail = ""; 
 		$contenido_mail = ""; 
 		$adjuntos = ""; 
-		$tipo_alerta = ""; 
-		$descripcion_alerta = ""; 
+		$asunto_actividad = ""; 
+		$descripcion_actividad = "";
+		$asignados_actividad = "";
 
 		/* TOMO LAS REGLAS DE NEGOCIO CON SUS RESPECTIVOS DATOS*/
-		$data = $this->getReglaPorId($id_regla, '1');		
+		$data = $this->getReglaPorId($id_regla, '', '1');		
 		if(count($data) > 0){
-			$id_licencia = $data["id_licencia"];
+			$id_empresa = $data["id_empresa"];
+			$cliente = $data["cliente"];
+			$cliente_mail = $data["cliente_mail"];
+			$contacto = $data["contacto"];
 			$asunto = $data["asunto"];
 			$intervalo = $data["intervalo"];
 			$accion = $data["accion"]; 
@@ -465,23 +501,28 @@ class ReglaModel extends CI_Model{
 			$asunto_mail = $data["asunto_mail"];
 			$contenido_mail = $data["contenido_mail"];
 			$adjuntos = $data["adjuntos"];		
-			$tipo_alerta = $data["tipo_alerta"];
-			$descripcion_alerta = $data["descripcion_alerta"];
+			$asunto_actividad = $data["asunto_actividad"];
+			$descripcion_actividad = $data["descripcion_actividad"];
+			$asignados_actividad = $data["asignados_actividad"];
 
 			$asunto_mail_fijo = $asunto_mail;
 			$contenido_mail_fijo = $contenido_mail;
-			$descripcion_alerta_fijo = $descripcion_alerta;
+			$descripcion_actividad_fijo = $descripcion_actividad;
+			$asignados_actividad_fijo = $asignados_actividad;
 			$destinatarios_columnas_fijo = $destinatarios_columnas;
 			if(!empty($consulta)){
 				$dominio = "";
+				$empresa = "";
 				$sql = 
-			    "SELECT dominio
+			    "SELECT licencias.dominio, empresas.empresa
 		        FROM licencias
-		        WHERE id_licencia = ?";
-				$stmt = $this->db->query($sql, array($id_licencia));
+		        INNER JOIN empresas on licencias.id_licencia = empresas.id_licencia
+		        WHERE empresas.id_empresa = ?";
+				$stmt = $this->db->query($sql, array($id_empresa));
 				$licencias = $stmt->result_array();
 				foreach ($licencias as $licencia) {
 					$dominio = $licencia["dominio"];
+					$empresa = $licencia["empresa"];
 				}
 
 				$sql_columnas = json_decode($this->verificar_consulta($consulta, "0", $dominio),true);
@@ -491,28 +532,58 @@ class ReglaModel extends CI_Model{
 					foreach($sql_columnas as $sql_columna){
 						$asunto_mail = $asunto_mail_fijo;
 						$contenido_mail = $contenido_mail_fijo;
-						$descripcion_alerta = $descripcion_alerta_fijo;
+						$descripcion_actividad = $descripcion_actividad_fijo;
+						$asignados_actividad = $asignados_actividad_fijo;
 						$destinatarios_columnas = $destinatarios_columnas_fijo;
 
 						/*modifico el email_contenido y email_asunto para obtener los valores de verdad */
 						for($i = 0; $i < $cantidad_key; $i++){
 							$asunto_mail = str_replace("[^*COLUMNA_".$keys[$i]."^*]", $sql_columna[$keys[$i]], $asunto_mail);
 							$contenido_mail = str_replace("[^*COLUMNA_".$keys[$i]."^*]", $sql_columna[$keys[$i]], $contenido_mail);
-							$descripcion_alerta = str_replace("[^*COLUMNA_".$keys[$i]."^*]", $sql_columna[$keys[$i]], $descripcion_alerta);
+							$descripcion_actividad = str_replace("[^*COLUMNA_".$keys[$i]."^*]", $sql_columna[$keys[$i]], $descripcion_actividad);
+							$asunto_actividad = str_replace("[^*COLUMNA_".$keys[$i]."^*]", $sql_columna[$keys[$i]], $asunto_actividad);
+							$cliente = str_replace("[^*COLUMNA_".$keys[$i]."^*]", $sql_columna[$keys[$i]], $cliente);
+							$contacto = str_replace("[^*COLUMNA_".$keys[$i]."^*]", $sql_columna[$keys[$i]], $contacto);
 							$destinatarios_columnas = str_replace("[^*COLUMNA_".$keys[$i]."^*]", $sql_columna[$keys[$i]], $destinatarios_columnas);
 						}
+						if(strpos($accion, "Actividad") !== false){
+							if(!empty($descripcion_actividad)){
+								$nombre_cliente = "";
+								$nombre_contacto = "";
+								$array_cliente = json_decode($this->seguimientoModel->seleccionarCliente($cliente, $empresa, $dominio), true);
+								if(count($array_cliente) > 0){
+									$nombre_cliente = $array_contacto[0]["cliente"];
 
-						if(strpos($accion, "Alerta") !== false){
-							if(!empty($descripcion_alerta)){
-								$tm = $this->db->query(
-								"INSERT INTO alertas 
-								(id_regla, descripcion, tipo, fecha) 
-								VALUES 
-								(?, ?, ?, NOW())", array($id_regla, $descripcion_alerta, $tipo_alerta));
-								if(!$tm){
-						    		$error = $this->db->error();
-						    		return $error['message'];
-						    	}
+									$array_contacto = json_decode($this->seguimientoModel->seleccionarContacto($contacto, $cliente, $empresa, $dominio), true);
+									if(count($array_contacto) > 0){
+										$nombre_contacto = $array_contacto[0]["contacto"];
+									}else{
+										$id_contacto = "";
+									}
+									
+									$tm = $this->db->query(
+									"INSERT INTO actividades 
+									(id_regla, descripcion, asunto, estado, fecha, id_contacto, contacto, id_cliente, cliente, id_empresa) 
+									VALUES 
+									(?, ?, ?, 'Pendiente', NOW(), ?, ?, ?, ?, ?)", array($id_regla, $descripcion_actividad, $asunto_actividad, $contacto, $nombre_contacto, $cliente, $nombre_cliente, $id_empresa));
+									if(!$tm){
+							    		$error = $this->db->error();
+							    		return $error['message'];
+							    	}
+							    	$id_actividad = $this->db->insert_id();
+
+							    	if(!empty($asignados_actividad)){
+							    		$asignados_actividad = explode("***", $asignados_actividad);
+							    		foreach ($asignados_actividad as $fila) {
+								    		$this->asociacion_actividad($id_actividad, $fila);
+								    	}
+							    	}else{
+							    		$asignados_actividad = $this->getUsuariosParaSelect();
+							    		foreach ($asignados_actividad as $fila) {
+								    		$this->asociacion_actividad($id_actividad, $fila["id_usuario"]);
+								    	}
+							    	}
+								}
 							}
 						}
 						if(strpos($accion, "Correo") !== false){
@@ -534,7 +605,13 @@ class ReglaModel extends CI_Model{
 									}
 									$destinatarios .= $destinatarios_fijos;
 								}
-								$id_correo_bd =$this->reglaModel->guardarMail($id_regla, $destinatarios, $asunto_mail,$contenido_mail);
+								$nombre_cliente_mail = "";
+								$array_cliente = json_decode($this->seguimientoModel->seleccionarCliente($cliente_mail, $empresa, $dominio), true);
+								if(count($array_cliente) > 0){
+									$nombre_cliente_mail = $array_contacto[0]["cliente"];
+								}
+
+								$id_correo_bd = $this->reglaModel->guardarMail($id_regla, $id_empresa, $cliente_mail, $nombre_cliente_mail, $destinatarios, $asunto_mail, $contenido_mail);
 								if(!empty($destinatarios)){
 									$post['id_regla'] = $id_regla;
 									$post['puerto'] = $puerto;
@@ -578,8 +655,6 @@ class ReglaModel extends CI_Model{
 				}
 			}
 
-		
-
 			$tm = $this->db->query("UPDATE REGLAS
 				SET fecha = DATE_ADD(NOW(), INTERVAL $intervalo MINUTE)
 				WHERE id_regla = '$id_regla'");
@@ -587,7 +662,7 @@ class ReglaModel extends CI_Model{
 	    		$error = $this->db->error();
 	    		$this->db->trans_rollback();
 	    		return $error['message'];
-	    	}	
+	    	}
 
 	    	$tm = $this->db->query("update reglas set estado='Pausada' where fecha > fechaExpiracion and estado <>'Pausada'");
 			if(!$tm){
@@ -609,7 +684,7 @@ class ReglaModel extends CI_Model{
 		}
 	}
 
-	function guardarMail($id_regla, $destinatarios, $asunto,  $contenido,$mail =''){
+	function guardarMail($id_regla, $id_empresa, $id_cliente, $cliente, $destinatarios, $asunto, $contenido, $mail = ''){
 		$uid_mail ='';
 		if ($uid_mail != ''){
 			$uid_mail = $mail->getMensajeId();	
@@ -617,9 +692,9 @@ class ReglaModel extends CI_Model{
 		$destinatarios = str_replace(";", "; ", $destinatarios);
 		$tm = $this->db->query(
 		"INSERT INTO mails 
-		(id_regla, destinatarios, asunto, uid_mail, fecha) 
+		(id_regla, id_empresa, destinatarios, asunto, uid_mail, id_cliente, cliente, fecha) 
 		VALUES 
-		(?, ?, ?, ?, NOW())", array($id_regla, $destinatarios, $asunto, $uid_mail));
+		(?, ?, ?, ?, ?, ?, ?, NOW())", array($id_regla, $id_empresa, $destinatarios, $asunto, $uid_mail, $id_cliente, $cliente));
 		if(!$tm){
     		$error = $this->db->error();
     		return $error['message'];
@@ -643,28 +718,32 @@ class ReglaModel extends CI_Model{
     	return $id_mail;
 	}
 
-	function getAlertas(){
+	function getActividades(){
 		$id_usuario = $this->session->userdata('id_usuario');
+		$id_empresa = $this->session->userdata('id_empresa');
 
-		$sql = "select alertas.descripcion, DATE_FORMAT(alertas.fecha, '%d/%m/%Y') fecha, DATE_FORMAT(alertas.fecha, '%T') hora, alertas.leido
+		$sql = "select DATE_FORMAT(actividades.fecha, '%d/%m/%Y') fecha, DATE_FORMAT(actividades.fecha, '%T') hora, actividades.asunto, actividades.estado, actividades.id_actividad, ifnull(actividades_asociacion.leido, 0) leido
 		from reglas 
-		inner join alertas on reglas.id_regla = alertas.id_regla 
-		where id_usuario = ? and tipo = 'Notificación'
-		order by alertas.fecha desc";
-		$stmt = $this->db->query($sql, array($id_usuario));
-		
-		//marco a todos como leido
-		$tm = $this->db->query(
-		"UPDATE alertas
-		INNER JOIN reglas ON reglas.id_regla = alertas.id_regla 
-		SET leido = '1'
-		WHERE id_usuario = ?", array($id_usuario));
+		inner join actividades on reglas.id_regla = actividades.id_regla 
+		inner join actividades_asociacion on actividades.id_actividad = actividades_asociacion.id_actividad
+		where actividades_asociacion.id_usuario = ? and reglas.id_empresa = ?
+		order by actividades.fecha desc";
+		$stmt = $this->db->query($sql, array($id_usuario, $id_empresa));
 		
 		return $stmt->result_array();
 	}
 
+	function asociacion_actividad($id_actividad, $id_usuario){
+		$tm = $this->db->query(
+		"INSERT INTO actividades_asociacion 
+		(id_actividad, id_usuario) 
+		VALUES 
+		(?, ?)", array($id_actividad, $id_usuario));
+		return $tm;
+	}
+
 	//FUNCIONES QUE VIENEN DE SQL SERVER	
-	function verificar_consulta($consulta, $columnas, $dominio){		
+	function verificar_consulta($consulta, $columnas, $dominio){
 		$curl = curl_init();		
 		$url = $dominio."/api/verificar_consulta";
 		curl_setopt($curl, CURLOPT_URL, $url);

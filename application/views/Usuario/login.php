@@ -16,13 +16,17 @@
     </div>
     <div class="login-box-body" style="border-radius: 10px;">
         <input type="hidden" name="enviar_form" id="enviar_form" value="1">
-        <div class="form-group has-feedback">
+        <div class="form-group has-feedback  campos_generales">
           <input style="border-radius: 10px;" type="text" class="form-control" name="correo" id="correo" placeholder="Correo" required="required">
           <span class="glyphicon  glyphicon-envelope form-control-feedback"></span>
         </div>
-        <div class="form-group has-feedback">
+        <div class="form-group has-feedback campos_generales">
           <input style="border-radius: 10px;" type="password" class="form-control" id="password" name="password" placeholder="Contraseña" required="required">
           <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+        </div>
+        <div class="form-group has-feedback empresas" style="display: none;">
+          <select style="border-radius: 10px;" class="form-control" id="empresa" name="empresa" placeholder="Empresa" required="required">            
+          </select>
         </div>
         <div class="row">
           <div class="alert alert-danger" id="error" style="display: none; margin-left: 15px; margin-right: 15px; padding-left: 0px !important; padding-right: 0px !important;">
@@ -35,10 +39,10 @@
             <div align='center' id="texto_error"><?php echo $this->session->flashdata('error-alerta') ?></div>
            </div>
         </div>
-      <?php } ?>
+        <?php } ?>
         <div class="row">
           <div class="col-xs-12">
-            <button style="width: 100%" onclick="login()" class="btn btn-primary">Ingresar</button>
+            <button style="width: 100%" id="boton_ingresar" onclick="login()" class="btn btn-primary">Ingresar</button>
           </div>
         </div>
          <div class="row">
@@ -132,12 +136,35 @@
       }).done(function(respuesta){
         if (respuesta['mensaje'] == 'OK'){
           window.location = "<?php echo base_url() ?>tablero";
-        } else {
+        } else if (respuesta['mensaje'] == 'empresas'){
+          $(".campos_generales").remove();
+          $(".empresas").show();
+          $("#empresa").append(respuesta['empresas']);
+          $("#boton_ingresar").attr("onclick","empresas()");
+        } else if (respuesta['mensaje'] == 'error'){
           $("#error").css('display', 'block');  
           $("#texto_error").text(respuesta['error']);  
         }
       })  
     }
+  }
+
+  function empresas(){
+    let id_empresa = $('#empresa').val();
+    let empresa = $('#empresa option:selected').text();
+    $.ajax({
+      url:'<?php echo base_url() ?>usuario/empresas',
+      type: 'POST',
+      dataType: "json",
+      data: {id_empresa, empresa},
+    }).done(function(respuesta){
+      if (respuesta['mensaje'] == 'OK'){
+        window.location = "<?php echo base_url() ?>tablero";
+      }else if (respuesta['mensaje'] == 'error'){
+        $("#error").css('display', 'block');  
+        $("#texto_error").text(respuesta['error']);  
+      }
+    });
   }
 
   function modalRecupero(){

@@ -10,6 +10,10 @@ a{
     cursor: pointer;
 }
 
+input[type="text"]:disabled, select:disabled, input[readonly], select[readonly] {
+  background: white !important;
+}
+
 .node-checked{
     background: #3c8dbc !important;
     color: white !important;

@@ -24,7 +24,7 @@
 							<tr>
 								<th></th>
 								<th>Asunto</th>
-								<th>Intervalo (Min)</th>
+								<th>Intervalo</th>
 								<th>Próxima ejecución</th>
 								<th>Acción</th>
 								<th>Estado</th>
@@ -33,11 +33,23 @@
 						<tbody>
 							<?php 
 							foreach ($reglas as $fila) {
+								$intervalo = $fila["intervalo"];
+								$tipoIntervalo = $fila["tipoIntervalo"];
+								if ($tipoIntervalo == "Horas"){
+									$intervalo = $intervalo / 60;
+								} else if ($tipoIntervalo == "Dias"){
+									$intervalo = $intervalo / 60 / 24;
+								} else if ($tipoIntervalo == "Semanas"){
+									$intervalo = $intervalo / 60 / 24 / 7;
+								} else if ($tipoIntervalo == "Meses"){
+									$intervalo = $intervalo / 60 / 24 / 30;
+								}
+								$intervalo = $intervalo.' '.$tipoIntervalo;
 							?>
 							<tr>
 								<td><a onclick="eliminarFila(this, <?php echo $fila["id_regla"]; ?>)"><span class="glyphicon glyphicon-trash"></span></a>&nbsp;&nbsp;&nbsp; <a href="<?php echo base_url(); ?>modificar-regla?id=<?php echo $fila["id_regla"]; ?>"><span class="glyphicon glyphicon-pencil"></span></a></td>
 								<td><a href="<?php echo base_url(); ?>detalle-regla?id=<?php echo $fila["id_regla"]; ?>"><?php echo $fila["asunto"]; ?></a></td>
-								<td><?php echo $fila["intervalo"]; ?></td>
+								<td><?php echo $intervalo ?></td>
 								<td><?php echo $fila["fecha2"]; ?></td>
 								<td><?php echo $fila["accion"]; ?></td>
 								<td><?php echo $fila["estado"]; ?></td>

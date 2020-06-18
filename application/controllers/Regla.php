@@ -18,11 +18,21 @@ class Regla extends CI_Controller {
 
 	public function agregar_regla(){
 		if ($this->session->userdata('id_usuario')){
-			$data = array("id_regla" => "", "asunto" => "", "intervalo" => "", "accion" => "Correo y Alerta", "estado" => "", "tipo_consulta" => "", "consulta" => "", 
+			$data = array("id_regla" => "", "asunto" => "", "intervalo" => "", "accion" => "Correo y Actividad", "estado" => "", "tipo_consulta" => "", "consulta" => "", 
 			"correo" => "", "contrasena" => "", "puerto" => "", "host" => "", "destinatarios_columnas" => "",
 			"destinatarios_fijos" => "", "atributos" => "", "asunto_mail" => "", "contenido_mail" => "", 
-			"adjuntos" => array(), "tipo_alerta" => "", "descripcion_alerta" => "","fechaInicio" =>'',"fechaExpiracion" =>'');
-			$data["array_usuarios"] = $this->usuarioModel->getUsuariosSelectSoloCorreo();
+			"adjuntos" => array(), "asunto_actividad" => "", "descripcion_actividad" => "","fechaInicio" =>'',"fechaExpiracion" =>'', 'tipoIntervalo' =>'', "asignados_actividad" => "");
+			$array_usuarios = $this->reglaModel->getUsuariosParaSelect();
+			$opciones_usuario = "<option></option>";
+			foreach ($array_usuarios as $fila_usuario) {
+				$opciones_usuario .= "<option value='".$fila_usuario["correo"]."'>".$fila_usuario["correo"]."</option>";
+			}
+			$data["array_usuarios"] = $opciones_usuario;
+			$opciones_usuario = "<option></option>";
+			foreach ($array_usuarios as $fila_usuario) {
+				$opciones_usuario .= "<option value='".$fila_usuario["id_usuario"]."'>".$fila_usuario["correo"]."</option>";
+			}
+			$data["array_asignados"] = $opciones_usuario;
 			$data["instancia"] = "Agregar";
 			$this->configuracionModel->getHeader();
 			$this->load->view('regla/formulario_regla', $data);
@@ -37,11 +47,23 @@ class Regla extends CI_Controller {
 		if ($this->session->userdata('id_usuario')){
 			$id_regla = isset($_GET["id"])?$_GET["id"]:"";
 			if(!empty($id_regla)){
-				$data = $this->reglaModel->getReglaPorId($id_regla, '');
-				log_message('error', json_encode($data));
+				$id_empresa = $this->session->userdata('id_empresa');
+				$where_empresa = " and id_empresa = '$id_empresa' ";
+				$data = $this->reglaModel->getReglaPorId($id_regla, $where_empresa, '');
 				if(count($data) > 0){
-					$data["array_usuarios"] = $this->usuarioModel->getUsuariosSelectSoloCorreo();
-					//$data["consulta_externa"] = $this->reglaModel->getConsultaExterna();
+					$array_usuarios = $this->reglaModel->getUsuariosParaSelect();
+					
+					$opciones_usuario = "<option></option>";
+					foreach ($array_usuarios as $fila_usuario) {
+						$opciones_usuario .= "<option value='".$fila_usuario["correo"]."'>".$fila_usuario["correo"]."</option>";
+					}
+					$data["array_usuarios"] = $opciones_usuario;
+
+					$opciones_usuario = "<option></option>";
+					foreach ($array_usuarios as $fila_usuario) {
+						$opciones_usuario .= "<option value='".$fila_usuario["id_usuario"]."'>".$fila_usuario["correo"]."</option>";
+					}
+					$data["array_asignados"] = $opciones_usuario;
 					$data["instancia"] = "Modificar";
 					$this->configuracionModel->getHeader();					
 					$this->load->view('regla/formulario_regla', $data);
@@ -136,7 +158,6 @@ class Regla extends CI_Controller {
 				//general
 				$instancia = $_POST['instancia'];
 				$id_regla = $_POST['id_regla'];
-
 				//encabezado
 				$asunto = $_POST['asunto'];
 				$intervalo = $_POST['intervalo'];
@@ -152,12 +173,22 @@ class Regla extends CI_Controller {
 				}
 
 				$fechaInicio = $_POST['fechaInicio'];
-				$fechaInicio =date('Y-m-d h:i:s', strtotime($fechaInicio));
+				if($fechaInicio != ""){
+					$fechaInicio = date('Y-m-d h:i:s', strtotime($fechaInicio));
+				}else{
+					$fechaInicio = date('Y-m-d h:i:s', strtotime(date("Y-m-d h:i:s")));
+				}				
 				$fechaExpiracion = $_POST['fechaExpiracion'];
-				$fechaExpiracion =date('Y-m-d h:i:s', strtotime($fechaExpiracion));
-				
+				if($fechaInicio != ""){
+					$fechaExpiracion = date('Y-m-d h:i:s', strtotime($fechaExpiracion));
+				}else{
+					$fechaExpiracion = null;
+				}
 				$accion = $_POST['accion'];
 				$estado = $_POST['estado'];
+
+				$cliente = $_POST['cliente'];
+				$contacto = $_POST['contacto'];
 				
 				//consulta
 				$consulta = $_POST['consulta'];
@@ -191,16 +222,26 @@ class Regla extends CI_Controller {
 				$asunto_mail = $_POST['asunto_mail'];
 				$contenido_mail = $_POST['contenido_mail'];
 				$contenido_mail.= '<img src="http://190.210.127.181:2052/tesis/correo/correoLeido/[^*DEST_ID^*]/[^*DEST_DESTINATARIO^*]" style="width:1px" />';
-				//alerta
-				$tipo_alerta = $_POST['tipo_alerta'];
-				$descripcion_alerta = $_POST['descripcion_alerta'];					
-
+				
+				//actividad
+				$asunto_actividad = $_POST['asunto_actividad'];
+				$descripcion_actividad = $_POST['descripcion_actividad'];
+				$asignados_actividad = "";
+				if(isset($_POST["asignados_actividad"])){
+					$asignados_actividad_2 = $_POST["asignados_actividad"];
+					for ($i = 0; $i < count($asignados_actividad_2); $i++){     
+						$asignados_actividad .= $asignados_actividad_2[$i]."***";
+					} 
+					if(!empty($asignados_actividad)){
+						$asignados_actividad = substr($asignados_actividad, 0, -3);
+					}
+				}
 				$respuesta = $this->reglaModel->regla_bd(
 				$instancia,	$id_regla,
-				$asunto, $intervalo, $accion, $estado, 
+				$asunto, $intervalo, $accion, $estado, $fechaInicio, $fechaExpiracion, $tipoIntervalo,
 				$consulta, 
 				$correo, $contrasena, $puerto, $host, $certificado_ssl, $destinatario_fijos, $destinatario_columnas, $asunto_mail, $contenido_mail, 
-				$tipo_alerta, $descripcion_alerta, $fechaInicio, $fechaExpiracion
+				$asunto_actividad, $descripcion_actividad, $asignados_actividad, $cliente, $contacto 
 				);
 				if($respuesta[0] == "ok"){
 					if(isset($_POST['archivos_subidos'])){
@@ -289,12 +330,12 @@ class Regla extends CI_Controller {
 	    echo json_encode($datos);
 	}
 
-	/*ALERTAS*/
-	public function alertas(){
+	/*ACTIVIDADES - NOTIFICACION*/
+	public function actividades(){
 		if ($this->session->userdata('id_usuario')){
 			$this->configuracionModel->getHeader();
-			$data["alertas"] = $this->reglaModel->getAlertas();
-			$this->load->view('alertas/alertas', $data);
+			$data["actividades"] = $this->reglaModel->getActividades();
+			$this->load->view('actividad/actividades', $data);
 			$this->load->view('menu/footer');
 		}else{
 			$this->session->set_flashdata('url',current_url());

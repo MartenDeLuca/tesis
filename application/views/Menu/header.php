@@ -15,7 +15,22 @@ if($menuFijo == "Si"){
 	$menuFijoClase = "";
 	$menuFijoRadioCheck = "value='Si' checked";
 }
-$cantidad_alertas = count($alertas);
+$cantidad_actividades = count($actividades_no_leidas);
+
+$EmpresasGenerales='';
+$posicion = 0;
+$empresa_visible_small = '';
+foreach  ($empresas as $fila){  
+	$EmpresasGenerales .=
+	"<div style='border-bottom: 0.9px solid #eee'> 
+        <li style='margin:10px;'>		                      
+          	<a class='fila-notificacion' onclick='cambiarEmpresa(\"".$fila['id_empresa']."\", \"".$fila['empresa']."\")' data-empresa='' title='Cambiar Empresa'> 
+           		<i class='glyphicon glyphicon-home'></i>&nbsp;&nbsp;&nbsp;".$fila['empresa']."
+          	</a>
+        </li>
+	</div>";
+	$posicion++;
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -32,11 +47,11 @@ $cantidad_alertas = count($alertas);
 		</style>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<title><?php if ($cantidad_alertas > 0) { echo "(".$cantidad_alertas.") "; } ?> Simplapp</title>
+		<title><?php if ($cantidad_actividades > 0) { echo "(".$cantidad_actividades.") "; } ?> Simplapp</title>
 		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
 		<?php $this->load->view('menu/css') ?>
 	</head>
-	<body class="hold-transition skin-<?php echo $menu_color; ?> sidebar-mini fixed <?php echo $menuFijoClase; ?>">
+	<body id="menuBody" class="hold-transition skin-<?php echo $menu_color; ?> sidebar-mini fixed <?php echo $menuFijoClase; ?>">
 		<div class="wrapper">
 			<header class="main-header">
 				<a href="<?php echo base_url() ?>tablero" class="logo">
@@ -47,17 +62,83 @@ $cantidad_alertas = count($alertas);
 					<a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
 						<span class="sr-only">Toggle navigation</span>
 					</a>
+					<ul class="nav navbar-nav hidden-sm hidden-xs">
+						<li><a id="empresa_crm_header"><?php echo $this->session->userdata('empresa') ?></a></li>
+					<?php 
+					if (count($empresas) > 1){ ?>
+						<li id="empresasUl" title="Cambiar empresa" class="dropdown notifications-menu">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+								<i class="glyphicon glyphicon-home"></i>
+							</a>		            
+					        <ul class="dropdown-menu" style="width: auto !important;">
+					            <li>
+					              <ul class="menu">
+					                <?php 
+					                echo $EmpresasGenerales;
+					                ?>
+					              </ul>
+					            </li>
+					        </ul>
+					    </li>
+					<?php 
+						$empresa_visible_small = '
+						<li id="empresasUl" title="Cambiar empresa" class="dropdown notifications-menu visible-xs visible-sm">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+								<i class="glyphicon glyphicon-home"></i>
+							</a>
+					        <ul class="dropdown-menu">
+					            <li>
+					              <ul class="menu">					                    
+					                <div style="border-bottom: 0.9px solid #eee"> 
+										<li style="margin:10px;">
+											<a class="fila-notificacion" style="color:green !important;" title="Empresa Seleccionada">
+												<i class="glyphicon glyphicon-home"></i>&nbsp;&nbsp; '.$this->session->userdata('empresa').'
+											</a>
+						 				</li>
+									</div>'.$EmpresasGenerales.'
+					              </ul>
+					            </li>
+					        </ul>
+					    </li>';
+					} ?>
+					</ul>
+
 					<div class="navbar-custom-menu">
 						<ul class="nav navbar-nav">
 							<li class="dropdown notifications-menu">
-								<a href="<?php echo base_url() ?>alertas" title="Alertas">
+								<a <?php if($cantidad_actividades > 0){ ?>
+										class="dropdown-toggle" data-toggle="dropdown"
+									<?php }else{ ?>
+										href="<?php echo base_url() ?>actividades"
+									<?php } ?>>
 									<i class="fa fa-bell"></i>
 									<?php
-									if($cantidad_alertas > 0){ 
+									if($cantidad_actividades > 0){ 
 									?>
-									<span class="label label-warning" ><?php echo $cantidad_alertas ?></span>
+									<span class="label label-warning cantidad_actividades"><?php echo $cantidad_actividades ?></span>
 									<?php } ?>
-								</a>								
+								</a>
+								<ul class="dropdown-menu">
+					                <li class="header">
+					                	<a class="header-notificacion" onclick="vaciarNotificaciones()"><center>Marcar todas como leidas</center></a>
+					                </li>
+					                <li>
+						                <ul class="menu">
+						                    <?php foreach($actividades_no_leidas as $fila){ ?>
+						                    <div style="border-bottom: 0.9px solid #eee"> 
+							                    <li style="margin:10px;">		                      
+							                      	<a class="fila-notificacion" href="<?php echo base_url() ?>modificar-actividad?id=<?php echo $fila['id_actividad']; ?>">
+							                       		<i class="fa fa-bell"></i> <?php echo $fila['asunto']; ?>
+							                      	</a>
+							                    </li>
+						                	</div>
+						                    <?php } ?>
+						                </ul>
+					                </li>
+					                <li class="header">
+					                	<a class="footer-notificacion" href="<?php echo base_url(); ?>actividades"><center>Ver todas</center></a>
+					                </li>
+					            </ul>								
 							</li>
 							<li class="dropdown user user-menu">
 								<a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -68,7 +149,7 @@ $cantidad_alertas = count($alertas);
 									<li class="user-header">
 										<img src="<?php echo $foto ?>" class="img-circle" alt="User Image">
 										<p>
-											<?php echo $this->session->userdata('empresa') ?>
+											<?php echo $this->session->userdata('nombre') ?>
 											<small><i class="fa fa-circle text-success"></i> Usuario Conectado</small>
 										</p>
 									</li>
@@ -118,6 +199,10 @@ $cantidad_alertas = count($alertas);
 						<?php
 						echo llenarTreeview($carpetas);
 						?>
+						<!--SEGUIMIENTO-->
+			            <li>
+			                <a href="<?php echo base_url() ?>seguimiento"><i class="fa fa-book"></i> <span>Seguimiento</span></a>
+			            </li>
 						
 						<!--REGLA DE NEGOCIO-->
 						<li>
@@ -131,9 +216,15 @@ $cantidad_alertas = count($alertas);
 
 			            <?php if ($this->session->userdata('permiso') == 'administrador'){ ?>
 			            <li>
+			                <a href="<?php echo base_url() ?>usuarios"><i class="fa fa-user"></i> <span>Usuarios</span></a>
+			            </li>
+			        	<?php } ?>
+
+			            <?php if ($this->session->userdata('permiso') == 'licencia'){ ?>
+			            <li>
 			                <a href="<?php echo base_url() ?>licencias"><i class="fa fa-key"></i> <span>Licencias</span></a>
 			            </li>
-			        	<?php } ?>						
+			        	<?php } ?>
 					</ul>
 				</section>
 			</aside>
@@ -390,7 +481,42 @@ $cantidad_alertas = count($alertas);
 					}
 
 					$("#item"+id).prop("checked", checked);
-				}				
+				}	
+
+				
+				$('.sidebar').mouseover(function() {
+					$('#menuBody').removeClass('sidebar-collapse');
+				}).mouseout(function() {
+					if (!$('#menuFijo').is(':checked')){
+						$('#menuBody').addClass('sidebar-collapse');
+					}
+				});
+
+				function cambiarEmpresa(id_empresa, empresa){
+					$.ajax({
+				      url:'<?php echo base_url() ?>usuario/empresas',
+				      type: 'POST',
+				      dataType: "json",
+				      data: {id_empresa, empresa},
+				    }).done(function(respuesta){
+				      	if (respuesta['mensaje'] == 'OK'){
+				        	window.location = "<?php echo base_url() ?>tablero";
+				    	}
+				    });
+				}
+
+				function vaciarNotificaciones(){
+					$.ajax({
+				      url:'<?php echo base_url() ?>configuracion/vaciarNotificaciones',
+				      type: 'POST',
+				      data: {},
+				    }).done(function(respuesta){
+				      	if (respuesta == 'OK'){
+					        document.title = "Simplapp";
+					        $('.cantidad_actividades').hide();
+					    }
+				    });
+				}
 			</script>
 	</body>
 </html>

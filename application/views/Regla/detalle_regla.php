@@ -12,14 +12,14 @@
   <section class="content">
     <div class="nav-tabs-custom">
       <ul class="nav nav-tabs">
-        <li class="active"><a data-step="alertas_tab" data-toggle="tab" href="#alertas_tab">Alertas</a></li>
+        <li class="active"><a data-step="actividades_tab" data-toggle="tab" href="#actividades_tab">Actividades</a></li>
         <li><a data-step="mails_tab" data-toggle="tab" href="#mails_tab">Mails</a></li>
       </ul>
       <div class="tab-content">
-        <div id="alertas_tab" class="tab-pane fade in active">
+        <div id="actividades_tab" class="tab-pane fade in active">
           <?php 
-          $datos["alertas"] = $alertas;
-          $this->load->view('alertas/alertas_interno', $datos);
+          $datos["actividades"] = $actividades;
+          $this->load->view('actividad/actividades_interno', $datos);
           ?>
         </div>
         <div id="mails_tab" class="tab-pane fade in">

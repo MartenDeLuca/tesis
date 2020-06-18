@@ -526,3 +526,19 @@ $config['rewrite_short_tags'] = FALSE;
 | Array:		array('10.0.1.200', '192.168.5.0/24')
 */
 $config['proxy_ips'] = '';
+
+
+$config['opciones_string'] = '<option value="1">Contiene</option><option value="2">No Contiene</option><option value="3">Es</option> <option value="4">No Es</option><option value="5">Comienza Por</option><option value="6">Termina Por</option><option value="7">Vacio</option><option value="8">No Vacio</option>';
+$config['opciones_date'] = '<option value="19">Es</option><option value="20">No Es</option><option value="10">Ultimos Dias</option><option value="15">Mayor</option><option value="11">Mayor o igual</option><option value="16">Menor</option><option value="12">Menor o igual</option><option value="13">Entre</option><option value="14">Mes/Año</option>';
+$config['opciones_float'] = '<option value="19">Contiene</option><option value="20">No Contiene</option><option value="17">Es</option><option value="18">No Es</option><option value="21">Comienza Por</option><option value="22">Termina Por</option><option value="15">Mayor</option><option value="11">Mayor o igual</option><option value="16">Menor</option><option value="12">Menor o igual</option>';
+
+$config['mails_array_columna'] = array('Asunto', 'Fecha', 'Cliente', 'Destinatarios');
+$config['mails_sql_columna'] = array("mails.asunto", "mails.fecha", "mails.cliente", "mails.destinatarios");
+$config['mails_key'] = array("asunto", "fecha", "cliente", "destinatarios");
+$config['mails_tipo_columna'] = array('string', 'date', 'string', 'string');
+
+
+$config['actividades_array_columna'] = array('Asunto', 'Fecha', 'Estado', 'Cliente', 'Contacto', 'Telefono', 'Proximo Contacto');
+$config['actividades_sql_columna'] = array("asunto", "fecha", "estado", "cliente", "contacto", "telefono", "proximo_contacto");
+$config['actividades_key'] = array("asunto", "fecha", "estado", "cliente", "contacto", "telefono", "proximo_contacto");
+$config['actividades_tipo_columna'] = array('string', 'date', 'string', 'string', 'string', 'string', 'date');
