@@ -195,6 +195,15 @@ class Seguimiento extends CI_Controller {
 		}			
 	}
 
+	public function buscarActividades(){
+		if ($this->session->userdata('id_usuario')){
+			$consulta = isset($_POST["consulta"])?$_POST["consulta"]:"";
+			$opcion = isset($_POST["opcion"])?$_POST["opcion"]:"";
+			$cliente = isset($_POST["cliente"])?$_POST["cliente"]:"";
+			echo json_encode($this->seguimientoModel->buscarActividades($consulta, $opcion, $cliente));
+		}
+	}
+	////////////////////////////////////////////////////////////////////////////
 
 	public function index(){
 		if ($this->session->userdata('id_usuario')){

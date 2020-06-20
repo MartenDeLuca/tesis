@@ -1,3 +1,37 @@
+	<div class="modal fade" id="modalContra" tabindex="-1" role="dialog"  aria-hidden="true">
+		<div class="modal-dialog modal-xs">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="tituloContra">Cambiar Contraseña</h4>
+				</div>
+				<div class="modal-body">	
+				 	<div class="text-right">
+						<a class="btn btn-primary btn-form" onclick="cambiarContrasena()">Guardar</a>
+						<a class="btn btn-danger btn-form" data-dismiss="modal">Cancelar</a>
+					</div>			
+					<div class="row">
+						<div class="col-md-12">
+							<label class="lab">Contraseña Actual</label>
+							<input type="password" data-tipo="string" class="form-control" id="contraActual">
+							<div class="error_color" id="error_contraActual"></div>
+						</div>
+						<div class="col-md-12">
+							<label class="lab">Nueva Contraseña</label>
+							<input type="password" data-tipo="string" class="form-control" id="nuevaContra">
+							<div class="error_color" id="error_nuevaContra"></div>
+						</div>
+						<div class="col-md-12">
+							<label class="lab">Confirmar Contraseña</label>
+							<input type="password"  data-tipo="string" class="form-control" id="confirmarContra">
+							<div class="error_color" id="error_confirmarContra"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+		
 	<div class="modal fade in" id="modal" tabindex="-1" role="dialog" aria-labelledby="formBuscar" aria-hidden="true">
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
@@ -10,6 +44,11 @@
 						<div class="col-md-12">
 							<label class="lab">Buscar</label>
 							<input type="text" class="form-control" id="modal-buscar">
+						</div>
+						<div class="col-md-12" id="div-modal-opcion">
+							<label class="lab">Criterio</label>
+							<select class="form-control" id="modal-opcion">
+							</select>
 						</div>
 						<div class="col-md-12">
 							<div id="modal-datos"></div>
@@ -65,13 +104,37 @@
 </body>
 </html>
 <script type="text/javascript">
+	function validoEmail(email) {
+	    var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+	    return re.test(email);
+	}
+
+	Number.prototype.AddZero = function(b,c){
+        var l = (String(b|| 10).length - String(this).length)+1;
+        return l > 0 ? new Array(l).join(c|| '0')+this : this;
+    }
+
 	var tipo_funcion = "";
 
 	$("#modal-buscar").keyup(function(){
 		window["buscar"+tipo_funcion]();
 	})
 
-	function modal(tipo){
+	$("#modal-opcion").change(function(){
+		window["buscar"+tipo_funcion]();
+	});
+
+	function modal(tipo, opciones){
+		if(opciones == undefined){
+			$("#div-modal-opcion").hide();
+		}else{
+			$("#div-modal-opcion").show();
+			var opciones = opciones.split("*");
+			$("#modal-opcion option").remove();
+			for(var i = 0; i < opciones.length; i++){
+				$("#modal-opcion").append("<option>"+opciones[i]+"</option>");
+			}
+		}
 		$("#modal").modal("show");
 		$("#modal-buscar").val("");
 		tipo_funcion = tipo;
@@ -238,4 +301,21 @@
 			agregarActividad();
 		}
 	}
+
+	function buscarEnTabla(input, tabla){
+	    if(input != ""){
+	    	$("#"+tabla+" tbody>tr").hide();
+	        $("#"+tabla+" td:contiene-palabra('" + input + "')").parent("tr").show();
+	    }
+	    else{
+	        $("#"+tabla+" tbody>tr").show();
+	    }
+	}
+
+	jQuery.extend(jQuery.expr[":"], 
+	{
+	    "contiene-palabra": function(elem, i, match, array) {
+	        return (elem.textContent || elem.innerText || $(elem).text() || "").toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
+	    }
+	});	
 </script>

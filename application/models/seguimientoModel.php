@@ -42,7 +42,7 @@ class SeguimientoModel extends CI_Model{
 			inner join actividades on actividades.id_actividad = actividades_comprobantes.id_actividad
 			where actividades_comprobantes.comprobante = ? and actividades_comprobantes.tipo = ? and (actividades_comprobantes.forma_pago <> '' or actividades_comprobantes.fecha_pago <> '' or actividades_comprobantes.observaciones <> '')
 			union 
-			select forma_pago, DATE_FORMAT(fecha_pago, '%d/%m/%Y %T') fecha_pago, observaciones, mails.fecha
+			select forma_pago, DATE_FORMAT(fecha_pago, '%d/%m/%Y') fecha_pago, observaciones, mails.fecha
 			from mails_comprobantes 
 			inner join mails on mails.id_mail = mails_comprobantes.id_mail
 			where mails_comprobantes.comprobante = ? and mails_comprobantes.tipo = ? and (mails_comprobantes.forma_pago <> '' or mails_comprobantes.fecha_pago <> '' or mails_comprobantes.observaciones <> '')
@@ -331,7 +331,7 @@ class SeguimientoModel extends CI_Model{
 									'<tr data-id='.$fila_comp["id"].'>
 										<td><input type="checkbox" data-comprobante="'.$cont.'" class="check_comprobantes"></td>
 										<td>'.$fila_comp["tipo"].'</td>
-										<td>'.$fila_comp["comprobante"].'</td>
+										<td><a onclick="redirectComp(\''.$fila_comp["comprobante"].'\', \''.$fila_comp["tipo"].'\')">'.$fila_comp["comprobante"].'</td>
 										<td>'.$fila_comp["estado"].'</td>
 										<td>'.$fila_comp["fecha"].'</td>
 										<td>'.$fila_comp["vencimiento"].'</td>
@@ -511,7 +511,7 @@ class SeguimientoModel extends CI_Model{
 		return $opciones_usuario;
 	}
 
-	function getContenidoMail($id_mail){		
+	function getContenidoMail($id_mail){
 		$sql_select = "select contenido from mails_contenido where id_mail = '$id_mail'";
 		$stmt = $this->db->query($sql_select);
 		$consultas_externas = $stmt->result_array();
@@ -536,6 +536,67 @@ class SeguimientoModel extends CI_Model{
     	return "OK";
 	}
 
+	function buscarActividades($consulta, $opcion, $cliente){
+		$registros = array();
+		if($opcion == "Seguimiento"){
+			$sql = 
+			"SELECT * 
+			FROM (
+				SELECT DATE_FORMAT(fecha, '%d/%m/%Y %T') fecha, asunto, 'Actividad' tipo, id_actividad id
+				FROM actividades
+				WHERE id_cliente = '$cliente'
+				union
+				SELECT DATE_FORMAT(fecha, '%d/%m/%Y %T') fecha, asunto, 'Mail' tipo, id_mail id
+				FROM mails
+				WHERE id_cliente = '$cliente'
+			) tabla
+			where (asunto like '%".$consulta."%' or fecha like '%".$consulta."%' or tipo like '%".$consulta."%')
+			order by fecha desc";
+			$stmt = $this->db->query($sql);
+			return $stmt->result_array();
+		}else if($opcion == "Comprobante"){
+			$sql = 
+			"SELECT * 
+			FROM (
+				SELECT DATE_FORMAT(actividades.fecha, '%d/%m/%Y %T') fecha, actividades.asunto, 'Actividad' tipo_actividad, actividades.id_actividad id, actividades_comprobantes.tipo, actividades_comprobantes.comprobante
+				FROM actividades
+				INNER JOIN actividades_comprobantes on actividades.id_actividad = actividades_comprobantes.id_actividad
+				WHERE actividades.id_cliente = '$cliente'
+				union
+				SELECT DATE_FORMAT(mails.fecha, '%d/%m/%Y %T') fecha, mails.asunto, 'Mail' tipo_actividad, mails.id_mail id, mails_comprobantes.tipo, mails_comprobantes.comprobante
+				FROM mails
+				INNER JOIN mails_comprobantes on mails.id_mail = mails_comprobantes.id_mail
+				WHERE mails.id_cliente = '$cliente'
+			) tabla
+			where (asunto like '%".$consulta."%' or fecha like '%".$consulta."%' or tipo_actividad like '%".$consulta."%' or tipo like '%".$consulta."%' or comprobante like '%".$consulta."%')
+			order by fecha desc";
+			$stmt = $this->db->query($sql);
+			return $stmt->result_array();
+		}
+		return $registros;
+	}
+
+	function comprobante_actividades($n_comp, $t_comp){
+		$sql = 
+		"SELECT * 
+		FROM (
+			SELECT DATE_FORMAT(actividades.fecha, '%d/%m/%Y %T') fecha, actividades.asunto, 'Actividad' tipo, actividades.id_actividad id
+			FROM actividades
+			INNER JOIN actividades_comprobantes on actividades.id_actividad = actividades_comprobantes.id_actividad
+			WHERE actividades_comprobantes.tipo = '$t_comp' and actividades_comprobantes.comprobante = '$n_comp'
+			union
+			SELECT DATE_FORMAT(mails.fecha, '%d/%m/%Y %T') fecha, mails.asunto, 'Mail' tipo, mails.id_mail id
+			FROM mails
+			INNER JOIN mails_comprobantes on mails.id_mail = mails_comprobantes.id_mail
+			WHERE mails_comprobantes.tipo = '$t_comp' and mails_comprobantes.comprobante = '$n_comp'
+		) tabla
+		order by fecha desc";
+		log_message("error", $sql);
+		$stmt = $this->db->query($sql);
+		return $stmt->result_array();
+	}
+
+	///////////////////////////////////////////////////////////////////////////////////
 	function getSeguimiento($tipo, $where){
 		if($tipo == "mails"){			
 			$sql = "select mails.asunto, mails.destinatarios, DATE_FORMAT(mails.fecha, '%d/%m/%Y %T') fecha, cliente, mails.id_mail, mails.id_cliente

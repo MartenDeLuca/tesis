@@ -11,6 +11,7 @@ $route['agregar-regla'] = 'Regla/agregar_regla';
 $route['modificar-regla'] = 'Regla/modificar_regla';
 $route['detalle-regla'] = 'Regla/detalle_regla';
 $route['detalle-correo'] = 'Regla/detalle_correo';
+$route['detalle-mail'] = 'Regla/detalle_correo';
 
 
 $route['actividades'] = 'Regla/actividades';
@@ -18,6 +19,7 @@ $route['actividades'] = 'Regla/actividades';
 $route['seguimiento'] = 'Seguimiento';
 $route['agregar-actividad'] = 'Seguimiento/agregar_actividad';
 $route['modificar-actividad'] = 'Seguimiento/modificar_actividad';
+$route['detalle-actividad'] = 'Seguimiento/modificar_actividad';
 
 $route['plantillas'] = 'plantilla';
 $route['agregar-plantilla'] = 'Plantilla/agregar_plantilla';
@@ -25,6 +27,8 @@ $route['modificar-plantilla'] = 'Plantilla/modificar_plantilla';
 
 $route['clientes'] = 'seguimiento/clientes';
 $route['detalle-cliente'] = 'seguimiento/detalle_cliente';
+
+$route['detalle-comprobante'] = 'cobranza/detalles';
 
 
 $route['login'] = 'usuario';

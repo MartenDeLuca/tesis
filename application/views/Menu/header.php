@@ -263,39 +263,6 @@ foreach  ($empresas as $fila){
 					</ul>
 				</section>
 			</aside>
-			<div class="modal fade" id="modalContra" tabindex="-1" role="dialog"  aria-hidden="true">
-				<div class="modal-dialog modal-xs">
-					<div class="modal-content">
-						<div class="modal-header">
-							<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
-							<h4 class="modal-title" id="tituloContra">Cambiar Contraseña</h4>
-						</div>
-						<div class="modal-body">	
-						 	<div class="text-right">
-								<a class="btn btn-primary btn-form" onclick="cambiarContrasena()">Guardar</a>
-								<a class="btn btn-danger btn-form" data-dismiss="modal">Cancelar</a>
-							</div>			
-							<div class="row">
-								<div class="col-md-12">
-									<label class="lab">Contraseña Actual</label>
-									<input type="password" data-tipo="string" class="form-control" id="contraActual">
-									<div class="error_color" id="error_contraActual"></div>
-								</div>
-								<div class="col-md-12">
-									<label class="lab">Nueva Contraseña</label>
-									<input type="password" data-tipo="string" class="form-control" id="nuevaContra">
-									<div class="error_color" id="error_nuevaContra"></div>
-								</div>
-								<div class="col-md-12">
-									<label class="lab">Confirmar Contraseña</label>
-									<input type="password"  data-tipo="string" class="form-control" id="confirmarContra">
-									<div class="error_color" id="error_confirmarContra"></div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
 
 			<div class="hidden-xs hidden-sm">
 				<span class='irArriba'> 
@@ -438,12 +405,14 @@ foreach  ($empresas as $fila){
 						document.getElementById("error_"+id).innerHTML =mensaje;
 					}
 				}
+				
 				function quitarError(id){
 					$("#"+id).css({"border":"1px solid #d2d6de"});
 					if ($("#error_"+id).length > 0){
 						document.getElementById("error_"+id).innerHTML ="";
 					}
 				}
+
 				function cambiarContrasenaModal(){
 					$('#contraActual').val('');
 					$('#nuevaContra').val('');
@@ -489,19 +458,6 @@ foreach  ($empresas as $fila){
 						marcarError("confirmarContra", error);
 					}
 				}
-
-				$(".int").keypress(function(e){
-					var key = e.charCode;
-					console.log(key);
-				    return key >= 48 && key <= 57;
-				});
-
-				$(".int").blur(function(){
-					var valor = this.value;
-					if (!Number.isInteger(parseInt(valor))){
-						$(this).val("");
-					}
-				});
 				
 				/*abrir los acordeones*/
 				function cambiar_check(id){

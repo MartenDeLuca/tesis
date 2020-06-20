@@ -93,7 +93,7 @@ $seguimientoModel = new seguimientoModel;
        									<tr data-id='<?php echo $contador; ?>'>
        										<td><input type="checkbox" data-comprobante="inicio" class="check_comprobantes"></td>
 		       								<td><?php echo $tipo; ?></td>
-		       								<td><?php echo $comprobante; ?></td>
+		       								<td><a onclick="redirectComp('<?php echo $comprobante; ?>', '<?php echo $tipo; ?>')"><?php echo $comprobante; ?></a></td>
 		       								<td>Pendiente</td>
 		       								<td><?php echo $fila["fecha"]; ?></td>
 		       								<td><?php echo $fila["vencimiento"]; ?></td>
@@ -130,7 +130,7 @@ $seguimientoModel = new seguimientoModel;
 				    	<li class="active"><a data-step="comprobantes_tab" data-toggle="tab" href="#comprobantes_tab">Vigentes</a></li>
 				    	<li><a data-step="historial_tab" data-toggle="tab" id="a_historial_tab" href="#historial_tab">Historial</a></li>
 				    	<div class="text-right">
-				    		<a title="Buscar Actividades" onclick="modal('Actividades')" class="btn btn-primary btn-form botones-derechos"><span class="glyphicon glyphicon-search"></span></a>
+				    		<a title="Buscar Actividades" onclick="modal('Actividades', 'Seguimiento*Comprobante')" class="btn btn-primary btn-form botones-derechos"><span class="glyphicon glyphicon-search"></span></a>
 				    	</div>
 				  	</ul>
 				  	<div class="tab-content">
@@ -702,24 +702,49 @@ $seguimientoModel = new seguimientoModel;
 
 	function buscarActividades(){
 		var consulta = $("#modal-buscar").val();
+		var opcion = $("#modal-opcion").val();
+		var cliente = $("#detalle_id_cliente").val();
 		$.ajax({
 			url: "<?php echo base_url() ?>/seguimiento/buscarActividades",
 			type: "POST",
-			data:{consulta},
+			data:{consulta, opcion, cliente},
 			dataType: "json",
 			success: function(respuesta){
-				var html = `<table class='table'><tr><td>Direccion</td><td>Cod. Postal</td><td>Localidad</td><td>Provincia</td></tr>`;
-				var tamano = respuesta.length;
-				for(var i = 0; i < tamano; i++){
-					html += `<tr style="cursor:pointer" onclick="seleccionarActividades(${respuesta[i]["id"]})"><td>${respuesta[i]["direccion"]}</td><td>${respuesta[i]["codigo_postal"]}</td><td>${respuesta[i]["localidad"]}</td><td>${respuesta[i]["provincia"]}</td></tr>`;
+				if(opcion == "Seguimiento"){
+					var html = `<table class='table'><tr><td>Asunto</td><td>Fecha</td><td>Tipo</td></tr>`;
+					var tamano = respuesta.length;
+					for(var i = 0; i < tamano; i++){
+						html += 
+						`<tr style="cursor:pointer" onclick="seleccionarActividades(${respuesta[i]["id"]}, '${respuesta[i]["tipo"]}')">
+							<td>${respuesta[i]["asunto"]}</td>
+							<td>${respuesta[i]["fecha"]}</td>
+							<td>${respuesta[i]["tipo"]}</td>
+						</tr>`;
+					}
+				}else{
+					var html = `<table class='table'><tr><td>Asunto</td><td>Fecha</td><td>Tipo</td><td>Comprobante</td></tr>`;
+					var tamano = respuesta.length;
+					for(var i = 0; i < tamano; i++){
+						html += 
+						`<tr style="cursor:pointer" onclick="seleccionarActividades(${respuesta[i]["id"]}, '${respuesta[i]["tipo_actividad"]}')">
+							<td>${respuesta[i]["asunto"]}</td>
+							<td>${respuesta[i]["fecha"]}</td>
+							<td>${respuesta[i]["tipo_actividad"]}</td>
+							<td>${respuesta[i]["tipo"]} - ${respuesta[i]["comprobante"]}</td>
+						</tr>`;
+					}
 				}
 				html += `</tbody></table>`;
-				$("#modal-datos").html(html);
+				$("#modal-datos").html(html);				
 			}
 		});		
 	}
 
 	function seleccionarActividades(id, tipo){
+		window.open("<?php echo base_url() ?>detalle-"+tipo+"?id="+id, '_blank');
+	}
 
+	function redirectComp(n_comp, t_comp){
+		window.open("<?php echo base_url() ?>detalle-comprobante?n_comp="+n_comp+"&t_comp="+t_comp, '_blank');
 	}
 </script>
