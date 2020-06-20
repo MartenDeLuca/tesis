@@ -3,14 +3,24 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Seguimiento extends CI_Controller {
 	
-	public function martin(){
+	public function detalle_cliente(){
 		if ($this->session->userdata('id_usuario')){
 			$id = isset($_GET["id"])?$_GET["id"]:"";
 			$empresa = $this->session->userdata('empresa');
 			$dominio = $this->session->userdata('dominio');
 
 			$cliente = json_decode($this->seguimientoModel->seleccionarDetalleCliente($id, $empresa, $dominio),true);
-			if(count($cliente) > 0){	
+			if(count($cliente) > 0){
+				if($this->session->userdata('vista_amplia') == "right"){
+					$div_actividades = "12";
+					$cambiarVista = "right";
+					$clase_div_datos_adicionales = "style='display:none;'";	
+				}else{
+					$div_actividades = "9";
+					$cambiarVista = "left";
+					$clase_div_datos_adicionales = "";
+				}
+
 				$array_asignados = $this->seguimientoModel->getArrayAsignados();		
 				$comprobantes = json_decode($this->seguimientoModel->seleccionarComprobante($id, $empresa, $dominio), true);
 				$actividades_pendientes = $this->seguimientoModel->actividadesPendientes($id, $array_asignados);
@@ -24,7 +34,10 @@ class Seguimiento extends CI_Controller {
 				$data["actividades_pendientes"] = $actividades_pendientes["html"];
 				$data["actividades_realizadas"] = $actividades_realizadas["html"];
 				$data["cont"] = $actividades_realizadas["cont"];
-				
+				$data["div_actividades"] = $div_actividades;
+				$data["cambiarVista"] = $cambiarVista;
+				$data["clase_div_datos_adicionales"] = $clase_div_datos_adicionales;
+				$data["cambiarVistaInteraccion"] = "minus";
 				$this->configuracionModel->getHeader();
 				$this->load->view('cliente/detalle_cliente', $data);
 				$this->load->view('menu/footer');
@@ -86,7 +99,8 @@ class Seguimiento extends CI_Controller {
 		        $destinatario_fijos = substr($destinatario_fijos, 0, -1);
 		    }			
 			
-			$comprobantes = json_decode($_POST['comprobantes'], true);
+			$comprobantes = json_decode($_POST['comprobantes'], true);			
+
 			if (isset($_FILES['Adjunto']['name'])){
 				$archivos_nuevos = $_FILES;
 			}else{
@@ -169,6 +183,18 @@ class Seguimiento extends CI_Controller {
 			$this->seguimientoModel->descargarArchivos($id_adjunto, $id_mail);
 		}
 	}
+
+	public function anotacionesComprobantes(){
+		if ($this->session->userdata('id_usuario')){
+			$where_id = isset($_POST["where_id"])?$_POST["where_id"]:"";
+			$tipo = isset($_POST["tipo"])?$_POST["tipo"]:"";
+			$fecha_pago = isset($_POST["fecha_pago"])?$_POST["fecha_pago"]:"";
+			$forma_pago = isset($_POST["forma_pago"])?$_POST["forma_pago"]:"";
+			$observacion = isset($_POST["observacion"])?$_POST["observacion"]:"";
+			echo $this->seguimientoModel->anotacionesComprobantes($where_id, $tipo, $fecha_pago, $forma_pago, $observacion);
+		}			
+	}
+
 
 	public function index(){
 		if ($this->session->userdata('id_usuario')){

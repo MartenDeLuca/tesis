@@ -138,6 +138,7 @@
 						<div class="acordeon__contenido">
 							<div class="row">
 								<div class="col-md-12">
+									<a class="btn btn-primary btn-form btn_anotacion" data-tipo="actividades" id="formulario_btn_anotacion" style="display: none;">Anotación</a>
 									<div class="table-responsive">
 										<table class="table" id="comprobantes">
 											<thead>
@@ -159,8 +160,8 @@
 												<?php 
 												foreach ($comprobantes as $fila) {
 												?>	
-												<tr>
-													<td><input type="checkbox" class="check_comprobantes"></td>
+												<tr data-id='<?php echo $fila["id"]; ?>'>
+													<td><input type="checkbox" data-comprobante="formulario" class="check_comprobantes"></td>
 													<td><?php echo $fila["tipo"]; ?></td>
 													<td><?php echo $fila["comprobante"]; ?></td>
 													<td><?php echo $fila["estado"]; ?></td>
@@ -244,54 +245,65 @@
 	}
 
 	function seleccionarCliente(id){
-		$.ajax({
-			url: "<?php echo $this->session->userdata('dominio') ?>/api/seleccionarCliente",
-			type: "POST",
-			data:{id, empresa},
-			dataType: "json",
-			success: function(respuesta){
-				$("#id_cliente").val(respuesta[0]["id_cliente"]);
-				$("#cod_cliente").val(respuesta[0]["cod_cliente"]);
-				$("#cliente").val(respuesta[0]["cliente"]);
-				$("#telefono").val(respuesta[0]["telefono"]);
-				$("#horario_retiro").val(respuesta[0]["horario_retiro"]);
-				$("#id_contacto").val("");
-				$("#contacto").val("");
-				campo_dias_reclamo(respuesta[0]["dias_reclamo"]);	
-				$.ajax({
-					url: "<?php echo base_url() ?>seguimiento/obtenerComprobantes",
-					type: "POST",
-					data:{id, empresa},
-					dataType: "json",
-					success: function(comprobantes){
-						var tamano = comprobantes.length;
-						var html_comp = "";
-						if(tamano > 0){
-							html_comp = htmlComprobantes(comprobantes, tamano);
+		if($("#current_url_hidden").val().indexOf("-actividad") > -1){
+			$.ajax({
+				url: "<?php echo $this->session->userdata('dominio') ?>/api/seleccionarCliente",
+				type: "POST",
+				data:{id, empresa},
+				dataType: "json",
+				success: function(respuesta){
+					$("#id_cliente").val(respuesta[0]["id_cliente"]);
+					$("#cod_cliente").val(respuesta[0]["cod_cliente"]);
+					$("#cliente").val(respuesta[0]["cliente"]);
+					$.ajax({
+						url: "<?php echo base_url() ?>seguimiento/obtenerComprobantes",
+						type: "POST",
+						data:{id, empresa},
+						dataType: "json",
+						success: function(comprobantes){
+							var tamano = comprobantes.length;
+							var html_comp = "";
+							if(tamano > 0){
+								html_comp = htmlComprobantes(comprobantes, tamano, 'formulario');
+							}
+							$("#cantidad11").html("("+tamano+")");
+							$("#comprobantes tbody").html(html_comp);
 						}
-						$("#cantidad11").html("("+tamano+")");
-						$("#comprobantes tbody").html(html_comp);
-					}
-				});						
-				$("#modal").modal("hide");
-			}
-		});
+					});						
+					$("#modal").modal("hide");
+				}
+			});
+		}else{
+			location.href = "<?php echo base_url(); ?>detalle-cliente?id="+id;
+		}
 	}
 
-	function htmlComprobantes(comprobantes, tamano){
+	function htmlComprobantes(comprobantes, tamano, cont){
 		var html_comp = "";
 		for(var j = 0; j < tamano; j++){
+			var fecha = comprobantes[j]["fecha"];
+			if(fecha.indexOf("-") > -1){
+				fecha = fecha.substr(8,2)+'/'+fecha.substr(5,2)+'/'+fecha.substr(0,4);
+			}			
+			var vencimiento = comprobantes[j]["vencimiento"];
+			if(vencimiento.indexOf("-") > -1){
+				vencimiento = vencimiento.substr(8,2)+'/'+vencimiento.substr(5,2)+'/'+vencimiento.substr(0,4);
+			}
+			var fecha_pago = comprobantes[j]["fecha_pago"];
+			if(fecha_pago.indexOf("-") > -1){
+				fecha_pago = fecha_pago.substr(8,2)+'/'+fecha_pago.substr(5,2)+'/'+fecha_pago.substr(0,4);
+			}
 			html_comp += 
 			`<tr>
-				<td><input type="checkbox" class="check_comprobantes"></td>
+				<td><input type="checkbox" data-comprobante="${cont}" class="check_comprobantes"></td>
 				<td>${comprobantes[j]["tipo"]}</td>
 				<td>${comprobantes[j]["comprobante"]}</td>
 				<td>${comprobantes[j]["estado"]}</td>
-				<td>${comprobantes[j]["fecha"]}</td>
-				<td>${comprobantes[j]["vencimiento"]}</td>
+				<td>${fecha}</td>
+				<td>${vencimiento}</td>
 				<td>${comprobantes[j]["importe"]}</td>
 				<td>${comprobantes[j]["dias"]}</td>
-				<td>${comprobantes[j]["fecha_pago"]}</td>
+				<td>${fecha_pago}</td>
 				<td>${comprobantes[j]["forma_pago"]}</td>
 				<td>${comprobantes[j]["observaciones"]}</td>
 			</tr>`;
@@ -340,7 +352,7 @@
 			objeto.importe = $($(this).children("td")[6]).html();
 			objeto.dias = $($(this).children("td")[7]).html();
 			var fecha_pago = $($(this).children("td")[8]).html();
-			objeto.fecha_pago = vencimiento.substr(6,4)+'-'+vencimiento.substr(3,2)+'-'+vencimiento.substr(0,2);
+			objeto.fecha_pago = fecha_pago.substr(6,4)+'-'+fecha_pago.substr(3,2)+'-'+fecha_pago.substr(0,2);
 			objeto.forma_pago = $($(this).children("td")[9]).html();
 			objeto.observaciones = $($(this).children("td")[10]).html();
 			comprobantes.push(objeto);

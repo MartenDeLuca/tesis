@@ -142,6 +142,7 @@
 							<div class="acordeon__contenido">
 								<div class="row">
 									<div class="col-md-12">
+										<a class="btn btn-primary btn-form btn_anotacion" data-tipo="mails" id="formulario2_btn_anotacion" style="display: none;">Anotación</a>
 										<div class="table-responsive">
 											<table class="table" id="comprobantes_mails">
 												<thead>
@@ -164,7 +165,7 @@
 													foreach ($comprobantes as $fila) {
 													?>	
 													<tr>
-														<td><input type="checkbox" class="check_comprobantes"></td>
+														<td><input type="checkbox" data-comprobante="formulario2" class="check_comprobantes"></td>
 														<td><?php echo $fila["tipo"]; ?></td>
 														<td><?php echo $fila["comprobante"]; ?></td>
 														<td><?php echo $fila["estado"]; ?></td>
@@ -244,11 +245,10 @@
 			objeto.vencimiento = vencimiento.substr(6,4)+'-'+vencimiento.substr(3,2)+'-'+vencimiento.substr(0,2);
 			objeto.importe = $($(this).children("td")[6]).html();
 			objeto.dias = $($(this).children("td")[7]).html();
-			objeto.fecha_pago = $($(this).children("td")[8]).html();
-			var fecha_pago = $($(this).children("td")[9]).html();
-			objeto.fecha_pago = vencimiento.substr(6,4)+'-'+vencimiento.substr(3,2)+'-'+vencimiento.substr(0,2);
-			objeto.forma_pago = $($(this).children("td")[10]).html();
-			objeto.observaciones = $($(this).children("td")[11]).html();
+			var fecha_pago = $($(this).children("td")[8]).html();
+			objeto.fecha_pago = fecha_pago.substr(6,4)+'-'+fecha_pago.substr(3,2)+'-'+fecha_pago.substr(0,2);
+			objeto.forma_pago = $($(this).children("td")[9]).html();
+			objeto.observaciones = $($(this).children("td")[10]).html();
 			comprobantes.push(objeto);
 		})
 

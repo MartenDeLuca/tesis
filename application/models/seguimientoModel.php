@@ -37,16 +37,18 @@ class SeguimientoModel extends CI_Model{
 		$sql_select = 
 		"select *
 		from (
-			select forma_pago, fecha_pago, observaciones, actividades.fecha 
+			select forma_pago, DATE_FORMAT(fecha_pago, '%d/%m/%Y') fecha_pago, observaciones, actividades.fecha 
 			from actividades_comprobantes 
 			inner join actividades on actividades.id_actividad = actividades_comprobantes.id_actividad
 			where actividades_comprobantes.comprobante = ? and actividades_comprobantes.tipo = ? and (actividades_comprobantes.forma_pago <> '' or actividades_comprobantes.fecha_pago <> '' or actividades_comprobantes.observaciones <> '')
 			union 
-			select forma_pago, fecha_pago, observaciones, mails.fecha
+			select forma_pago, DATE_FORMAT(fecha_pago, '%d/%m/%Y %T') fecha_pago, observaciones, mails.fecha
 			from mails_comprobantes 
 			inner join mails on mails.id_mail = mails_comprobantes.id_mail
 			where mails_comprobantes.comprobante = ? and mails_comprobantes.tipo = ? and (mails_comprobantes.forma_pago <> '' or mails_comprobantes.fecha_pago <> '' or mails_comprobantes.observaciones <> '')
 		) tabla
+		order by fecha desc
+		limit 0, 1		
 		";
 		$stmt = $this->db->query($sql_select, array($comprobante, $tipo, $comprobante, $tipo));
 		$datos = $stmt->result_array();
@@ -66,6 +68,17 @@ class SeguimientoModel extends CI_Model{
 			$html .= $this->boxActividad($fila, $cont, $array_asignados);
 		 	$cont++;
 		}
+		$html .= "
+		<script>
+		$(document).ready(function(){
+			$('.box').boxWidget({
+			  animationSpeed: 500,
+			  collapseIcon: 'fa-minus',
+			  expandIcon: 'fa-plus',
+			  removeIcon: 'fa-times'
+			})
+		})
+		</script>";
 		return array("html" => $html, "cont" => $cont);
 	}
 
@@ -230,7 +243,7 @@ class SeguimientoModel extends CI_Model{
 			<div class="box-body" '.$visual_box.'>
 				<div class="acordeon">	
 					<div class="acordeon__item">
-						<input type="checkbox" name="acordeon" class="check-acordeon" id="'.$cont.'_item1" onchange="cambiar_check('.$cont.'_1)" checked>
+						<input type="checkbox" name="acordeon" class="check-acordeon" id="'.$cont.'_item1" onchange="cambiar_check(\''.$cont.'_1\')" checked>
 						<label for="'.$cont.'_item1" class="acordeon__titulo">
 							<div style="text-align:left;">General <span style="float:right;"><span id="'.$cont.'_icon1" class="glyphicon glyphicon glyphicon-chevron-down"></span></span></div>
 						</label>
@@ -278,22 +291,23 @@ class SeguimientoModel extends CI_Model{
 							</div>
 						</div>
 					</div>
-					'.$this->boxComprobantes($comprobantes_2, $cont, $cantidad_comprobantes).'
+					'.$this->boxComprobantes($comprobantes_2, $cont, $cantidad_comprobantes, 'actividades').'
 				</div>	
 			</div>
 		</div>';
 		return $html;
 	}
 
-	function boxComprobantes($comprobantes_2, $cont, $cantidad_comprobantes){
+	function boxComprobantes($comprobantes_2, $cont, $cantidad_comprobantes, $tipoActividad){
 		$html = 
 		'<div class="acordeon__item">
-			<input type="checkbox" name="acordeon" class="check-acordeon" id="'.$cont.'_item2" onchange="cambiar_check('.$cont.'_2)" checked>
+			<input type="checkbox" name="acordeon" class="check-acordeon" id="'.$cont.'_item2" onchange="cambiar_check(\''.$cont.'_2\')" checked>
 			<label for="'.$cont.'_item2" class="acordeon__titulo">
 				<div style="text-align:left;">Comprobantes ('.$cantidad_comprobantes.') <span style="float:right;"><span id="'.$cont.'_icon2" class="glyphicon glyphicon glyphicon-chevron-down"></span></span></div>
 			</label>
 			<div class="acordeon__contenido">
 				<div class="col-md-12">
+					<a class="btn btn-primary btn-form btn_anotacion" data-tipo="'.$tipoActividad.'" id="'.$cont.'_btn_anotacion" style="display: none;">Anotación</a>
 					<div class="table-responsive">
 						<table class="table" id="'.$cont.'_comprobantes">
 							<thead>
@@ -306,16 +320,16 @@ class SeguimientoModel extends CI_Model{
 									<th>Vencimiento</th>
 									<th>Importe</th>
 									<th>Días</th>
-									<th>Forma de Pago</th>
 									<th>Fecha de Pago</th>
+									<th>Forma de Pago</th>									
 									<th>Observaciones</th>
 								</tr>
 							</thead>
 							<tbody>'; 
 								foreach ($comprobantes_2 as $fila_comp) {
 								$html .= 
-									'<tr>
-										<td><input type="checkbox" id="'.$cont.'_checkbox"></td>
+									'<tr data-id='.$fila_comp["id"].'>
+										<td><input type="checkbox" data-comprobante="'.$cont.'" class="check_comprobantes"></td>
 										<td>'.$fila_comp["tipo"].'</td>
 										<td>'.$fila_comp["comprobante"].'</td>
 										<td>'.$fila_comp["estado"].'</td>
@@ -323,13 +337,13 @@ class SeguimientoModel extends CI_Model{
 										<td>'.$fila_comp["vencimiento"].'</td>
 										<td>'.$fila_comp["importe"].'</td>
 										<td>'.$fila_comp["dias"].'</td>		
-										<td>'.$fila_comp['forma_pago'].'</td>
 										<td>';
 										$fecha_pago = $fila_comp["fecha_pago"]; 
-										if(strpos($fecha_pago, '1969-12-31') !== false){
+										if(strpos($fecha_pago, '31/12/1969') !== false){
 											$fecha_pago = ''; 
 										}
-										$html .= '</td>
+										$html .= $fecha_pago.'</td>
+										<td>'.$fila_comp['forma_pago'].'</td>
 										<td>'.$fila_comp['observaciones'].'</td>
 									</tr>';
 								}
@@ -381,7 +395,7 @@ class SeguimientoModel extends CI_Model{
 					'</span>
 		        </div>
 				<div class="box-tools pull-right">
-					<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i></button>
+					<button type="button" class="btn btn-box-tool" data-widget="collapse" onclick="abrirIframe(\''.$cont.'\', \''.$id_mail.'\')"><i class="fa fa-plus"></i></button>
 				</div>
 			</div>
 			<div class="box-body">
@@ -394,13 +408,13 @@ class SeguimientoModel extends CI_Model{
 			    		<div id="'.$cont.'_datos_mail" class="tab-pane fade in active">
 							<div class="acordeon">
 								<div class="acordeon__item">
-									<input type="checkbox" name="acordeon" class="check-acordeon" id="'.$cont.'_item1" onchange="cambiar_check('.$cont.'_1)" checked>
+									<input type="checkbox" name="acordeon" class="check-acordeon" id="'.$cont.'_item1" onchange="cambiar_check(\''.$cont.'_1\')" checked>
 									<label for="'.$cont.'_item1" class="acordeon__titulo">
 										<div style="text-align:left;">General <span style="float:right;"><span id="'.$cont.'_icon1" class="glyphicon glyphicon glyphicon-chevron-down"></span></span></div>
 									</label>
 									<div class="acordeon__contenido">
 				       					<div class="row">
-				       						<iframe class="iframe_body" style="overflow-x: auto !important;" width="100%" src="'.base_url().'seguimiento/getContenidoMail/'.$id_mail.'" id="'.$cont.'_idFrame" frameborder="0" onload="resizeIframe(this)"></iframe>
+				       						<iframe class="iframe_body" style="overflow-x: auto !important; padding-left: 15px;" width="100%" src="'.base_url().'seguimiento/getContenidoMail/'.$id_mail.'" id="'.$cont.'_idFrame" frameborder="0" onload="resizeIframe(this)"></iframe>
 				       					</div>
 				       					<div class="row">';
 				       					foreach ($adjuntos as $fila) {
@@ -418,7 +432,7 @@ class SeguimientoModel extends CI_Model{
 				       					'</div>
 				       				</div>
 				       			</div>
-				       			'.$this->boxComprobantes($comprobantes_2, $cont, $cantidad_comprobantes).'
+				       			'.$this->boxComprobantes($comprobantes_2, $cont, $cantidad_comprobantes, 'mails').'
 				       		</div>
 				       	</div>
 				       	<div id="'.$cont.'_metrica_mail" class="tab-pane fade in">
@@ -457,29 +471,27 @@ class SeguimientoModel extends CI_Model{
 			                      	</table>
 			                    </div>
 			                </div>
-				       		<script>
-							am4core.ready(function() {
-								am4core.useTheme(am4themes_animated);							
-								var chart = am4core.create("'.$cont.'_chartdiv", am4charts.PieChart);
+				       		<script>				       		
+							$(document).ready(function() {
 								var total = '.$enviados.';
 								var leidos = '.$cantLeidos.';
 								var noLeidos = '.$noLeidos.';
-								chart.data = [ {
-								  "country": "Leidos",
-								  "litres": leidos
-								}, {
-								  "country": "No Leidos",
-								  "litres": noLeidos
-								}];
-								var pieSeries = chart.series.push(new am4charts.PieSeries());
-								pieSeries.dataFields.value = "litres";
-								pieSeries.dataFields.category = "country";
-								pieSeries.slices.template.stroke = am4core.color("#fff");
-								pieSeries.slices.template.strokeWidth = 2;
-								pieSeries.slices.template.strokeOpacity = 1;
-								pieSeries.hiddenState.properties.opacity = 1;
-								pieSeries.hiddenState.properties.endAngle = -90;
-								pieSeries.hiddenState.properties.startAngle = -90;
+					       		var chart = AmCharts.makeChart("'.$cont.'_chartdiv", {
+									"type": "pie",
+									"theme": "light",
+									"dataProvider": [{"title": "Leidos","value": leidos}, {"title": "No Leidos","value": noLeidos}],
+									"valueField": "value",
+									"titleField": "title",
+									"balloon":{
+										"fixedPosition":true
+									},
+									"export": {
+										"enabled": true
+									},
+									"responsive": {
+										"enabled": true
+									}
+								});
 							});
 							</script>
 				       	</div>
@@ -508,6 +520,20 @@ class SeguimientoModel extends CI_Model{
 			$contenido_mail .= $fila["contenido"];
 		}
 		return $contenido_mail;
+	}
+
+	function anotacionesComprobantes($where_id, $tipo, $fecha_pago, $forma_pago, $observacion){
+	 	$tm = $this->db->query(
+		"UPDATE ".$tipo."_comprobantes
+		SET fecha_pago = ?, forma_pago = ?, observaciones = ?
+		$where_id", 
+		array($fecha_pago, $forma_pago, $observacion));
+		if(!$tm){
+    		$error = $this->db->error();
+    		$this->db->trans_rollback();
+    		return $error['message'];
+    	}
+    	return "OK";
 	}
 
 	function getSeguimiento($tipo, $where){
@@ -723,7 +749,7 @@ class SeguimientoModel extends CI_Model{
 
 	function getComprobantesPorActividad($id, $singular, $plural){
 		$sql_select = 
-		"select tipo, comprobante, DATE_FORMAT(fecha, '%d/%m/%Y') fecha, DATE_FORMAT(vencimiento, '%d/%m/%Y') vencimiento, case when estado = 'Pendiente' then datediff(vencimiento, now()) else '-' end dias, importe, fecha_pago, forma_pago, observaciones, id, estado  
+		"select tipo, comprobante, DATE_FORMAT(fecha, '%d/%m/%Y') fecha, DATE_FORMAT(vencimiento, '%d/%m/%Y') vencimiento, case when estado = 'Pendiente' then datediff(vencimiento, now()) else '-' end dias, importe, DATE_FORMAT(fecha_pago, '%d/%m/%Y') fecha_pago, forma_pago, observaciones, id, estado  
 		from ".$plural."_comprobantes
 		where id_".$singular." = ?";
 		$stmt = $this->db->query($sql_select, array($id));

@@ -23,6 +23,9 @@ $route['plantillas'] = 'plantilla';
 $route['agregar-plantilla'] = 'Plantilla/agregar_plantilla';
 $route['modificar-plantilla'] = 'Plantilla/modificar_plantilla';
 
+$route['clientes'] = 'seguimiento/clientes';
+$route['detalle-cliente'] = 'seguimiento/detalle_cliente';
+
 
 $route['login'] = 'usuario';
 $route['licencias'] = 'usuario/licencias/0';

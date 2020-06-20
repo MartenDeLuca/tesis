@@ -1,8 +1,4 @@
 <?php 
-$clase_div_datos_adicionales = "";
-$div_actividades = "9";
-$cambiarVistaInteraccion = "minus";
-$cambiarVista = "left";
 $seguimientoModel = new seguimientoModel;
 ?>
 <style type="text/css">
@@ -10,6 +6,16 @@ $seguimientoModel = new seguimientoModel;
 	    background-color: white !important;	 
 	}
 </style>
+
+<script src="<?php echo base_url('plugin') ?>/amcharts/amcharts.js"></script>
+<script src="<?php echo base_url('plugin') ?>/amcharts/plugins/dataloader/dataloader.min.js" type="text/javascript"></script>
+<script src="<?php echo base_url('plugin') ?>/amcharts/serial.js"></script>
+<script src="<?php echo base_url('plugin') ?>/amcharts/funnel.js"></script>
+<script src="<?php echo base_url('plugin') ?>/amcharts/pie.js"></script>
+<script src="<?php echo base_url('plugin') ?>/amcharts/plugins/export/export.min.js"></script>
+<link href="<?php echo base_url('plugin') ?>/amcharts/plugins/export/export.css" type="text/css" media="all" rel="stylesheet"/>
+<script src="<?php echo base_url('plugin') ?>/amcharts/themes/light.js"></script>
+
 <div class="content-wrapper" style="background: white !important;">	
     <section class="content-header">
         <h1>
@@ -29,6 +35,8 @@ $seguimientoModel = new seguimientoModel;
 						<a title="Agregar actividad" onclick="agregarActividad()" class="btn btn-primary btn-form botones-derechos"><span class="glyphicon glyphicon-file"></span></a>
 						
 						<a title="Mandar mail" onclick="mandarMail()" class="btn btn-primary btn-form botones-derechos"><span class="glyphicon glyphicon-envelope"></span></a>
+
+						<a title="Buscar Cliente" onclick="modal('Cliente')" class="btn btn-primary btn-form botones-derechos hidden-xs"><span class="glyphicon glyphicon-search"></span></a>
 						
 						<a title="Mostrar/Ocultar el contenido de las tareas" onclick="cambiarVistaInteraccion(this)" id="cambiarVistaInteraccion" class="btn btn-primary btn-form botones-derechos hidden-xs"><span class="glyphicon glyphicon-<?php echo $cambiarVistaInteraccion; ?>"></span></a>
 						
@@ -48,8 +56,9 @@ $seguimientoModel = new seguimientoModel;
 						</div>
        				</div>
        				<div class="box-body">
+       					<a class="btn btn-primary btn-form btn_anotacion" data-tipo="actividades" id="inicio_btn_anotacion" style="display: none;">Anotación</a>
        					<div class="table-responsive">
-       						<table class="table">
+       						<table class="table" id="inicio_comprobantes">
        							<thead>
        								<tr>
        									<th></th>
@@ -81,8 +90,8 @@ $seguimientoModel = new seguimientoModel;
 			             				$comprobantes[$contador]["forma_pago"] = $forma_pago;
 			             				$comprobantes[$contador]["observaciones"] = $observaciones; 
        								?>
-       									<tr>
-       										<td><input type="checkbox" id="check_comprobante_<?php echo $contador; ?>"></td>
+       									<tr data-id='<?php echo $contador; ?>'>
+       										<td><input type="checkbox" data-comprobante="inicio" class="check_comprobantes"></td>
 		       								<td><?php echo $tipo; ?></td>
 		       								<td><?php echo $comprobante; ?></td>
 		       								<td>Pendiente</td>
@@ -120,6 +129,9 @@ $seguimientoModel = new seguimientoModel;
 				  	<ul class="nav nav-tabs">
 				    	<li class="active"><a data-step="comprobantes_tab" data-toggle="tab" href="#comprobantes_tab">Vigentes</a></li>
 				    	<li><a data-step="historial_tab" data-toggle="tab" id="a_historial_tab" href="#historial_tab">Historial</a></li>
+				    	<div class="text-right">
+				    		<a title="Buscar Actividades" onclick="modal('Actividades')" class="btn btn-primary btn-form botones-derechos"><span class="glyphicon glyphicon-search"></span></a>
+				    	</div>
 				  	</ul>
 				  	<div class="tab-content">
 			    		<div id="comprobantes_tab" class="tab-pane fade in active">
@@ -227,38 +239,6 @@ $seguimientoModel = new seguimientoModel;
 	</div>
 </div>
 
-<div class="modal fade in" id="modalComprobantes" tabindex="-1" role="dialog" aria-labelledby="formBuscar" aria-hidden="true">
-	<div class="modal-dialog modal-lg">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span></button>
-				<h4 class="modal-title" id="modalComprobantes-title">Anotación en comprobantes</h4> 
-			</div>
-			<div class="modal-body">
-				<div class="row">
-					<div class="col-md-12">
-						<label class="lab">Fecha de pago</label>
-						<input type="date" class="form-control" id="fecha_pago">
-					</div>
-					<div class="col-md-12">
-						<label class="lab">Forma de pago</label>
-						<select class="form-control" id="forma_pago">
-							<option>Transfiere</option>
-							<option>Pago con eCheq</option>
-							<option>Retirar pago</option>
-							<option>Trae pago</option>
-						</select>
-					</div>
-					<div class="col-md-12">
-						<label class="lab">Observación</label>
-						<input type="text" class="form-control" maxlength="200" id="observaciones">
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
-
 <div class="modal fade in" id="modalActividad" tabindex="-1" role="dialog" aria-labelledby="formBuscar" aria-hidden="true">
 	<div class="modal-dialog modal-lg">
 		<div class="modal-content">
@@ -300,9 +280,7 @@ $seguimientoModel = new seguimientoModel;
 <input type="hidden" id="cont_activo" value="">
 <input type="hidden" id="id_actividad_no_mirar">
 <input type="hidden" id="inicio" value="0">
-<script src="https://www.amcharts.com/lib/4/core.js"></script>
-<script src="https://www.amcharts.com/lib/4/charts.js"></script>
-<script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
+
 
 <script type="text/javascript">
 	var empresa = "<?php echo $this->session->userdata('empresa'); ?>";
@@ -360,7 +338,7 @@ $seguimientoModel = new seguimientoModel;
 		$("#div_actividades").addClass("col-md-"+cambio_ancho);
 
 		//guardar acciones
-		//guardarConfiguracion('vista', valor_configuracion);
+		cambiar_menu('vista_amplia', valor_configuracion);
 	}
 
 	function cambiarVistaInteraccion(objeto){
@@ -410,7 +388,7 @@ $seguimientoModel = new seguimientoModel;
 			success: function(respuesta){
 				$("#div_historial_tab").append(respuesta["html"]);
 				$("#cont").val(respuesta["cont"]);
-				$("#inicio").val(parseInt(inicio)+10);				
+				$("#inicio").val(parseInt(inicio)+10);
 			}
 		});
 	}
@@ -434,6 +412,7 @@ $seguimientoModel = new seguimientoModel;
 
 	function editarActividad(cont){
 		$("#cont_activo").val(cont);
+		$("#formulario_btn_anotacion").hide();
 		$("#modalActividad").modal('show');
 		var array = window[cont+"_datos_actividad"];
 		$("#instancia").val("Modificar");
@@ -468,6 +447,7 @@ $seguimientoModel = new seguimientoModel;
 
 	function agregarActividad(){
 		$("#modalActividad").modal('show');
+		$("#formulario_btn_anotacion").hide();
 		$("#instancia").val("Agregar");
 		var d = new Date();
        	localDateTime = 
@@ -493,7 +473,7 @@ $seguimientoModel = new seguimientoModel;
 		var tamano_array_comprobantes = array_comprobantes.length;
 		var html_comp = "";
 		if(tamano_array_comprobantes > 0){
-			html_comp = htmlComprobantes(array_comprobantes, tamano_array_comprobantes);
+			html_comp = htmlComprobantes(array_comprobantes, tamano_array_comprobantes, 'formulario');
 		}
 		$("#"+id_cantidad).html("("+tamano_array_comprobantes+")");
 		$("#"+id_tabla+" tbody").html(html_comp);
@@ -553,14 +533,21 @@ $seguimientoModel = new seguimientoModel;
 			var tamano_array_comprobantes = array_comprobantes.length;
 			var html_comp = "";
 			if(tamano_array_comprobantes > 0){
-				html_comp = htmlComprobantes(array_comprobantes, tamano_array_comprobantes);
+				html_comp = htmlComprobantes(array_comprobantes, tamano_array_comprobantes, cont);
 			}
 			$("#"+cont+"_comprobantes tbody").html(html_comp);
 
 			window[cont+"_datos_actividad"] = array;
 			if(estado_nuevo == "Pendiente" && estado_viejo == "Realizada"){
 				var html = ajusto_html(cont);			
-				$("#div_actividades_pendientes").prepend(html);	
+				$("#div_actividades_pendientes").prepend(html);
+				$('.box').boxWidget({
+				  animationSpeed: 500,
+				  collapseIcon: 'fa-minus',
+				  expandIcon: 'fa-plus',
+				  removeIcon: 'fa-times'
+				})
+			
 				$("#"+cont+"_check_estado").show();		
 			}else if(estado_viejo == "Pendiente" && estado_nuevo == "Realizada"){
 				acciones_adicionales(cont, array["id_actividad"]);			
@@ -569,6 +556,7 @@ $seguimientoModel = new seguimientoModel;
 			var cont = $("#cont").val();
 			$("#cont").val(parseInt(cont)+1);
 			var id = array["id_actividad"];
+			ajustarAdicionalesComprobante(array["comprobantes"]);
 			$.ajax({
 				url: "<?php echo base_url() ?>seguimiento/actividadesAgregar",
 				type: "POST",
@@ -583,12 +571,14 @@ $seguimientoModel = new seguimientoModel;
 				}
 			});
 		}
+		$("#"+cont+"_btn_anotacion").hide();
 	}
 
 	function accion_mail_bd(array){
 		var cont = $("#cont").val();
 		$("#cont").val(parseInt(cont)+1);
 		var id = array["id_actividad"];
+		ajustarAdicionalesComprobante(array["comprobantes"]);
 		$.ajax({
 			url: "<?php echo base_url() ?>seguimiento/mailAgregar",
 			type: "POST",
@@ -597,6 +587,23 @@ $seguimientoModel = new seguimientoModel;
 				$("#comprobantes_tab").prepend(respuesta);
 			}
 		});
+	}
+
+	function ajustarAdicionalesComprobante(array){
+		var tamano = array.length;
+		var fecha_pago, forma_pago, observacion;
+		for(var i = 0; i < tamano; i++){
+			fecha_pago = array[i]["fecha_pago"];
+			fecha_pago = fecha_pago.substr(8,2)+'/'+fecha_pago.substr(5,2)+'/'+fecha_pago.substr(0,4);
+			forma_pago = array[i]["forma_pago"];
+			observacion = array[i]["observaciones"];
+			$($($("#inicio_comprobantes tbody tr")[i]).children("td")[8]).html(fecha_pago);
+			comprobantes_pendientes[i]["fecha_pago"] = array[i]["fecha_pago"];
+			$($($("#inicio_comprobantes tbody tr")[i]).children("td")[9]).html(forma_pago);
+			comprobantes_pendientes[i]["forma_pago"] = forma_pago;
+			$($($("#inicio_comprobantes tbody tr")[i]).children("td")[10]).html(observacion);
+			comprobantes_pendientes[i]["observaciones"] = observacion;
+		}
 	}
 
 	function descargarArchivos(id_adjunto, id_mail){
@@ -655,10 +662,17 @@ $seguimientoModel = new seguimientoModel;
 		id_actividad_no_mirar += " and id_actividad <> '"+id+"' ";
 		$("#id_actividad_no_mirar").val(id_actividad_no_mirar);
 		$("#"+id_prepend).prepend(html);
+		$('.box').boxWidget({
+		  animationSpeed: 500,
+		  collapseIcon: 'fa-minus',
+		  expandIcon: 'fa-plus',
+		  removeIcon: 'fa-times'
+		})
 	}
 
 	function ajusto_html(cont){
 		var html = $("#"+cont+"_box").html();
+		var clases = $("#"+cont+"_box").attr("class");
 		var html_aux = html;
 		var html_final = "";
 		while(html_aux != ""){			
@@ -670,7 +684,7 @@ $seguimientoModel = new seguimientoModel;
 				html_aux = "";
 			}
 		}
-		html = "<div class='box' id='"+cont+"_box'>"+html_final+"</div>";
+		html = "<div class='"+clases+"' id='"+cont+"_box'>"+html_final+"</div>";		
 		$("#"+cont+"_box").remove();
 		return html;
 	}
@@ -678,6 +692,34 @@ $seguimientoModel = new seguimientoModel;
   	function resizeIframe(obj) {
   		var tamano = obj.contentWindow.document.documentElement.scrollHeight;
     	obj.style.height = tamano+ 'px';
+	}	
+
+	function abrirIframe(cont, id_mail){
+		if($("#"+cont+"_box").attr("class").indexOf("collapsed-box") > -1){
+			$("#"+cont+"_idFrame").attr('src', "<?php echo base_url(); ?>seguimiento/getContenidoMail/"+id_mail);
+		}
 	}
-	
+
+	function buscarActividades(){
+		var consulta = $("#modal-buscar").val();
+		$.ajax({
+			url: "<?php echo base_url() ?>/seguimiento/buscarActividades",
+			type: "POST",
+			data:{consulta},
+			dataType: "json",
+			success: function(respuesta){
+				var html = `<table class='table'><tr><td>Direccion</td><td>Cod. Postal</td><td>Localidad</td><td>Provincia</td></tr>`;
+				var tamano = respuesta.length;
+				for(var i = 0; i < tamano; i++){
+					html += `<tr style="cursor:pointer" onclick="seleccionarActividades(${respuesta[i]["id"]})"><td>${respuesta[i]["direccion"]}</td><td>${respuesta[i]["codigo_postal"]}</td><td>${respuesta[i]["localidad"]}</td><td>${respuesta[i]["provincia"]}</td></tr>`;
+				}
+				html += `</tbody></table>`;
+				$("#modal-datos").html(html);
+			}
+		});		
+	}
+
+	function seleccionarActividades(id, tipo){
+
+	}
 </script>

@@ -35,6 +35,7 @@ class Usuario extends CI_Controller {
 						'id_carpeta' => $resultado->id_carpeta,
 						'dominio' => $resultado->dominio,
 						'puerto' => $resultado->puerto,
+						'vista_amplia' => $resultado->vista_amplia,
 						'diccionario' => $resultado->diccionario,
 						'permiso' => $resultado->permiso,
 						'ingreso' => true
