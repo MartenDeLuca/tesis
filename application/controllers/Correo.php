@@ -12,14 +12,14 @@ class Correo extends CI_Controller {
 			$correo = $_POST['correo'];
 			$contra = $_POST['contra'];	
 			$nombre = $_POST['nombre'];	
-			$host= $_POST['host'];	
-			$puerto= $_POST['puerto'];	
+			$host = $_POST['host'];	
+			$puerto = $_POST['puerto'];	
 		} else {
 			$correo = "crmflow2017@gmail.com";
 			$contra = "neestor1";
 			$nombre = 'SIMPLAPP';
-			$host="smtp.gmail.com";
-			$puerto="25";
+			$host ="smtp.gmail.com";
+			$puerto = "25";
 		}
 		if(!isset($_POST['separador'])){
 			$separador = '***';
@@ -38,7 +38,7 @@ class Correo extends CI_Controller {
 		if(!isset($_POST['certificado_ssl'])){
 			$mail->SMTPOptions = array('ssl' => array('verify_peer' => false,'verify_peer_name' => false,'allow_self_signed' => true));
 		}else{
-			if($_POST['certificado_ssl'] == "Si"){
+			if($_POST['certificado_ssl'] == "1"){
 				$mail->SMTPOptions = array('ssl' => array('verify_peer' => false,'verify_peer_name' => false,'allow_self_signed' => true));
 			}else{
 				$mail->SMTPOptions = array();
@@ -85,8 +85,12 @@ class Correo extends CI_Controller {
 		$mail->CharSet = 'UTF-8';
 
 		if (!$mail->send()) {
-			echo 'error';			
+			echo 'error';
 		}else {
+			if(isset($_POST["id_correo_bd"])){
+				$message_id = $mail->getMensajeId();
+				$this->reglaModel->setearIdMensaje($message_id, $_POST["id_correo_bd"]);
+			}
 			echo 'OK';
 		}
 	}

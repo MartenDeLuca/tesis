@@ -34,9 +34,9 @@ class CorreoModel extends CI_Model{
 	    curl_close($curl);
 	}
 
-	function marcarLeido($id_correo,$destinatario){
-		$sql = "select id_correo from mails_leidos";
-		$stmt = $this->db->query($sql);
+	function marcarLeido($id_correo, $destinatario){
+		$sql = "select id_correo from mails_leidos where id_correo = ? and destinatario = ?";
+		$stmt = $this->db->query($sql, array($id_correo, $destinatario));
 		$registros = $stmt->result_array();
 		if (count($registros) == 0){
 			$tm = $this->db->query("INSERT INTO mails_leidos (id_correo, destinatario) VALUES (?, ?)", array($id_correo, $destinatario));

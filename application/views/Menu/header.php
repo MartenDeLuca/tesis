@@ -15,6 +15,30 @@ if($menuFijo == "Si"){
 	$menuFijoClase = "";
 	$menuFijoRadioCheck = "value='Si' checked";
 }
+
+$fecha = getdate(); 
+$fechaAno = $fecha['year'];
+if(strlen($fecha['mon'])==1){
+	$fechaMes = '0'.$fecha['mon']; 
+}else{
+	$fechaMes = $fecha['mon'];
+}
+if(strlen($fecha['mday'])==1){
+	$fechaDia = '0'.$fecha['mday']; 
+}else{
+	$fechaDia = $fecha['mday']; 
+}
+if(strlen($fecha['hours'])==1){
+	$fechaHoras = '0'.$fecha['hours']; 
+}else{
+	$fechaHoras = $fecha['hours']; 
+} 
+if(strlen($fecha['minutes'])==1){
+	$fechaMinutos = '0'.$fecha['minutes']; 
+}else{
+	$fechaMinutos = $fecha['minutes']; 
+}
+
 $cantidad_actividades = count($actividades_no_leidas);
 
 $EmpresasGenerales='';
@@ -199,9 +223,20 @@ foreach  ($empresas as $fila){
 						<?php
 						echo llenarTreeview($carpetas);
 						?>
-						<!--SEGUIMIENTO-->
+
+						<!--CLIENTE-->
+			            <li>
+			                <a href="<?php echo base_url() ?>clientes"><i class="fa fa-book"></i> <span>Clientes</span></a>
+			            </li>
+
+			            <!--SEGUIMIENTO-->
 			            <li>
 			                <a href="<?php echo base_url() ?>seguimiento"><i class="fa fa-book"></i> <span>Seguimiento</span></a>
+			            </li>
+
+			            <!--PLANTILLAS-->
+			            <li>
+			                <a href="<?php echo base_url() ?>plantillas"><i class="fa fa-book"></i> <span>Plantillas de Mails</span></a>
 			            </li>
 						
 						<!--REGLA DE NEGOCIO-->
@@ -270,7 +305,7 @@ foreach  ($empresas as $fila){
 				</span>	
 			</div>
 
-			<input type="hidden" id="Fecha_Actual" value="<?php $fecha=getdate(); if(strlen($fecha['mon'])==1) $fechaMes = '0'.$fecha['mon']; else $fechaMes = $fecha['mon']; if(strlen($fecha['mday'])==1) $fechaDia = '0'.$fecha['mday']; else $fechaDia = $fecha['mday']; echo $fechaDia .'/'. $fechaMes .'/'. $fecha['year'];?>">
+			<input type="hidden" id="Fecha_Actual" value="<?php echo $fechaDia .'/'. $fechaMes .'/'. $fechaAno; ?>">
 			<input type="hidden" id="personalizarElegidos" value="0">			
 			<input type="hidden" id="base_url" value="<?php echo htmlspecialchars(base_url()); ?>">
 			<input type="hidden" id="current_url_hidden" value= "<?php echo $current_url; ?>">
@@ -421,19 +456,19 @@ foreach  ($empresas as $fila){
 					var nuevaContra = $('#nuevaContra').val();
 					var confirmarContra = $('#confirmarContra').val();
 					let ok = true;
-					let error= '';
+					let error = '';
 					if(nuevaContra == confirmarContra){
-						if (nuevaContra.length < 8 ) {
-				          ok=false;
-				          error="La contraseña debe tener minimo 8 caracteres";
+						if (nuevaContra.length < 8) {
+				          ok = false;
+				          error = "La contraseña debe tener minimo 8 caracteres";
 				        }
 				        if (!nuevaContra.match(/[A-z]/) || !nuevaContra.match(/[0-9]/)) {
-				          ok=false;   
-				          error="La contraseña debe tener al menos un numero y una letra";
+				          ok = false;   
+				          error = "La contraseña debe tener al menos un numero y una letra";
 				        }
 					}else{
-						ok =false;
-						error= "Las contraseñas no coinciden";
+						ok = false;
+						error = "Las contraseñas no coinciden";
 					}
 					if (ok){
 						$.ajax({
@@ -453,7 +488,6 @@ foreach  ($empresas as $fila){
 						marcarError("nuevaContra", error);
 						marcarError("confirmarContra", error);
 					}
-					
 				}
 
 				$(".int").keypress(function(e){

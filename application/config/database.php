@@ -94,25 +94,3 @@ $db['default'] = array(
 	'failover' => array(),
 	'save_queries' => TRUE
 );
-
-$db['sqlsrv'] = array(
-	'hostname' => 'sqlsrv:Server=tangosrv;Database=master',
-	//'port' => '1433',
-	'username' => 'Axoft',
-	'password' => 'Axoft',
-	'database' => 'master',  
-	'dbdriver' => 'pdo',
-	'dbprefix' => '',
-	'pconnect' => FALSE,
-	'db_debug' => FALSE,
-	'cache_on' => FALSE,
-	'cachedir' => '',
-	'char_set' => 'utf8',
-	'dbcollat' => 'utf8_general_ci',
-	'swap_pre' => '',
-	'encrypt' => FALSE,
-	'compress' => FALSE,
-	'stricton' => FALSE,
-	'failover' => array(),
-	'save_queries' => TRUE
-);

@@ -107,53 +107,6 @@
 					</div>
 					<div id="correo_tab" class="tab-pane fade in">
 						<div class="acordeon">
-							<div class="acordeon__item">
-								<input type="checkbox" name="acordeon" class="check-acordeon" id="item0" onchange="cambiar_check(0)" checked>
-								<label for="item0" class="acordeon__titulo">
-									<div style="text-align:left;">Mail <span style="float:right;"><span id="icon0" class="glyphicon glyphicon glyphicon-chevron-down"></span></span></div>
-								</label>
-								<div class="acordeon__contenido">
-									<div class="row">
-										<div class="col-md-6">
-					    					<label class="lab">Correo</label>
-					    					<input type="text" class="form-control" placeholder="Correo" name="correo" id="correo" value="<?php echo $correo; ?>">
-					    					<div class="error_color" id="error_correo"></div>
-					    				</div>
-					    				<div class="col-md-6">
-					    					<label class="lab">Contraseña</label>
-					    					<input type="password" class="form-control" placeholder="Contraseña" name="contrasena" id="contrasena" value="">
-					    					<div class="error_color" id="error_contrasena"></div>
-					    				</div>
-					    			</div>
-					    			<div class="row">
-					    				<div class="col-md-6">
-					    					<label class="lab">Puerto</label>
-					    					<input type="text" class="form-control int" placeholder="Puerto" name="puerto" id="puerto" value="<?php echo $puerto; ?>">
-					    					<div class="error_color" id="error_puerto"></div>
-					    				</div>
-					    				<div class="col-md-6">
-					    					<label class="lab">Host</label>
-					    					<input type="text" class="form-control" placeholder="Host" name="host" id="host" value="<?php echo $host; ?>">
-					    					<div class="error_color" id="error_host"></div>
-					    				</div>
-					    			</div>
-					    			<div class="row">
-					    				<div class="col-md-6">
-					    					<label class="lab">Certificado SSL</label>
-					    					<select class="form-control select2 input_select2" name="certificado_ssl" id="certificado_ssl">
-					    						<option value="1">Si</option>
-					    						<option value="0">No</option>
-					    					</select>
-					    					<div class="error_color" id="error_certificado_ssl"></div>
-					    				</div>
-					    				<div class="col-md-6">
-						    				<div class="pull-right" style="padding-top:20px;">
-						    					<a class="btn btn-primary btn-form" onclick="validarDatosCorreo(this)">Validar Correo</a>
-						    				</div>
-					    				</div>
-					    			</div>
-					    		</div>
-					    	</div>	
 					    	<div class="acordeon__item">
 								<input type="checkbox" name="acordeon" class="check-acordeon" id="item1" onchange="cambiar_check(1)" checked>
 								<label for="item1" class="acordeon__titulo">
@@ -161,7 +114,7 @@
 								</label>
 								<div class="acordeon__contenido">
 									<div class="row">
-										<div class="col-md-12">
+										<div class="col-md-6">
 											<label class="lab">Cliente</label>
 											<select type="text" class="form-control" name="cliente_mail" id="cliente_mail">												
 					    						<?php echo $atributos; ?>	
@@ -176,6 +129,14 @@
 												?>
 											});
 											</script>
+										</div>
+										<div class="col-md-6">
+											<label class="lab">Incluye comprobantes</label>
+											<select type="text" class="form-control" name="comprobantes_mail" id="comprobantes_mail">
+					    						<option <?php if($comprobantes_mail == "1"){echo 'selected'; } ?> value="1">Si</option>
+					    						<option <?php if($comprobantes_mail == "0"){echo 'selected'; } ?> value="0">No</option>
+					    					</select>
+					    					<div class="error_color" id="error_comprobantes_mail"></div>
 										</div>
 									</div>
 					    			<div class="row">
@@ -361,20 +322,12 @@
 								</script>
 							</div>
 							<div class="col-md-6">
-								<label class="lab">Contacto</label>
-								<select type="text" class="form-control" name="contacto" id="contacto">
-		    						<?php echo $atributos; ?>	
+								<label class="lab">Incluye comprobantes</label>
+								<select type="text" class="form-control" name="comprobantes" id="comprobantes">
+		    						<option <?php if($comprobantes == "1"){echo 'selected'; } ?> value="1">Si</option>
+		    						<option <?php if($comprobantes == "0"){echo 'selected'; } ?> value="0">No</option>
 		    					</select>
-		    					<div class="error_color" id="error_contacto"></div>
-		    					<script type="text/javascript">
-		    					$(document).ready(function(){
-								  	<?php 
-									if(!empty($contacto)){ ?>
-										$('#contacto').val('<?php echo $contacto ?>');
-									<?php }
-									?>
-								});
-								</script>
+		    					<div class="error_color" id="error_comprobantes"></div>
 							</div>
 						</div>
 						<div class="row">
@@ -680,58 +633,6 @@
 		}	
 	});
 
-	/*Verifica el correo mientras escribe*/
-	$(document).on("keyup", "#correo", function(e){
-		var id = this.id;
-		var value = this.value;
-		if (value != ''){
-			if (validoEmail(value)){
-				quitarError(id);
-			}else {
-				marcarError(id, 'El correo esta escrito incorrectamente');
-			}
-		}
-	});
-
-	function validoEmail(email) {
-	  var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-	  return re.test(email);
-	}
-
-	/*Funcion del boton Validar Correo, automanda un mail a los datos puestos*/
-	function validarDatosCorreo(objeto){
-		var correo = $("#correo").val();
-		var contrasena = $("#contrasena").val();
-		var host = $("#host").val();
-		var puerto = $("#puerto").val();
-		var certificado_ssl = $("#certificado_ssl").val();
-		if(correo != "" && contrasena != "" && host != "" && puerto != "" && certificado_ssl != ""){
-			if(validoEmail(correo)){
-				$.ajax({
-					url:document.getElementById("base_url").value+"Regla/validarDatosCorreo",
-					type: "POST",
-					data:{correo, contrasena, host, puerto, certificado_ssl},
-					dataType: "text",
-					beforeSend: function(){
-						$(objeto).prop("disabled", "true");
-						$(objeto).html("Cargando...");
-					},
-					success: function(respuesta){
-						if(respuesta.trim() == "OK") {
-							alert("Los datos son correctos");
-						}else{
-							alert("Los datos son incorrectos, por favor revisarlos.");
-						}
-						$(objeto).html("Validar Correo");
-						$(objeto).prop("disabled", "false");
-					}
-				});
-			}else{
-				marcarError("correo", 'El correo esta escrito incorrectamente');
-			}
-		}
-	}
-
 	$("#tipo_consulta").change(function(){
 		var valor = this.value;
 		if(valor == "Consulta Externa"){
@@ -776,8 +677,8 @@
 				success: function(respuesta){
 					console.log(respuesta);
 					if(respuesta[0] == "OK") {
-						$("#atributos option, #atributos_actividad option, #destinatario_columnas option").remove();
-						$("#atributos, #atributos_actividad, #destinatario_columnas, #contacto, #cliente").append("<option></option>"+respuesta[1]);
+						$("#atributos option, #atributos_actividad option, #destinatario_columnas option, #cliente option, #cliente_mail option").remove();
+						$("#atributos, #atributos_actividad, #destinatario_columnas, #cliente, #cliente_mail").append("<option></option>"+respuesta[1]);
 					}else{
 						marcarError("consulta", respuesta[1]);
 						marcarError("consulta_externa", respuesta[1]);

@@ -59,6 +59,21 @@ class ConfiguracionModel extends CI_Model{
 		}
 	}
 
+	function configuracion_mail($columna, $valor){
+		$id_empresa = $this->session->userdata('id_empresa');
+		$sql_select = "select id_configuracion from mails_config where id_empresa = ?";
+		$stmt = $this->db->query($sql_select, array($id_empresa));
+		$registros = $stmt->result_array();
+		if(count($registros) > 0){
+			$tm = $this->db->query("update mails_config set $columna = ? where id_empresa = ?", array($valor, $id_empresa));
+		}else{
+			$objeto["certificado_ssl"] = "1";
+			$objeto["id_empresa"] = $id_empresa;
+			$objeto[$columna] = $valor;
+			$tm = $this->db->insert("mails_config", $objeto);
+		}
+	}
+
 	function vaciarNotificaciones(){
 		$id_usuario = $this->session->userdata('id_usuario');
 
@@ -75,6 +90,7 @@ class ConfiguracionModel extends CI_Model{
 
 	function getConfiguracion(){
 		$id_usuario = $this->session->userdata('id_usuario');
+		$id_empresa = $this->session->userdata('id_empresa');
 		$sql_select = 
 		"select *
 		from usuarios_config 
@@ -83,6 +99,17 @@ class ConfiguracionModel extends CI_Model{
 		$configuracion = $stmt->result_array();
 		return $configuracion;
 	}
+
+	function getConfiguracionMail(){
+		$id_empresa = $this->session->userdata('id_empresa');
+		$sql_select = 
+		"select *
+		from mails_config 
+		where id_empresa = ?";
+		$stmt = $this->db->query($sql_select, array($id_empresa));
+		$configuracion = $stmt->result_array();
+		return $configuracion;
+	}	
 
 	/*FUNCIONES GENERICAS DE CONFIGURACION*/
 	function formato_fecha($fecha){

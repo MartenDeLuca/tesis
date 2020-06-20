@@ -259,3 +259,45 @@ input[type="text"]:disabled, select:disabled, input[readonly], select[readonly] 
 .tab-pane .tab-pane .select2-container {
     width: 100% !important;
 }
+
+.fijo_scroll {
+    background-color:white !important;
+    position:fixed !important; 
+    top:50px; 
+    padding:10px 0; 
+    z-index:10 !important;
+    width: 96%;
+}
+
+@media screen and (max-width:549px){
+  .fijo_scroll {
+    background-color:white !important;
+    position:fixed !important; 
+    top:100px;      
+    padding:10px 0; 
+    width:100% !important;
+    z-index:10 !important;
+  }
+}  
+
+@media screen and (min-width:550px) and (max-width:590px){
+  .fijo_scroll {
+        background-color:white !important;
+        position:fixed !important; 
+        top:100px;      
+        padding:10px 0; 
+        width:100% !important;
+        z-index:10 !important;
+    } 
+}    
+
+@media screen and (min-width:591px) and (max-width:840px){
+    .fijo_scroll {
+        background-color:white !important;
+        position:fixed !important; 
+        top:100px;      
+        padding:10px 0; 
+        width:100% !important;
+        z-index:10 !important;
+    }       
+} 

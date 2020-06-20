@@ -19,6 +19,11 @@ $route['seguimiento'] = 'Seguimiento';
 $route['agregar-actividad'] = 'Seguimiento/agregar_actividad';
 $route['modificar-actividad'] = 'Seguimiento/modificar_actividad';
 
+$route['plantillas'] = 'plantilla';
+$route['agregar-plantilla'] = 'Plantilla/agregar_plantilla';
+$route['modificar-plantilla'] = 'Plantilla/modificar_plantilla';
+
+
 $route['login'] = 'usuario';
 $route['licencias'] = 'usuario/licencias/0';
 $route['usuarios'] = 'usuario/licencias/1';

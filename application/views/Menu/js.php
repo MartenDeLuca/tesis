@@ -56,4 +56,9 @@
 		    var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 		    return re.test(email);
 		}
+
+		Number.prototype.AddZero = function(b,c){
+	        var l = (String(b|| 10).length - String(this).length)+1;
+	        return l > 0 ? new Array(l).join(c|| '0')+this : this;
+	    }		
 	</script>

@@ -19,9 +19,8 @@ class Regla extends CI_Controller {
 	public function agregar_regla(){
 		if ($this->session->userdata('id_usuario')){
 			$data = array("id_regla" => "", "asunto" => "", "intervalo" => "", "accion" => "Correo y Actividad", "estado" => "", "tipo_consulta" => "", "consulta" => "", 
-			"correo" => "", "contrasena" => "", "puerto" => "", "host" => "", "destinatarios_columnas" => "",
-			"destinatarios_fijos" => "", "atributos" => "", "asunto_mail" => "", "contenido_mail" => "", 
-			"adjuntos" => array(), "asunto_actividad" => "", "descripcion_actividad" => "","fechaInicio" =>'',"fechaExpiracion" =>'', 'tipoIntervalo' =>'', "asignados_actividad" => "");
+		 	"destinatarios_columnas" => "", "destinatarios_fijos" => "", "atributos" => "", "asunto_mail" => "", "contenido_mail" => "", 
+			"adjuntos" => array(), "asunto_actividad" => "", "descripcion_actividad" => "","fechaInicio" =>'',"fechaExpiracion" =>'', 'tipoIntervalo' =>'', "asignados_actividad" => "", "cliente" => "", "cliente_mail" => "", "comprobantes" => "", "comprobantes_mail" => "");
 			$array_usuarios = $this->reglaModel->getUsuariosParaSelect();
 			$opciones_usuario = "<option></option>";
 			foreach ($array_usuarios as $fila_usuario) {
@@ -114,20 +113,6 @@ class Regla extends CI_Controller {
 		}
 	}
 
-	public function validarDatosCorreo(){
-		if ($this->input->is_ajax_request()) {
-			if ($this->session->userdata('id_usuario')){
-				$correo = $_POST['correo'];
-				$contrasena = $_POST['contrasena'];
-				$puerto = $_POST['puerto'];
-				$host = $_POST['host'];
-				$certificado_ssl = $_POST['certificado_ssl'];
-				$respuesta = $this->reglaModel->validarDatosCorreo($correo, $contrasena, $puerto, $host, $certificado_ssl);
-				echo $respuesta;
-			}
-		}
-	}
-
 	public function regla_bd_modificar(){
 		if ($this->input->is_ajax_request()) {
 			if ($this->session->userdata('id_usuario')){
@@ -188,20 +173,15 @@ class Regla extends CI_Controller {
 				$estado = $_POST['estado'];
 
 				$cliente = $_POST['cliente'];
-				$contacto = $_POST['contacto'];
+				$comprobantes = $_POST['comprobantes'];
 				
 				//consulta
 				$consulta = $_POST['consulta'];
 
 				//correo
-				$correo = $_POST['correo'];
-				$contrasena = $_POST['contrasena'];
-				$this->load->library('encrypt');
-				$contrasena = $this->encrypt->encode($contrasena);
-				$puerto = $_POST['puerto'];
-				$host = $_POST['host'];
-				$certificado_ssl = $_POST['certificado_ssl'];
-				$host = $_POST['host'];
+				$cliente_mail = $_POST['cliente_mail'];
+				$comprobantes_mail = $_POST['comprobantes_mail'];
+				
 				$destinatario_fijos = "";
 				if(isset($_POST['destinatario_fijos'])){
 					$destinatario_fijos_post = $_POST['destinatario_fijos'];
@@ -221,7 +201,6 @@ class Regla extends CI_Controller {
 			    }
 				$asunto_mail = $_POST['asunto_mail'];
 				$contenido_mail = $_POST['contenido_mail'];
-				$contenido_mail.= '<img src="http://190.210.127.181:2052/tesis/correo/correoLeido/[^*DEST_ID^*]/[^*DEST_DESTINATARIO^*]" style="width:1px" />';
 				
 				//actividad
 				$asunto_actividad = $_POST['asunto_actividad'];
@@ -240,8 +219,8 @@ class Regla extends CI_Controller {
 				$instancia,	$id_regla,
 				$asunto, $intervalo, $accion, $estado, $fechaInicio, $fechaExpiracion, $tipoIntervalo,
 				$consulta, 
-				$correo, $contrasena, $puerto, $host, $certificado_ssl, $destinatario_fijos, $destinatario_columnas, $asunto_mail, $contenido_mail, 
-				$asunto_actividad, $descripcion_actividad, $asignados_actividad, $cliente, $contacto 
+				$destinatario_fijos, $destinatario_columnas, $asunto_mail, $contenido_mail, $cliente_mail, $comprobantes_mail,
+				$asunto_actividad, $descripcion_actividad, $asignados_actividad, $cliente, $comprobantes 
 				);
 				if($respuesta[0] == "ok"){
 					if(isset($_POST['archivos_subidos'])){
@@ -297,7 +276,7 @@ class Regla extends CI_Controller {
 			        $array_archivos[] = $nombreArchivo; 
 			        $this->upload->initialize($config);
 			        
-			        if (!$this->upload->do_upload()) {		           		
+			        if (!$this->upload->do_upload()) {
 						$data['uploadError'] = $this->upload->display_errors();
 						echo $this->upload->display_errors();
 						return;
@@ -318,16 +297,15 @@ class Regla extends CI_Controller {
 	}
 
 	public function reglas_a_ejecutar(){
-		$datos = array();
 	    $registros = $this->reglaModel->reglas_a_ejecutar();
-	    $cont = 0;
 	    foreach($registros as $fila) {
 	    	$id_regla = $fila["id_regla"];
-	    	$datos[$cont] = $id_regla;
 	    	$this->reglaModel->ejecucion_regla_negocio($id_regla);
-	    	$cont++;
 	    }
-	    echo json_encode($datos);
+	}
+
+	public function sincronizar_comprobantes(){
+		$this->reglaModel->sincronizar_comprobantes();	    
 	}
 
 	/*ACTIVIDADES - NOTIFICACION*/

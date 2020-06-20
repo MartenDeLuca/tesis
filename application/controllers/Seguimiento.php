@@ -2,6 +2,174 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Seguimiento extends CI_Controller {
+	
+	public function martin(){
+		if ($this->session->userdata('id_usuario')){
+			$id = isset($_GET["id"])?$_GET["id"]:"";
+			$empresa = $this->session->userdata('empresa');
+			$dominio = $this->session->userdata('dominio');
+
+			$cliente = json_decode($this->seguimientoModel->seleccionarDetalleCliente($id, $empresa, $dominio),true);
+			if(count($cliente) > 0){	
+				$array_asignados = $this->seguimientoModel->getArrayAsignados();		
+				$comprobantes = json_decode($this->seguimientoModel->seleccionarComprobante($id, $empresa, $dominio), true);
+				$actividades_pendientes = $this->seguimientoModel->actividadesPendientes($id, $array_asignados);
+				
+				$actividades_realizadas = $this->seguimientoModel->actividadRealizada($id, $array_asignados, $actividades_pendientes["cont"], 'exists', '', '');
+
+				$data["cliente"] = $cliente[0];
+				$data["id"] = $id;
+				$data["comprobantes"] = $comprobantes;				
+				$data["array_asignados"] = $array_asignados;
+				$data["actividades_pendientes"] = $actividades_pendientes["html"];
+				$data["actividades_realizadas"] = $actividades_realizadas["html"];
+				$data["cont"] = $actividades_realizadas["cont"];
+				
+				$this->configuracionModel->getHeader();
+				$this->load->view('cliente/detalle_cliente', $data);
+				$this->load->view('menu/footer');
+			}else{
+
+			}
+		}else{
+			$this->session->set_flashdata('url',current_url());
+			redirect(base_url('login'));
+		}
+	}
+
+	public function actividadRealizadaHistorial(){
+		if ($this->session->userdata('id_usuario')){
+			$array_asignados = $this->seguimientoModel->getArrayAsignados();
+			$id = isset($_POST["id"])?$_POST["id"]:"";
+			$cont = isset($_POST["cont"])?$_POST["cont"]:"";
+			$inicio = isset($_POST["inicio"])?$_POST["inicio"]:"0";
+			$id_actividad_no_mirar = isset($_POST["id_actividad_no_mirar"])?$_POST["id_actividad_no_mirar"]:"";
+
+			$actividades_realizadas = $this->seguimientoModel->actividadRealizada($id, $array_asignados, $cont, 'not exists', "limit $inicio, 10", $id_actividad_no_mirar);
+			echo json_encode($actividades_realizadas);
+		}
+	}
+
+	public function actividadesAgregar(){
+		if ($this->session->userdata('id_usuario')){
+			$id = isset($_POST["id"])?$_POST["id"]:"";
+			$cont = isset($_POST["cont"])?$_POST["cont"]:"";
+			$array_asignados = isset($_POST["array_asignados"])?$_POST["array_asignados"]:"";
+			$actividad = $this->seguimientoModel->actividadesAgregar($id, $cont, $array_asignados);
+			echo $actividad["html"];
+		}	
+	}
+
+	public function mailAgregar(){
+		if ($this->session->userdata('id_usuario')){
+			$id = isset($_POST["id"])?$_POST["id"]:"";
+			$cont = isset($_POST["cont"])?$_POST["cont"]:"";
+			$array_asignados = isset($_POST["array_asignados"])?$_POST["array_asignados"]:"";
+			$actividad = $this->seguimientoModel->mailAgregar($id, $cont, $array_asignados);
+			echo $actividad["html"];
+		}	
+	}	
+
+	public function mandarMail(){
+		if ($this->session->userdata('id_usuario')){	        
+			$asunto_mail = $_POST['asunto_mail'];
+			$contenido_mail = $_POST['contenido_mail'];
+			$id_cliente = $_POST['id_cliente'];
+			$cliente = $_POST['cliente'];
+			
+			$destinatario_fijos = "";
+			if(isset($_POST['destinatario_fijos'])){
+				$destinatario_fijos_post = $_POST['destinatario_fijos'];
+				foreach($destinatario_fijos_post as $selected) {
+		            $destinatario_fijos .= $selected.";";
+		        }
+		        $destinatario_fijos = substr($destinatario_fijos, 0, -1);
+		    }			
+			
+			$comprobantes = json_decode($_POST['comprobantes'], true);
+			if (isset($_FILES['Adjunto']['name'])){
+				$archivos_nuevos = $_FILES;
+			}else{
+				$archivos_nuevos = array();
+			}
+			$adjuntos = array();
+			$archivoTemporal = date("Ymdhisu");
+			$carpeta = $_SERVER['DOCUMENT_ROOT'].$this->config->item('carpeta_principal').'Plugin/mailtemporal/'.$archivoTemporal.'/';
+			if(isset($archivos_nuevos['Adjunto']['name'])){
+			    $cantidad = count($archivos_nuevos['Adjunto']['name']);
+		       	if (!file_exists($carpeta)) {
+				    mkdir($carpeta, 0777, true);
+				}
+				$config = array();
+			    $config['upload_path'] = 'plugin/mailtemporal/'.$archivoTemporal;
+			    $config['allowed_types'] = '*';
+			    $config['max_size']      = '0';
+			    $config['overwrite']     = FALSE;
+			    $this->load->library('upload');
+
+			    for($j = 0; $j < $cantidad; $j++){
+			    	if(!empty($archivos_nuevos['Adjunto']['name'][$j])){
+						$nombreArchivo = $archivos_nuevos['Adjunto']['name'][$j];
+						$nombreArchivo = str_replace(" ", "", $nombreArchivo);
+						$_FILES['userfile']['name'] = $nombreArchivo;
+				        $_FILES['userfile']['type'] = $archivos_nuevos['Adjunto']['type'][$j];
+				        $_FILES['userfile']['tmp_name'] = $archivos_nuevos['Adjunto']['tmp_name'][$j];
+				        $_FILES['userfile']['error'] = $archivos_nuevos['Adjunto']['error'][$j];
+				        $_FILES['userfile']['size'] = $archivos_nuevos['Adjunto']['size'][$j]; 
+				        $this->upload->initialize($config);
+				        
+				        if (!$this->upload->do_upload()) {
+							$data['uploadError'] = $this->upload->display_errors();
+							echo $this->upload->display_errors();
+							return;
+						}
+						$objeto = array();
+						$objeto["adjunto"] = $nombreArchivo;
+						array_push($adjuntos, $objeto);
+					}
+			    }
+			}
+
+			$id_empresa = $this->session->userdata('id_empresa');
+			$empresa = $this->session->userdata('empresa');
+			$dominio = $this->session->userdata('dominio');
+			
+			$parametrosMail = $this->reglaModel->parametrosMail($id_empresa);
+			$correo = $parametrosMail["correo"];
+			$contrasena = $parametrosMail["contrasena"];
+			$puerto = $parametrosMail["puerto"];
+			$host = $parametrosMail["host"];
+			$certificado_ssl = $parametrosMail["certificado_ssl"];
+			
+			$respuesta = $this->reglaModel->mandarMail(
+				'0', $id_empresa, $id_cliente, $cliente,
+				$asunto_mail, $contenido_mail, 'Manual',
+				$empresa, $dominio, $puerto, $host, $correo, $contrasena, $certificado_ssl,
+				$carpeta, $adjuntos, '', $destinatario_fijos, '2', $comprobantes
+			);
+			$carpeta = str_replace('/', '\\', $carpeta);
+			$this->reglaModel->deleteDir($carpeta);
+			
+			echo json_encode($respuesta);
+		}
+	}
+
+	public function getContenidoMail($id_mail){
+		if ($this->session->userdata('id_usuario')){
+			$datos = array();
+			$datos['body'] = $this->seguimientoModel->getContenidoMail($id_mail);
+			$this->load->view('cliente/ifram_seleccion', $datos);
+		}	
+	}
+
+	public function descargarArchivos(){
+		if ($this->session->userdata('id_usuario')){
+			$id_adjunto = isset($_GET["id_adjunto"])?$_GET["id_adjunto"]:"";
+			$id_mail = isset($_GET["id_mail"])?$_GET["id_mail"]:"";
+			$this->seguimientoModel->descargarArchivos($id_adjunto, $id_mail);
+		}
+	}
+
 	public function index(){
 		if ($this->session->userdata('id_usuario')){
 			$id_empresa = $this->session->userdata('id_empresa');
@@ -114,16 +282,10 @@ class Seguimiento extends CI_Controller {
 			$data = array(
 			"id_actividad" => "", 
 			"asunto" => "", "fecha" => date("Y-m-d"), "estado" => "Pendiente", "descripcion" => "", 
-			"cliente" => "", "id_cliente" => "", "cod_cliente" => "", "telefono" => "", "dias_reclamo" => "",
-			"contacto" => "", "id_contacto" => "", "celular" => "", "correo" => "", 
+			"cliente" => "", "id_cliente" => "", "cod_cliente" => "",			
 			"comprobantes" => array(),
-			"proximo_contacto" => "", "horario_retiro" => "", "direccion" => "", "asignados" => array());
-			$array_usuarios = $this->reglaModel->getUsuariosParaSelect();
-			$opciones_usuario = "<option></option>";
-			foreach ($array_usuarios as $fila_usuario) {
-				$opciones_usuario .= "<option value='".$fila_usuario["id_usuario"]."'>".$fila_usuario["correo"]."</option>";
-			}
-			$data["array_asignados"] = $opciones_usuario;
+			"proximo_contacto" => "", "direccion" => "", "asignados" => array());
+			$data["array_asignados"] = $this->seguimientoModel->getArrayAsignados();
 			$data["instancia"] = "Agregar";
 			$this->configuracionModel->getHeader();
 			$this->load->view('actividad/formulario_actividad', $data);
@@ -140,12 +302,7 @@ class Seguimiento extends CI_Controller {
 			if(!empty($id)){
 				$data = $this->seguimientoModel->getActividadPorId($id);
 				if(count($data) > 0){
-					$array_usuarios = $this->reglaModel->getUsuariosParaSelect();
-					$opciones_usuario = "<option></option>";
-					foreach ($array_usuarios as $fila_usuario) {
-						$opciones_usuario .= "<option value='".$fila_usuario["id_usuario"]."'>".$fila_usuario["correo"]."</option>";
-					}
-					$data["array_asignados"] = $opciones_usuario;					
+					$data["array_asignados"] = $this->seguimientoModel->getArrayAsignados();
 					$data["instancia"] = "Modificar";
 					$this->configuracionModel->getHeader();					
 					$this->load->view('actividad/formulario_actividad', $data);
@@ -173,13 +330,6 @@ class Seguimiento extends CI_Controller {
 
 				$id_cliente = $_POST['id_cliente'];
 				$cliente = $_POST['cliente'];
-				$telefono = $_POST['telefono'];
-				$dias_reclamo = $_POST['dias_reclamo'];
-
-				$id_contacto = $_POST['id_contacto'];
-				$contacto = $_POST['contacto'];
-				$celular = $_POST['celular'];
-				$correo = $_POST['correo'];				
 
 				$descripcion = $_POST['descripcion'];
 
@@ -188,19 +338,18 @@ class Seguimiento extends CI_Controller {
 				$comprobantes = json_decode($_POST['comprobantes'], true);
 
 				$proximo_contacto = $_POST['proximo_contacto'];
-				$horario_retiro = $_POST['horario_retiro'];
 				$direccion = $_POST['direccion'];
+
 
 				$respuesta = $this->seguimientoModel->actividad_bd(
 				$instancia,	$id_actividad,
 				$asunto, $fecha, $estado, 
-				$id_cliente, $cliente, $telefono, $dias_reclamo,
-				$id_contacto, $contacto, $celular, $correo, $asociacion,
+				$id_cliente, $cliente,
+				$asociacion, $proximo_contacto, $direccion,
 				$descripcion, 
-				$comprobantes,
-				$proximo_contacto, $horario_retiro, $direccion 
+				$comprobantes				
 				);
-				echo $respuesta;
+				echo json_encode($respuesta);
 			}
 		}
 	}
@@ -210,6 +359,19 @@ class Seguimiento extends CI_Controller {
 			if ($this->session->userdata('id_usuario')){		
 				$id = $_POST['id'];
 				$respuesta = $this->seguimientoModel->eliminarActividad($id);
+				echo $respuesta;
+			}
+		}
+	}
+
+
+	public function modificarActividad(){
+		if ($this->input->is_ajax_request()) {
+			if ($this->session->userdata('id_usuario')){		
+				$id = $_POST['id'];
+				$valor = $_POST['valor'];
+				$campo = $_POST['campo'];
+				$respuesta = $this->seguimientoModel->modificarActividad($id, $valor, $campo);
 				echo $respuesta;
 			}
 		}
