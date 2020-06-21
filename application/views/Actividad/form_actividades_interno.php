@@ -225,25 +225,6 @@
 		});
 	}
 
-	function buscarCliente(){
-		var consulta = $("#modal-buscar").val();
-		$.ajax({
-			url: "<?php echo $this->session->userdata('dominio') ?>/api/buscarClientes",
-			type: "POST",
-			data:{consulta, empresa},
-			dataType: "json",
-			success: function(respuesta){
-				var html = `<table class='table'><thead><tr><td>Cliente</td><td>Documento</td></tr></thead><tbody>`;
-				var tamano = respuesta.length;
-				for(var i = 0; i < tamano; i++){
-					html += `<tr style="cursor:pointer" onclick="seleccionarCliente(${respuesta[i]["id"]})"><td>${respuesta[i]["cliente"]}</td><td>${respuesta[i]["documento"]}</td></tr>`;
-				}
-				html += `</tbody></table>`;
-				$("#modal-datos").html(html);
-			}
-		});
-	}
-
 	function seleccionarCliente(id){
 		if($("#current_url_hidden").val().indexOf("-actividad") > -1){
 			$.ajax({
@@ -276,39 +257,6 @@
 		}else{
 			location.href = "<?php echo base_url(); ?>detalle-cliente?id="+id;
 		}
-	}
-
-	function htmlComprobantes(comprobantes, tamano, cont){
-		var html_comp = "";
-		for(var j = 0; j < tamano; j++){
-			var fecha = comprobantes[j]["fecha"];
-			if(fecha.indexOf("-") > -1){
-				fecha = fecha.substr(8,2)+'/'+fecha.substr(5,2)+'/'+fecha.substr(0,4);
-			}			
-			var vencimiento = comprobantes[j]["vencimiento"];
-			if(vencimiento.indexOf("-") > -1){
-				vencimiento = vencimiento.substr(8,2)+'/'+vencimiento.substr(5,2)+'/'+vencimiento.substr(0,4);
-			}
-			var fecha_pago = comprobantes[j]["fecha_pago"];
-			if(fecha_pago.indexOf("-") > -1){
-				fecha_pago = fecha_pago.substr(8,2)+'/'+fecha_pago.substr(5,2)+'/'+fecha_pago.substr(0,4);
-			}
-			html_comp += 
-			`<tr>
-				<td><input type="checkbox" data-comprobante="${cont}" class="check_comprobantes"></td>
-				<td>${comprobantes[j]["tipo"]}</td>
-				<td>${comprobantes[j]["comprobante"]}</td>
-				<td>${comprobantes[j]["estado"]}</td>
-				<td>${fecha}</td>
-				<td>${vencimiento}</td>
-				<td>${comprobantes[j]["importe"]}</td>
-				<td>${comprobantes[j]["dias"]}</td>
-				<td>${fecha_pago}</td>
-				<td>${comprobantes[j]["forma_pago"]}</td>
-				<td>${comprobantes[j]["observaciones"]}</td>
-			</tr>`;
-		}
-		return html_comp;
 	}
 
 	function guardar(){

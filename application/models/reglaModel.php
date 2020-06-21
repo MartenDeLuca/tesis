@@ -130,41 +130,6 @@ class ReglaModel extends CI_Model{
 		return $data;
 	}
 
-	function getCorreoPorIdCorreo($id_correo){
-		$id_empresa = $this->session->userdata('id_empresa');
-		$data =array();
-		//faltan los adjuntos
-		$sql = "select mails.*, reglas.asunto as reglaAsunto 
-		from mails 
-		inner join reglas on reglas.id_regla = mails.id_regla 
-		where mails.id_mail = '$id_correo' and reglas.id_empresa = '$id_empresa'";
-		$stmt = $this->db->query($sql);
-		$correos = $stmt->result_array();
-		if(count($correos) > 0){
-			$data['correo'] = $correos[0];	
-		}
-
-		$sql = "select * from mails_leidos
-			where id_correo = $id_correo";
-		$stmt = $this->db->query($sql);
-		$leidos =$stmt->result_array();
-		$data['leidos'] = array();
-		if (count($leidos) > 0){
-			$data['leidos'] = $leidos;
-		}
-		
-		$sql_select = "select contenido from mails_contenido where id_mail = $id_correo";
-		$stmt = $this->db->query($sql_select);
-		$consultas_externas = $stmt->result_array();
-		$contenido_mail = '';
-		foreach ($consultas_externas as $fila) {
-			$contenido_mail .= $fila["contenido"];
-		}
-		$data["contenido_mail"] = $contenido_mail;
-
-		return $data;
-	}
-
 	function validarDatosCorreo($correo, $contrasena, $puerto, $host, $certificado_ssl){
 		date_default_timezone_set('Etc/UTC');
 		$this->load->library("phpmailer_library");
@@ -664,6 +629,12 @@ class ReglaModel extends CI_Model{
 			$array_cliente = json_decode($this->seguimientoModel->seleccionarCliente($cliente_mail, $empresa, $dominio), true);
 			if(count($array_cliente) > 0){
 				$nombre_cliente_mail = $array_cliente[0]["cliente"];
+
+				if(strpos($contenido_mail, "[^*COLUMNA_Link*^]") !== false){
+					$id_cliente_url = encrypt_url($cliente_mail);
+					$id_empresa_url = encrypt_url($id_empresa);
+					$contenido_mail = str_replace("[^*COLUMNA_Link*^]", '<a href="'.base_url().'vista_cliente?id='.$id_cliente_url.'&id_em='.$id_empresa_url.'">Ver Comprobantes</a>', $contenido_mail);	
+				}
 			}
 
 			$id_correo_bd = $this->reglaModel->guardarMail($id_regla, $id_empresa, $cliente_mail, $nombre_cliente_mail, $destinatarios, $asunto_mail, $origen);
@@ -731,7 +702,7 @@ class ReglaModel extends CI_Model{
 			$post['adjuntos'] = $adjunto_procesados;
 			$post['nombre'] = "";
 			$post['asunto'] = $asunto_mail;
-			$contenido_mail .= '<img src="http://190.210.127.181:2052/tesis/correo/correoLeido/[^*DEST_ID^*]/[^*DEST_DESTINATARIO^*]" onerror=\'this.style.display = "none"\' alt="imagen" />'; 
+			$contenido_mail .= '<img src="http://190.210.127.181:2052/tesis/correo/correoLeido/[^*DEST_ID^*]/[^*DEST_DESTINATARIO^*]" onerror=\'this.style.display = "none"\' alt="imagen" />';
 			$contenido_mail = str_replace('[^*DEST_ID^*]', $id_correo_bd, $contenido_mail);
 			$destinatarios = explode('***', $destinatarios);
 			for($x = 0; $x < count($destinatarios); $x++) { 
@@ -818,7 +789,7 @@ class ReglaModel extends CI_Model{
 			$html_tabla_comprobantes = 
 			"<table>
 			<tr>
-				<th>Tipo</th><th>Comprobante</th><th>Fecha Emisión</th><th>Fecha Vencimiento</th><th>Importe</th><th>Días</th>
+				<th>Tipo</th><th>Comprobante</th><th>Emisión</th><th>Vencimiento</th><th>Importe</th><th>Días</th>
 			</tr>";
 			foreach ($array_comprobantes as $comp) {
 				$html_tabla_comprobantes .= 
@@ -853,7 +824,7 @@ class ReglaModel extends CI_Model{
 			$dominio = $licencia["dominio"];
 			$empresa = $licencia["empresa"];
 			$id_empresa = $licencia["id_empresa"];
-
+			log_message("error", $dominio. " ".$empresa);
 			$curl = curl_init();
 			$url = $dominio."/api/comprobantesTodos";
 			curl_setopt($curl, CURLOPT_URL, $url);
@@ -869,23 +840,26 @@ class ReglaModel extends CI_Model{
 		    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
 		    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
 		    $comprobantes = curl_exec($curl);
-			foreach ($comprobantes as $fila) {
-		    	$comprobante = $fila["comprobante"];
-		    	$tipo = $fila["tipo"];
-		    	$estado = $fila["estado"];
+		    $comprobantes = json_decode($comprobantes, true);		    
+		    if(isset($comprobantes[0]["comprobante"])){
+				foreach ($comprobantes as $fila) {
+			    	$comprobante = $fila["comprobante"];
+			    	$tipo = $fila["tipo"];
+			    	$estado = $fila["estado"];
 
-		    	$tm = $this->db->query("
-		    	UPDATE actividades_comprobantes 
-		    	INNER JOIN actividades on actividades_asociacion.id_actividad = actividades.id_actividad
-		    	SET actividades_comprobantes.estado = ? 
-		    	WHERE actividades_comprobantes.comprobante = ? AND actividades_comprobantes.tipo = ? AND actividades.id_empresa = ?", array($estado, $comprobante, $tipo, $id_empresa));
+			    	$tm = $this->db->query("
+			    	UPDATE actividades_comprobantes 
+			    	INNER JOIN actividades on actividades_comprobantes.id_actividad = actividades.id_actividad
+			    	SET actividades_comprobantes.estado = ? 
+			    	WHERE actividades_comprobantes.comprobante = ? AND actividades_comprobantes.tipo = ? AND actividades.id_empresa = ?", array($estado, $comprobante, $tipo, $id_empresa));
 
-		    	$tm = $this->db->query("
-		    	UPDATE mails_comprobantes 
-		    	INNER JOIN mails on mails_asociacion.id_actividad = mails.id_actividad
-		    	SET mails_comprobantes.estado = ? 
-		    	WHERE mails_comprobantes.comprobante = ? AND mails_comprobantes.tipo = ? AND mails.id_empresa = ?", array($estado, $comprobante, $tipo, $id_empresa));
-		    }		    
+			    	$tm = $this->db->query("
+			    	UPDATE mails_comprobantes 
+			    	INNER JOIN mails on mails_comprobantes.id_mail = mails.id_mail
+			    	SET mails_comprobantes.estado = ? 
+			    	WHERE mails_comprobantes.comprobante = ? AND mails_comprobantes.tipo = ? AND mails.id_empresa = ?", array($estado, $comprobante, $tipo, $id_empresa));
+			    }
+			}
 		}
 	}
 

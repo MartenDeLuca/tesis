@@ -51,3 +51,10 @@
 	<script src="<?php echo base_url('plugin') ?>/bower_components/bootstrap-datepicker/dist2/js/bootstrap-datepicker.min.js"></script>
 	<script src="<?php echo base_url('plugin') ?>/bower_components/moment/min/moment.min.js"></script>
 	<script type="text/javascript" src="<?php echo base_url('plugin') ?>/bower_components/bootstrap-datetimepicker-master/build/js/bootstrap-datetimepicker.min.js"></script>
+
+	<script type="text/javascript">
+	function validoEmail(email) {
+	    var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+	    return re.test(email);
+	}		
+	</script>

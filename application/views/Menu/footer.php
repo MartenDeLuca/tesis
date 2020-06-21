@@ -104,11 +104,7 @@
 </body>
 </html>
 <script type="text/javascript">
-	function validoEmail(email) {
-	    var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-	    return re.test(email);
-	}
-
+	var empresa = "<?php echo $this->session->userdata('empresa'); ?>";
 	Number.prototype.AddZero = function(b,c){
         var l = (String(b|| 10).length - String(this).length)+1;
         return l > 0 ? new Array(l).join(c|| '0')+this : this;
@@ -226,13 +222,18 @@
 	function guardarAnotacion(){
 		var tipo = $("#comprobantes_tipo_actividad").val();
 		var objeto = $("#comprobantes_objeto").val();
+		var esModal = 0;
+		if(objeto.indexOf("modal") > -1){
+			objeto = objeto.substr(5);
+			esModal = 1;
+		}
 		var fecha_pago = $("#comprobantes_fecha_pago").val();
 		var fecha_pago_2 = fecha_pago.substr(8,2)+'/'+fecha_pago.substr(5,2)+'/'+fecha_pago.substr(0,4);
 		var forma_pago = $("#comprobantes_forma_pago").val();
 		var observacion = $("#comprobantes_observaciones").val();
 		var fila_comprobantes = $('[data-comprobante="'+objeto+'"]');
 		var tamano = fila_comprobantes.length;
-		var where_id = "";
+		var where_id = "";		
 		if(objeto != "inicio"){
 			for(var i = 0; i < tamano; i++){
 				if($(fila_comprobantes[i]).is(':checked')) {
@@ -247,12 +248,12 @@
 				where_id = " where "+where_id.substr(0, where_id.length-4);
 			}
 		}
-		if(objeto.indexOf("formulario") == -1 && objeto != "inicio"){
+		if(objeto.indexOf("formulario") == -1 && objeto != "inicio" && where_id != ""){
 			$.ajax({
 				url: "<?php echo base_url() ?>seguimiento/anotacionesComprobantes",
 				type: "POST",
 				data:{where_id, tipo, fecha_pago, forma_pago, observacion},
-				success: function(respuesta){
+				success: function(respuesta){					
 					if(window[objeto+"_datos_actividad"]){
 						var fila;
 						var comprobantes = new Array();
@@ -282,7 +283,9 @@
 					}else{
 						alert(respuesta);
 					}
-					
+					if(esModal == 1){
+						$("#modalInformacion").modal("hide");
+					}
 				}
 			});
 		}else if(objeto.indexOf("formulario") > -1){
@@ -318,4 +321,56 @@
 	        return (elem.textContent || elem.innerText || $(elem).text() || "").toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
 	    }
 	});	
+
+	function buscarCliente(){
+		var consulta = $("#modal-buscar").val();
+		$.ajax({
+			url: "<?php echo $this->session->userdata('dominio') ?>/api/buscarClientes",
+			type: "POST",
+			data:{consulta, empresa},
+			dataType: "json",
+			success: function(respuesta){
+				var html = `<table class='table'><thead><tr><td>Cliente</td><td>Documento</td></tr></thead><tbody>`;
+				var tamano = respuesta.length;
+				for(var i = 0; i < tamano; i++){
+					html += `<tr style="cursor:pointer" onclick="seleccionarCliente(${respuesta[i]["id"]})"><td>${respuesta[i]["cliente"]}</td><td>${respuesta[i]["documento"]}</td></tr>`;
+				}
+				html += `</tbody></table>`;
+				$("#modal-datos").html(html);
+			}
+		});
+	}
+
+	function htmlComprobantes(comprobantes, tamano, cont){
+		var html_comp = "";
+		for(var j = 0; j < tamano; j++){
+			var fecha = comprobantes[j]["fecha"];
+			if(fecha.indexOf("-") > -1){
+				fecha = fecha.substr(8,2)+'/'+fecha.substr(5,2)+'/'+fecha.substr(0,4);
+			}			
+			var vencimiento = comprobantes[j]["vencimiento"];
+			if(vencimiento.indexOf("-") > -1){
+				vencimiento = vencimiento.substr(8,2)+'/'+vencimiento.substr(5,2)+'/'+vencimiento.substr(0,4);
+			}
+			var fecha_pago = comprobantes[j]["fecha_pago"];
+			if(fecha_pago.indexOf("-") > -1){
+				fecha_pago = fecha_pago.substr(8,2)+'/'+fecha_pago.substr(5,2)+'/'+fecha_pago.substr(0,4);
+			}
+			html_comp += 
+			`<tr>
+				<td><input type="checkbox" data-comprobante="${cont}" class="check_comprobantes"></td>
+				<td>${comprobantes[j]["tipo"]}</td>
+				<td>${comprobantes[j]["comprobante"]}</td>
+				<td>${comprobantes[j]["estado"]}</td>
+				<td>${fecha}</td>
+				<td>${vencimiento}</td>
+				<td>${comprobantes[j]["importe"]}</td>
+				<td>${comprobantes[j]["dias"]}</td>
+				<td>${fecha_pago}</td>
+				<td>${comprobantes[j]["forma_pago"]}</td>
+				<td>${comprobantes[j]["observaciones"]}</td>
+			</tr>`;
+		}
+		return html_comp;
+	}		
 </script>

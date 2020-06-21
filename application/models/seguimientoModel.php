@@ -4,6 +4,29 @@ class SeguimientoModel extends CI_Model{
 		parent::__construct();	
 	}
 
+	function getClientes($where, $having){
+		$dominio = $this->session->userdata('dominio');
+		$empresa = $this->session->userdata('empresa');
+
+		$curl = curl_init();		
+		$url = $dominio."/api/getClientes";
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_POST, TRUE);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+		curl_setopt($curl, CURLOPT_POSTFIELDS, 'where='.$where.'&having='.$having.'&empresa='.$empresa);
+	    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
+	    curl_setopt($curl, CURLOPT_TIMEOUT, 2); 
+	    curl_setopt($curl, CURLOPT_HEADER, 0);
+	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+	    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+	    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
+	    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
+	    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+	    $result = curl_exec($curl);
+	    $result = json_decode($result, true);
+	    return $result;
+	}
+
 	function mailsDeContactos($id_cliente){
 		$dominio = $this->session->userdata('dominio');
 		$empresa = $this->session->userdata('empresa');
@@ -226,13 +249,13 @@ class SeguimientoModel extends CI_Model{
 		$cantidad_comprobantes = count($comprobantes_2);
 		$html = 
 		'<script>window["'.$cont.'_datos_actividad"] = '.json_encode($datos_actividad).';</script>
-		<div class="box '.$box_collapse.'" id="'.$cont.'_box">
+		<div class="box '.$box_collapse.' box_actividad" id="'.$cont.'_box">
 			<div class="box-header with-border">
 				<div class="user-block">
 			       	<span style="font-size: 16px; font-weight: 600;">
-		                '.$input_realizo_actividad.' <b id="'.$cont.'_asunto">'.$fila["asunto"].'</b> ('.$cantidad_comprobantes.' comprobantes)
+		                '.$input_realizo_actividad.' <span class="glyphicon glyphicon-file"></span> <b id="'.$cont.'_asunto">'.$fila["asunto"].'</b> <a onclick="verComprobantes('.$cont.', \'Actividades\')">('.$cantidad_comprobantes.' comprobantes)</a>
 		            </span>
-					<span style="margin-left: 0px;" class="description"><div style="display:inline;" id="'.$cont.'_fecha">'.$fila["fecha2"].'</div> <small id="'.$cont.'_label_estado" class="label bg-'.$color.'">'.$fila["estado"].'</small></span>
+					<span style="margin-left: 0px;" class="description"><div style="display:inline;" id="'.$cont.'_fecha">'.$fila["fecha2"].'</div> &nbsp;<small id="'.$cont.'_label_estado" class="label bg-'.$color.'">'.$fila["estado"].'</small></span>
 		        </div>
 				<div class="box-tools pull-right">
 					<button type="button" class="btn btn-box-tool" onclick="eliminarActividad('.$id_actividad.', '.$cont.')"><i class="fa fa-trash"></i></button> 
@@ -321,12 +344,17 @@ class SeguimientoModel extends CI_Model{
 									<th>Importe</th>
 									<th>Días</th>
 									<th>Fecha de Pago</th>
-									<th>Forma de Pago</th>									
+									<th>Forma de Pago</th>
 									<th>Observaciones</th>
 								</tr>
 							</thead>
 							<tbody>'; 
 								foreach ($comprobantes_2 as $fila_comp) {
+									if($fila_comp["dias"] < 0){
+										$estilo_color = 'style="color:red; font-weight: bold;"';
+									}else{
+										$estilo_color = '';
+									}
 								$html .= 
 									'<tr data-id='.$fila_comp["id"].'>
 										<td><input type="checkbox" data-comprobante="'.$cont.'" class="check_comprobantes"></td>
@@ -336,7 +364,7 @@ class SeguimientoModel extends CI_Model{
 										<td>'.$fila_comp["fecha"].'</td>
 										<td>'.$fila_comp["vencimiento"].'</td>
 										<td>'.$fila_comp["importe"].'</td>
-										<td>'.$fila_comp["dias"].'</td>		
+										<td '.$estilo_color.'>'.$fila_comp["dias"].'</td>		
 										<td>';
 										$fecha_pago = $fila_comp["fecha_pago"]; 
 										if(strpos($fecha_pago, '31/12/1969') !== false){
@@ -369,7 +397,8 @@ class SeguimientoModel extends CI_Model{
         $destinatarios = $fila["proximo_contacto"];        
         $destinatarios = explode(";", $destinatarios);
         $enviados = count($destinatarios);
-		$sql = "select * from mails_leidos
+		$sql = "select destinatario, DATE_FORMAT(fechaCreacion, '%d/%m/%Y %T') fechaCreacion 
+			from mails_leidos
 			where id_correo = '$id_mail'";
 		$stmt = $this->db->query($sql);
 		$leidos = $stmt->result_array();
@@ -381,15 +410,15 @@ class SeguimientoModel extends CI_Model{
 		}
 		
 		$html = 
-		'<div class="box collapsed-box" id="'.$cont.'_box">
+		'<div class="box collapsed-box box_mail" id="'.$cont.'_box">
 			<div class="box-header with-border">
 				<div class="user-block">
 			       	<span style="font-size: 16px; font-weight: 600;">
-		                <b>'.$fila["asunto"].'</b> ('.$cantidad_comprobantes.' comprobantes)
+		                <span class="glyphicon glyphicon-envelope"></span> <b id="'.$cont.'_asunto">'.$fila["asunto"].'</b> <a onclick="verComprobantes('.$cont.', \'Mails\')">('.$cantidad_comprobantes.' comprobantes)</a>
 		            </span>
 					<span style="margin-left: 0px;" class="description">'.$fila["fecha2"];
 					foreach ($destinatarios as $fila_dest) {					
-						$html .= '<span class="label label-primary label_correo">'.$fila_dest.'</span>';
+						$html .= ' &nbsp;<span class="label label-primary label_correo">'.$fila_dest.'</span>';
 					}
 					$html .= 
 					'</span>
@@ -591,7 +620,6 @@ class SeguimientoModel extends CI_Model{
 			WHERE mails_comprobantes.tipo = '$t_comp' and mails_comprobantes.comprobante = '$n_comp'
 		) tabla
 		order by fecha desc";
-		log_message("error", $sql);
 		$stmt = $this->db->query($sql);
 		return $stmt->result_array();
 	}
@@ -615,7 +643,7 @@ class SeguimientoModel extends CI_Model{
 		}
 	}
 
-	function manejoWhere($tipo, $columna, $busqueda, $tipo_busqueda, $where){
+	function manejoWhere($tipo, $columna, $busqueda, $tipo_busqueda, $where, $isnull){
 		/*OBTENGO LAS OPCIONES BUSQUEDA SEGUN EL TIPO DE DATO*/
 		$opciones_float = $this->config->item("opciones_float");
 		$opciones_date = $this->config->item("opciones_date");
@@ -623,7 +651,7 @@ class SeguimientoModel extends CI_Model{
 		$array_columna = $this->config->item($tipo."_array_columna");
 		$sql_columna = $this->config->item($tipo."_sql_columna");
 		$tipo_columna = $this->config->item($tipo."_tipo_columna");
-		$array = procesarWhere($columna, $busqueda, $tipo_busqueda, $opciones_float, $opciones_date, $opciones_string, $where, $array_columna, $sql_columna, $tipo_columna);
+		$array = procesarWhere($columna, $busqueda, $tipo_busqueda, $opciones_float, $opciones_date, $opciones_string, $where, $array_columna, $sql_columna, $tipo_columna, $isnull);
 		return $array;
 	}	
 
@@ -718,7 +746,7 @@ class SeguimientoModel extends CI_Model{
 		}
 	}	
 
-	function exportar($tipo){
+	function exportar_seguimiento($tipo){
 		ini_set('memory_limit', '2048M');
 		ini_set('max_execution_time', 300);
 		header("Content-Type: application/vnd.ms-excel");
@@ -759,6 +787,49 @@ class SeguimientoModel extends CI_Model{
 		}
 		return $html;
 	}
+
+	function exportar_clientes($tipo){
+		ini_set('memory_limit', '2048M');
+		ini_set('max_execution_time', 300);
+		header("Content-Type: application/vnd.ms-excel");
+		header("Content-Disposition: attachment; filename=".$tipo.".xls");
+		
+		$tamano = count($this->config->item($tipo.'_array_columna'));
+		$columna = $this->config->item($tipo.'_array_columna');
+		$sql_columna = $this->config->item($tipo.'_sql_columna');
+		$key = $this->config->item($tipo.'_key');
+		$tipo_columna = $this->config->item($tipo.'_tipo_columna');
+
+		$where = $this->session->userdata($tipo.'_where_sql');
+		$having = $this->session->userdata($tipo.'_having_sql');
+		
+		$datos = $this->getClientes($where, $having);
+		$html = "";
+		if(count($datos) > 0) {
+			$html =
+			'<table>
+				<thead>
+					<tr>';			
+	                for($i = 0; $i < $tamano; $i++){
+	                    $html .= '<th>'.$columna[$i].'</th>';
+	                }
+					$html .=
+					'</tr>
+				</thead>
+				<tbody>'; 
+				foreach ($datos as $fila) {
+					$html .= '<tr>';
+				   	for($i = 0; $i < $tamano; $i++){
+	                	$html .= '<th>'.$fila[$key[$i]].'</th>';
+	                }
+	                $html .= '</tr>';
+	            }
+	            $html .=         
+				'</tbody>
+			</table>';
+		}
+		return $html;
+	}	
 
 	function getActividadPorId($id){
 		$empresa = $this->session->userdata('empresa');
@@ -833,15 +904,11 @@ class SeguimientoModel extends CI_Model{
 		$comprobantes = json_decode($this->seleccionarComprobante($id, $empresa, $dominio), true);
 		$cont = 0;
 		foreach ($comprobantes as $fila) {
-			$sql_select = 
-			"select fecha_retiro
-			from actividades_comprobantes
-			where comprobante = ? and tipo = ?";
-			$stmt = $this->db->query($sql_select, array($fila["comprobante"], $fila["tipo"]));
-			$datos = $stmt->result_array();
-			foreach ($datos as $dato) {
-				$comprobantes[$cont]["fecha_retiro"] = $dato["fecha_retiro"];
-			}
+			$array = $this->getActividadComprobante($fila["tipo"], $fila["comprobante"]);
+			$comprobantes[$cont]["estado"] = 'Pendiente';
+			$comprobantes[$cont]["fecha_pago"] = $array["fecha_pago"];
+			$comprobantes[$cont]["forma_pago"] = $array["forma_pago"];
+			$comprobantes[$cont]["observaciones"] = $array["observaciones"];
 			$cont++;
 		}		
 		return $comprobantes;
@@ -876,7 +943,7 @@ class SeguimientoModel extends CI_Model{
 		"id_cliente" => $id_cliente, "cliente" => $cliente, 
 		"descripcion" => $descripcion, 
 		"proximo_contacto" => $proximo_contacto, "direccion" => $direccion,
-		"id_empresa" => $id_empresa);
+		"id_empresa" => $id_empresa, "origen" => "Manual");
 		
 		if($instancia == "Agregar"){
 			//inserto a la regla
@@ -1005,6 +1072,51 @@ class SeguimientoModel extends CI_Model{
     		return $error['message'];
     	}
 		return "OK";		
+	}
+
+	function getCorreoPorIdCorreo($id_correo){
+		$id_empresa = $this->session->userdata('id_empresa');
+		$data = array();
+		//faltan los adjuntos
+		$sql = "select mails.*
+		from mails 
+		where mails.id_mail = '$id_correo' and mails.id_empresa = '$id_empresa'";
+		$stmt = $this->db->query($sql);
+		$correos = $stmt->result_array();		
+		if(count($correos) > 0){
+			$data["correo"] = $correos[0];
+
+			$sql = "select * from mails_adjunto
+			where id_mail = $id_correo";
+			$stmt = $this->db->query($sql);
+			$adjuntos = $stmt->result_array();
+			$data['adjuntos'] = array();
+			if (count($adjuntos) > 0){
+				$data['adjuntos'] = $adjuntos;
+			}
+
+			$sql = 
+			"select destinatario, DATE_FORMAT(fechaCreacion, '%d/%m/%Y %T') fechaCreacion 
+			from mails_leidos
+			where id_correo = '$id_correo'";
+			$stmt = $this->db->query($sql);
+			$leidos =$stmt->result_array();
+			$data['leidos'] = array();
+			if (count($leidos) > 0){
+				$data['leidos'] = $leidos;
+			}
+			
+			$sql_select = "select contenido from mails_contenido where id_mail = $id_correo";
+			$stmt = $this->db->query($sql_select);
+			$consultas_externas = $stmt->result_array();
+			$contenido_mail = '';
+			foreach ($consultas_externas as $fila) {
+				$contenido_mail .= $fila["contenido"];
+			}
+			$data["contenido_mail"] = $contenido_mail;
+
+		}
+		return $data;
 	}
 
 	//FUNCIONES QUE VIENEN DE SQL SERVER	

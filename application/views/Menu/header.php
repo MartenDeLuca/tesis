@@ -226,7 +226,7 @@ foreach  ($empresas as $fila){
 
 						<!--CLIENTE-->
 			            <li>
-			                <a href="<?php echo base_url() ?>clientes"><i class="fa fa-book"></i> <span>Clientes</span></a>
+			                <a href="<?php echo base_url() ?>clientes"><i class="fa fa-users"></i> <span>Clientes</span></a>
 			            </li>
 
 			            <!--SEGUIMIENTO-->
@@ -236,7 +236,7 @@ foreach  ($empresas as $fila){
 
 			            <!--PLANTILLAS-->
 			            <li>
-			                <a href="<?php echo base_url() ?>plantillas"><i class="fa fa-book"></i> <span>Plantillas de Mails</span></a>
+			                <a href="<?php echo base_url() ?>plantillas"><i class="fa fa-envelope"></i> <span>Plantillas de Mails</span></a>
 			            </li>
 						
 						<!--REGLA DE NEGOCIO-->

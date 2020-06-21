@@ -20,13 +20,15 @@
 								<div style="text-align:left;">General <span style="float:right;"><span id="icon110" class="glyphicon glyphicon glyphicon-chevron-down"></span></span></div>
 							</label>
 							<div class="acordeon__contenido">
-								<div class="col-md-12" <?php echo $visible; ?>>
-									<label class="lab">Cliente</label>
-									<input type="text" class="form-control" name="cliente" id="cliente_mail" readonly onfocus="modal('Cliente')" value="<?php echo htmlspecialchars($cliente); ?>">
-									<input type="hidden" id="id_cliente_mail" name="id_cliente" value="<?php echo htmlspecialchars($id_cliente); ?>">
-									<input type="hidden" id="cod_cliente_mail" name="cod_cliente" value="<?php echo htmlspecialchars($cod_cliente); ?>">
-									<div class="error_color" id="error_cliente_mail"></div>
-								</div>		
+								<div class="row">
+									<div class="col-md-12" <?php echo $visible; ?>>
+										<label class="lab">Cliente</label>
+										<input type="text" class="form-control" name="cliente" id="cliente_mail" readonly onfocus="modal('Cliente')" placeholder="Cliente" value="<?php echo htmlspecialchars($cliente); ?>">
+										<input type="hidden" id="id_cliente_mail" name="id_cliente" value="<?php echo htmlspecialchars($id_cliente); ?>">
+										<input type="hidden" id="cod_cliente_mail" name="cod_cliente" value="<?php echo htmlspecialchars($cod_cliente); ?>">
+										<div class="error_color" id="error_cliente_mail"></div>
+									</div>
+								</div>	
 								<div class="row">
 									<div class="col-md-12">
 										<label class="lab">Destinatarios</label>
@@ -337,4 +339,38 @@
 	 	$("#tabla_adjunto_id").val(contador);
 	 	$('#adjuntos').append(fila);
 	}
+
+	function seleccionarCliente(id){
+		if($("#current_url_hidden").val().indexOf("-mail") > -1){
+			$.ajax({
+				url: "<?php echo $this->session->userdata('dominio') ?>/api/seleccionarCliente",
+				type: "POST",
+				data:{id, empresa},
+				dataType: "json",
+				success: function(respuesta){
+					$("#id_cliente_mail").val(respuesta[0]["id_cliente"]);
+					$("#cod_cliente_mail").val(respuesta[0]["cod_cliente"]);
+					$("#cliente_mail").val(respuesta[0]["cliente"]);
+					$.ajax({
+						url: "<?php echo base_url() ?>seguimiento/obtenerComprobantes",
+						type: "POST",
+						data:{id, empresa},
+						dataType: "json",
+						success: function(comprobantes){
+							var tamano = comprobantes.length;
+							var html_comp = "";
+							if(tamano > 0){
+								html_comp = htmlComprobantes(comprobantes, tamano, 'formulario2');
+							}
+							$("#cantidad111").html("("+tamano+")");
+							$("#comprobantes_mails tbody").html(html_comp);
+						}
+					});						
+					$("#modal").modal("hide");
+				}
+			});
+		}else{
+			location.href = "<?php echo base_url(); ?>detalle-cliente?id="+id;
+		}
+	}	
 </script>

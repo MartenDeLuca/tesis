@@ -28,6 +28,7 @@
 		    						<option value=""></option>
 		    						<option value="[^*COLUMNA_Cliente*^]">Cliente</option>
 		    						<option value="[^*TABLA_Comprobante*^]">Comprobantes pendientes</option>
+		    						<option value="[^*COLUMNA_Link*^]">Link de Comprobantes</option>
 		    					</select>
 		    					<div class="error_color" id="error_atributos"></div>
 		    				</div>

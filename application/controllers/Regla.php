@@ -97,22 +97,6 @@ class Regla extends CI_Controller {
 		}
 	}
 
-	public function detalle_correo(){
-		if ($this->session->userdata('id_usuario')){			
-			$id_correo = isset($_GET["id"])?$_GET["id"]:"";
-			if(!empty($id_correo)){
-				$data = $this->reglaModel->getCorreoPorIdCorreo($id_correo);
-				$data["id_correo"] = $id_correo;
-				$this->configuracionModel->getHeader();
-				$this->load->view('regla/detalle_correo', $data);
-				$this->load->view('menu/footer');
-			}
-		}else{
-			$this->session->set_flashdata('url',current_url());
-			redirect(base_url('login'));
-		}
-	}
-
 	public function regla_bd_modificar(){
 		if ($this->input->is_ajax_request()) {
 			if ($this->session->userdata('id_usuario')){

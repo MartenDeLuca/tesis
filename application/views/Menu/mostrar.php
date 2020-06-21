@@ -1,89 +1,3 @@
-<div class="content-wrapper" style="background: white !important;">
-  	<section class="content-header">
-      <h1 id="h1_tablero">
-        Seguimientos
-      </h1>
-      <ol class="breadcrumb">
-        <li class="active">Datos</li>
-      </ol>
-	</section>
-	<section class="content">
-  		<div class="nav-tabs-custom">
-		  	<ul class="nav nav-tabs">
-		    	<li <?php if($instancia == "actividades"){ ?> class="active" <?php } ?>><a href="<?php echo base_url() ?>seguimiento?tipo=actividades">Actividades</a></li>
-		    	<li <?php if($instancia == "mails"){ ?> class="active"<?php } ?>><a href="<?php echo base_url() ?>seguimiento?tipo=mails">Mails</a></li>
-		    	<div class="pull-rigth">
-		    		<div class="text-right">
-						<a href="<?php echo base_url(); ?>agregar-actividad" class="btn btn-primary btn-form">Agregar</a>
-						<a onclick="exportar()" class="btn btn-primary btn-form">Exportar</a>
-					</div>
-		    	</div>
-		  	</ul>
-		  	<div class="tab-content">
-	    		<div id="reglas" class="tab-pane fade in active">		
-					<table class="table table-striped table-bordered dt-responsive nowrap" id="tabla">
-						<thead>
-							<tr>
-								<?php
-									if($instancia == "actividades"){
-								?>
-										<th></th>
-								<?php
-									}
-
-	                                for($i = 0; $i < $tamano; $i++){
-	                            ?>
-	                                    <th><?php echo $columna[$i]; ?></th>
-	                            <?php
-	                                }
-	                            ?>
-							</tr>
-						</thead>
-						<tbody>
-							<?php
-							foreach ($datos as $fila) {
-							?>
-							<tr>
-							<?php
-								if($instancia == "actividades"){
-							?>
-									<td>
-										<a onclick="eliminarActividad(<?php echo $fila["id_actividad"] ?>, this)"><span class="glyphicon glyphicon-trash"></span></a>&nbsp;&nbsp;&nbsp; 
-										<a href="<?php echo base_url().'modificar-actividad?id='.$fila["id_actividad"] ?>"><span class="glyphicon glyphicon-pencil"></span></a>
-									</td>
-							<?php
-								}
-							   for($i = 0; $i < $tamano; $i++){
-                            ?>
-                                <th>
-                                	<?php 
-                                	$inicio = "";
-                                	$fin = "";
-                                	if(($instancia == "mails" && $key[$i] == "asunto")){
-                                		$inicio = "<a href=".base_url()."detalle-correo?id=".$fila["id_mail"].">";
-                                		$fin = "</a>";
-                                	}else if($key[$i] == "cliente"){
-                                		$inicio = "<a href=".base_url()."detalle-cliente?id=".$fila["id_cliente"].">";
-                                		$fin = "</a>";
-                                	}
-                                	echo $inicio.$fila[$key[$i]].$fin;
-                                	?>
-                               	</th>
-                            <?php
-                                }
-                            ?>
-                            </tr>
-                            <?php
-                            }
-                        	?>	                    	
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
-	</section>
-</div>
-
 <div class="modal fade in" id="modalBusqueda" tabindex="-1" role="dialog" aria-labelledby="formBuscar2" aria-hidden="true">
 	<div class="modal-dialog modal-md">
 		<div class="modal-content" >
@@ -153,20 +67,12 @@
 		</div>
 	</div>	
 </div>	
-
-<input type="hidden" id="tipo" value="<?php echo $instancia; ?>">
-<script type="text/javascript">
+<script>
 	var opciones_string = `<?php echo $this->config->item('opciones_string'); ?>`;
 	var opciones_float = `<?php echo $this->config->item('opciones_float'); ?>`;
 	var opciones_date = `<?php echo $this->config->item('opciones_date'); ?>`;
-	$(document).ready(function(){
-		$("#tabla").DataTable({
-	        "aaSorting": [[ 1, "asc" ]], 
-			"language": { "info": "_START_ a _END_ de _TOTAL_ registros", "zeroRecords": "", "emptyTable": "", "search": "<span onclick='modal()' class='glyphicon glyphicon-plus'></span>", "searchPlaceholder": "Buscar...", "paginate": { "previous": "<", "next": ">"}, "sLengthMenu": "_MENU_" }
-		});		
-	});
 
-	function modal(){
+	function modal_buscar(){
 		$('#modalBusqueda').modal('show');
 	}
 
@@ -349,13 +255,13 @@
 	    	url += "&bus="+busqueda;
 	    	url += "&ti_bu="+tipo_busqueda;
 	    }
-	    location.href = "<?php echo base_url(); ?>seguimiento"+url;
+	    location.href = "<?php echo base_url().$url; ?>"+url;
 	}
 
 	function vaciar(){
 		var tipo = $('#tipo').val();
 		var url = "?vaciar=1&tipo="+tipo;
-	    location.href = "<?php echo base_url(); ?>seguimiento"+url;
+	    location.href = "<?php echo base_url().$url; ?>"+url;
 	}
 
 	$(document).on( "keydown", ".input_busquedaGuardada", function(e) {
@@ -430,29 +336,12 @@
 	function ejecutarBusquedaGuardada(id){
 		var tipo = $('#tipo').val();
 		var url = "?guar="+id+"&tipo="+tipo;
-	    location.href = "<?php echo base_url(); ?>seguimiento"+url;
+	    location.href = "<?php echo base_url().$url; ?>"+url;
 	}
 
 	function exportar(){
 		var tipo = $('#tipo').val();
 		var url = "?tipo="+tipo;
-	    location.href = "<?php echo base_url(); ?>seguimiento/exportar"+url;
+	    location.href = "<?php echo base_url(); ?>seguimiento/exportar_<?php echo $url; ?>"+url;
 	}	
-
-	function eliminarActividad(id, objeto){
-		if(confirm("Desea eliminar la actividad?")){
-			$.ajax({
-				type: "POST",
-				url: document.getElementById("base_url").value+"Seguimiento/eliminarActividad",
-				data: {id},
-				success: function (respuesta) {
-					if(respuesta == "OK"){
-						$("#tabla").DataTable().row((objeto).closest("tr")).remove().draw();
-					}else{
-						alert(respuesta);
-					}
-				}
-			})
-		}
-	}
 </script>

@@ -59,6 +59,15 @@ class UsuarioModel extends CI_Model{
 		return $stmt->result_array();
 	}
 
+	public function getDatosPorIdEmpresa($id_empresa){
+		$query = "select empresas.empresa, licencias.dominio
+		from empresas  
+		inner join licencias on licencias.id_licencia = empresas.id_licencia
+		where id_empresa = ?";
+		$stmt = $this->db->query($query, array($id_empresa));
+		return $stmt->result_array();
+	}
+
 	public function getUsuarioPorIdYFecha($id, $fecha_confirmacion){
 		$query = "select * from usuarios where id_usuario = ? and fechaConfirmacion = ?";
 		$usuario =  $this->db->query($query, array($id, $fecha_confirmacion));

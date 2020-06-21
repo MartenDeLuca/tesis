@@ -3,6 +3,140 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Seguimiento extends CI_Controller {
 	
+	public function vista_cliente(){
+		$id_cliente = substr($this->config->item('url_normal'), strripos($this->config->item('url_normal'), 'id=')+3, strripos($this->config->item('url_normal'), 'id=')+3-strripos($this->config->item('url_normal'), '&id_em=')-7);
+		$id_cliente = decrypt_url($id_cliente);
+
+		$id_empresa = substr($this->config->item('url_normal'), strripos($this->config->item('url_normal'), '&id_em=')+7);
+		$id_empresa = decrypt_url($id_empresa);
+
+		$configuracion = $this->usuarioModel->getDatosPorIdEmpresa($id_empresa);
+		if(count($configuracion) > 0){
+			$data["vista_cliente"] = "1";
+			$dominio = $configuracion[0]["dominio"];
+			$empresa = $configuracion[0]["empresa"];
+			log_message("error", $id_cliente);
+			$data["comprobantes"] = json_decode($this->seguimientoModel->seleccionarComprobante($id_cliente, $empresa, $dominio), true);			
+			$this->load->view('cliente/vista_cliente', $data);
+		}
+	}
+
+	public function clientes(){
+		if ($this->session->userdata('id_usuario')){
+			$id_empresa = $this->session->userdata('id_empresa');
+
+			//tipo de grilla
+			$tipo = "clientes";
+			$where = "where gva12.estado = 'PEN'";
+
+			//busqueda guardada
+			$busqueda_guardada = isset($_GET["guar"])?$_GET["guar"]:"";
+			if(is_numeric($busqueda_guardada)){	
+				$registros_guardados = $this->seguimientoModel->registros_guardados($tipo, " and id_busqueda = '$busqueda_guardada'");
+				$columna = "";
+				$busqueda = "";
+				$tipo_busqueda = "";
+				foreach ($registros_guardados as $fila) {
+					$columna = $fila["columna"];
+					$busqueda = $fila["busqueda"];
+					$tipo_busqueda = $fila["tipo_busqueda"];
+				}
+				if(!empty($columna) && !empty($busqueda) && !empty($tipo_busqueda)){
+					$this->seguimientoModel->guardar_busqueda($columna, $tipo_busqueda, $busqueda, $tipo, '');
+				}
+			}
+
+			//vaciar
+			$vaciar = isset($_GET["vaciar"])?$_GET["vaciar"]:"";
+			if($vaciar == "1"){
+				$columna = "";
+				$busqueda = "";
+				$tipo_busqueda = "";
+				$this->seguimientoModel->vaciar_busqueda($tipo);
+			}else{
+				//busqueda generada en el momento
+				$columna = isset($_GET["col"])?$_GET["col"]:"";
+				$busqueda = isset($_GET["bus"])?$_GET["bus"]:"";
+				$tipo_busqueda = isset($_GET["ti_bu"])?$_GET["ti_bu"]:"";
+				//busqueda guardada
+				$nombreBusqueda = isset($_GET["no_bu"])?$_GET["no_bu"]:"";
+				if(!empty($columna) && !empty($busqueda) && !empty($tipo_busqueda)){
+					$this->seguimientoModel->guardar_busqueda($columna, $tipo_busqueda, $busqueda, $tipo, $nombreBusqueda);
+				}
+
+				$registros_guardados = $this->seguimientoModel->registros_guardados($tipo, '');
+				foreach ($registros_guardados as $fila) {
+					$columna = $fila["columna"];
+					$busqueda = $fila["busqueda"];
+					$tipo_busqueda = $fila["tipo_busqueda"];
+				}
+			}
+
+			$array = $this->seguimientoModel->manejoWhere($tipo, $columna, $busqueda, $tipo_busqueda, $where, 'isnull');
+			
+			$data["array_valores"] = $array;
+			
+			$data["tamano"] = count($this->config->item($tipo.'_array_columna'));
+			$data["columna"] = $this->config->item($tipo.'_array_columna');
+			$data["sql_columna"] = $this->config->item($tipo.'_sql_columna');
+			$data["key"] = $this->config->item($tipo.'_key');
+			$data["tipo_columna"] = $this->config->item($tipo.'_tipo_columna');
+
+
+			$where_ajuste = $array["where"];
+			$where_general = "";
+			$having_general = "";
+			while (!empty($where_ajuste)) {
+				$count = strpos($where_ajuste, " count(");
+				$sum = strpos($where_ajuste, " sum(");
+				$count2 = strpos($where_ajuste, " isnull(count(");
+				$sum2 = strpos($where_ajuste, " isnull(sum(");
+				if($sum !== false || $count !== false || $sum2 !== false || $count2 !== false){
+					$array_min = array($sum, $count, $sum2, $count2);
+					$posicion = "";
+					foreach ($array_min as $value) {
+						if($value !== false){
+							if($posicion == ""){
+								$posicion = $value;
+							}else if($posicion > $value){
+								$posicion = $value;
+							}
+						}	
+					}
+					$where_general .= substr($where_ajuste, 0, $posicion-4);
+					$and = strpos($where_ajuste, " and", $posicion);
+					if($and !== false){
+						$final = $and;
+					}else{
+						$final = strlen($where_ajuste);
+					}
+					$having_general .= substr($where_ajuste, $posicion-4, $final-($posicion)+4);					
+					$where_ajuste = substr($where_ajuste, $final);
+				}else{
+					$where_general = substr($where_ajuste, 0);
+					$where_ajuste = "";
+				}
+			}
+			$array["where"] = $where_general;
+			if(!empty($having_general)){
+				$having_general = " having ".substr($having_general, 4);
+			}
+			$this->session->set_userdata($tipo.'_where_sql', $array["where"]);
+			$this->session->set_userdata($tipo.'_having_sql', $having_general);			
+			$data["datos"] = $this->seguimientoModel->getClientes($array["where"], $having_general);	
+			$data["instancia"] = $tipo;
+			$data["url"] = "clientes";
+
+			//VISTA
+			$this->configuracionModel->getHeader();
+			$this->load->view('cliente/clientes', $data);
+			$this->load->view('menu/footer');
+		}else{
+			$this->session->set_flashdata('url',current_url());
+			redirect(base_url('login'));
+		}
+	}
+
 	public function detalle_cliente(){
 		if ($this->session->userdata('id_usuario')){
 			$id = isset($_GET["id"])?$_GET["id"]:"";
@@ -261,7 +395,7 @@ class Seguimiento extends CI_Controller {
 				}
 			}
 
-			$array = $this->seguimientoModel->manejoWhere($tipo, $columna, $busqueda, $tipo_busqueda, $where);
+			$array = $this->seguimientoModel->manejoWhere($tipo, $columna, $busqueda, $tipo_busqueda, $where, 'ifnull');
 			
 			$data["array_valores"] = $array;
 			
@@ -275,10 +409,11 @@ class Seguimiento extends CI_Controller {
 
 			$data["datos"] = $this->seguimientoModel->getSeguimiento($tipo, $array["where"]);			
 			$data["instancia"] = $tipo;
+			$data["url"] = "seguimiento";
 
 			//VISTA
 			$this->configuracionModel->getHeader();
-			$this->load->view('seguimiento/seguimiento', $data);
+			$this->load->view('actividad/seguimiento', $data);
 			$this->load->view('menu/footer');
 		}else{
 			$this->session->set_flashdata('url',current_url());
@@ -305,10 +440,47 @@ class Seguimiento extends CI_Controller {
 		echo $result;
 	}
 
-	public function exportar(){
+	public function exportar_seguimiento(){
 		$tipo = isset($_GET["tipo"])?$_GET["tipo"]:"";
-		$result = $this->seguimientoModel->exportar($tipo);
+		$result = $this->seguimientoModel->exportar_seguimiento($tipo);
 		echo $result;
+	}
+
+	public function exportar_clientes(){
+		$tipo = isset($_GET["tipo"])?$_GET["tipo"]:"";
+		$result = $this->seguimientoModel->exportar_clientes($tipo);
+		echo $result;
+	}
+
+	public function agregar_mail(){
+		if ($this->session->userdata('id_usuario')){
+			$array_asignados = $this->seguimientoModel->getArrayAsignados();
+			$data_mail_interno = array("array_asignados" => $array_asignados, "adjuntos" => array(), "contenido_mail" => "", "asunto_mail" => "", "destinatario_fijos" => array(), "cod_cliente" => "", "comprobantes" => array(), "id_cliente" => "", "cliente" => "", "visible" => "");
+			$data["instancia"] = "Agregar";
+			$this->configuracionModel->getHeader();
+			$this->load->view('actividad/formulario_mail', $data_mail_interno);
+			$this->load->view('menu/footer');
+		}	
+	}
+
+	public function detalle_correo(){
+		if ($this->session->userdata('id_usuario')){			
+			$id_correo = isset($_GET["id"])?$_GET["id"]:"";
+			if(!empty($id_correo)){
+				$data = $this->seguimientoModel->getCorreoPorIdCorreo($id_correo);
+				if(isset($data["correo"]["id_cliente"])){
+					$data["id_correo"] = $id_correo;
+					$this->configuracionModel->getHeader();
+					$this->load->view('actividad/detalle_correo', $data);
+					$this->load->view('menu/footer');
+				}else{
+
+				}
+			}
+		}else{
+			$this->session->set_flashdata('url',current_url());
+			redirect(base_url('login'));
+		}
 	}
 
 	public function agregar_actividad(){

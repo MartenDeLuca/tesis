@@ -200,27 +200,27 @@ if(!function_exists('decrypt_url')){
 }
 
 if(!function_exists('armado_where')){
-    function armado_where($columna, $tipo_busqueda, $busqueda, $tipo){
+    function armado_where($columna, $tipo_busqueda, $busqueda, $tipo, $isnull){
         $where = "";
         $buscar3 = adaptarString($busqueda);
         
         if($tipo == "string"){
             if($tipo_busqueda == "1"){
-                $where = $where." ifnull(".trim($columna).",'') like '%".$buscar3."%'";   
+                $where = $where." $isnull(".trim($columna).",'') like '%".$buscar3."%'";   
             }else if($tipo_busqueda == "2"){
-                $where = $where." ifnull(".trim($columna).",'') not like '%".$buscar3."%'";
+                $where = $where." $isnull(".trim($columna).",'') not like '%".$buscar3."%'";
             }else if($tipo_busqueda == "3"){
-                $where = $where." ifnull(".trim($columna).",'') = '".$buscar3."'";  
+                $where = $where." $isnull(".trim($columna).",'') = '".$buscar3."'";  
             }else if($tipo_busqueda == "4"){
-                $where = $where." ifnull(".trim($columna).",'') <> '".$buscar3."'"; 
+                $where = $where." $isnull(".trim($columna).",'') <> '".$buscar3."'"; 
             }else if($tipo_busqueda == "5"){
-                $where = $where." ifnull(".trim($columna).",'') like '".$buscar3."%'";  
+                $where = $where." $isnull(".trim($columna).",'') like '".$buscar3."%'";  
             }else if($tipo_busqueda == "6"){
-                $where = $where." ifnull(".trim($columna).",'') like '%".$buscar3."'";
+                $where = $where." $isnull(".trim($columna).",'') like '%".$buscar3."'";
             }else if($tipo_busqueda == "7"){                        
-                $where = $where." ifnull(".trim($columna).", '') = ''"; 
+                $where = $where." $isnull(".trim($columna).", '') = ''"; 
             }else if($tipo_busqueda == "8"){
-                $where = $where." ifnull(".trim($columna).", '') <> ''";
+                $where = $where." $isnull(".trim($columna).", '') <> ''";
             }
         }
         if($tipo == "float" || $tipo == "int"){
@@ -233,17 +233,17 @@ if(!function_exists('armado_where')){
             }else if($tipo_busqueda == "16"){
                 $where =  $where.trim($columna)." < '".$buscar3."'";
             }else if($tipo_busqueda == "17"){
-                $where = $where." ifnull(".trim($columna).",'0') = '".$buscar3."'"; 
+                $where = $where." $isnull(".trim($columna).",'0') = '".$buscar3."'"; 
             }else if($tipo_busqueda == "18"){
-                $where = $where." ifnull(".trim($columna).",'0') <> '".$buscar3."'";
+                $where = $where." $isnull(".trim($columna).",'0') <> '".$buscar3."'";
             }else if($tipo_busqueda == "19"){
-                $where = $where." ifnull(".trim($columna).",'0') like '%".$buscar3."%'";
+                $where = $where." $isnull(".trim($columna).",'0') like '%".$buscar3."%'";
             }else if($tipo_busqueda == "20"){
-                $where = $where." ifnull(".trim($columna).",'0') not like '%".$buscar3."%'";
+                $where = $where." $isnull(".trim($columna).",'0') not like '%".$buscar3."%'";
             }else if($tipo_busqueda == "21"){
-                $where = $where." ifnull(".trim($columna).",'') like '".$buscar3."%'";  
+                $where = $where." $isnull(".trim($columna).",'') like '".$buscar3."%'";  
             }else if($tipo_busqueda == "22"){
-                $where = $where." ifnull(".trim($columna).",'') like '%".$buscar3."'";
+                $where = $where." $isnull(".trim($columna).",'') like '%".$buscar3."'";
             }
         }
 
@@ -283,7 +283,7 @@ if(!function_exists('armado_where')){
 }
 
 if(!function_exists('procesarWhere')){
-    function procesarWhere($columna, $busqueda, $tipo_busqueda, $opciones_float, $opciones_date, $opciones_string, $where, $array_columna, $sql_columna, $tipo_columna){
+    function procesarWhere($columna, $busqueda, $tipo_busqueda, $opciones_float, $opciones_date, $opciones_string, $where, $array_columna, $sql_columna, $tipo_columna, $isnull){
         $posicion = 1;
         $busquedasGuardadas = "";
         if(!empty($columna)){
@@ -300,8 +300,7 @@ if(!function_exists('procesarWhere')){
                         $valor = $columna[$i];
                         $clase_input = "";  
                         $row_busquedasGuardadas = "";
-                        $pos = array_search($valor, $sql_columna);
-                        log_message("error", $pos." ".$valor);
+                        $pos = array_search($valor, $sql_columna);                        
                         $valor = $array_columna[$pos];
                         $columna_sql = $sql_columna[$pos];
                         $tipo = $tipo_columna[$pos];
@@ -323,7 +322,7 @@ if(!function_exists('procesarWhere')){
                             $posicion2 = $posicion;
                             $posicion_tipo = strpos($opciones, ' value="'.$tipo_busqueda[$i].'"');
                             $opciones_dinamico = substr($opciones, 0, $posicion_tipo)." selected ".substr($opciones, $posicion_tipo);
-                            $armado_where = armado_where($columna_sql, $tipo_busqueda[$i], $busqueda[$i], $tipo);
+                            $armado_where = armado_where($columna_sql, $tipo_busqueda[$i], $busqueda[$i], $tipo, $isnull);
                             $where_busqueda .= $comienzo.$armado_where;
                             $row_busquedasGuardadas .=
                             '<div class="row row_'.$posicion.'" id="row_'.$posicion2.'">
@@ -349,7 +348,7 @@ if(!function_exists('procesarWhere')){
                             for($j = 0; $j < $tamano_sql; $j++){
                                 $posicion_tipo = strpos($opciones, ' value="'.$tipo_busqueda_sql[$j].'"');
                                 $opciones_dinamico = substr($opciones, 0, $posicion_tipo)." selected ".substr($opciones, $posicion_tipo);
-                                $armado_where = armado_where($columna_sql, $tipo_busqueda_sql[$j], $busqueda_sql[$j], $tipo);
+                                $armado_where = armado_where($columna_sql, $tipo_busqueda_sql[$j], $busqueda_sql[$j], $tipo, $isnull);
                                 $where_busqueda .= $comienzo_sql.$armado_where;
                                 $comienzo_sql = " or ";
                                 $row_busquedasGuardadas .=

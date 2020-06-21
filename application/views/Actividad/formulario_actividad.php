@@ -13,8 +13,7 @@
 	</section>
 </div>
 
-<script type="text/javascript">
-	var empresa = "<?php echo $this->session->userdata('empresa'); ?>";
+<script type="text/javascript">	
 	$('document').ready(function(){
 		$(".input_select2").select2();
 		$(".show-hide").parent().parent().hide();

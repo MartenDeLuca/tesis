@@ -141,6 +141,7 @@ class PlantillaModel extends CI_Model{
 
 	function seleccionarPlantilla($id, $cliente){
 		$empresa = $this->session->userdata('empresa');
+		$id_empresa = $this->session->userdata('id_empresa');
 		$dominio = $this->session->userdata('dominio');
 
 		$data = $this->getPlantillaPorId($id);
@@ -176,6 +177,12 @@ class PlantillaModel extends CI_Model{
 			}
 			$html_tabla_comprobantes .= "</table>";
 			$contenido_mail = str_replace("[^*TABLA_Comprobante*^]", $html_tabla_comprobantes, $contenido_mail);
+		}
+
+		if(strpos($contenido_mail, "[^*COLUMNA_Link*^]") !== false){
+			$id_cliente_url = encrypt_url($cliente);
+			$id_empresa_url = encrypt_url($id_empresa);
+			$contenido_mail = str_replace("[^*COLUMNA_Link*^]", '<a href="'.base_url().'vista_cliente?id='.$id_cliente_url.'&id_em='.$id_empresa_url.'">Ver Comprobantes</a>', $contenido_mail);	
 		}
 		$data["contenido_mail"] = $contenido_mail;
 		return $data;
