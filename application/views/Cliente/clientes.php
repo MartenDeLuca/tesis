@@ -23,6 +23,7 @@
 						<thead>
 							<tr>
 								<th>Razon social</th>
+								<th>Vendedor</th>
 								<th>Cant. Facturas</th>
 								<th>Deuda</th>
 								<th>Venc/No Venc</th>
@@ -35,11 +36,17 @@
 							?>
 							<tr>
 								<td><a href="<?php echo base_url() ?>detalle-cliente?id=<?php echo $fila["id_gva14"]; ?>"><?php echo $fila["razon_soci"]; ?></a></td>
+								<td style="text-align: right;"><?php echo $fila["nombre_ven"]; ?></td>
 								<td style="text-align: right;"><?php echo $fila["cant_facturas"]; ?></td>
 								<td style="text-align: right;"><?php echo number_format($fila["deuda"],2, ',', '.'); ?></td>
 								<td>
-									<?php 
-									$vencida = number_format((((float) $fila["vencido"]*100) / ((float) $fila["deuda"])), 2, '.', '');
+									<?php 									
+									if((float) $fila["deuda"] > 0){
+										$vencida = number_format((((float) $fila["vencido"]*100) / ((float) $fila["deuda"])), 2, '.', '');
+									}else{
+										$vencida = 100;
+									}
+									
 									$no_vencida = number_format((100 - $vencida), 2, '.', '');
 									?>
 									<div class="progress">
@@ -51,20 +58,7 @@
 									    </div>
 									</div> 
 								</td>
-								<td>
-									<?php 
-									$vencida = 100;
-									$no_vencida = 0;
-									?>
-									<div class="progress">
-									    <div class="progress-bar progress-bar-warning progress-bar-striped" role="progressbar" aria-valuenow="<?php echo $vencida; ?>" aria-valuemin="0" aria-valuemax="100" style="width:<?php echo $vencida; ?>%">
-									      <?php echo $vencida; ?>%
-									    </div>
-									    <div class="progress-bar progress-bar-danger progress-bar-striped" role="progressbar" aria-valuenow="<?php echo $no_vencida; ?>" aria-valuemin="0" aria-valuemax="100" style="width:<?php echo $no_vencida; ?>%">
-									      <?php echo $no_vencida; ?>%
-									    </div>
-									</div>
-								</td>
+								<td style="text-align: right;"><?php echo number_format($fila["cumplimiento"],2, ',', '.'); ?> días</td>
 							</tr>
 							<?php 
 							}

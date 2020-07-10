@@ -2,44 +2,44 @@
 			<div class="row">
 				<div class="col-md-3">
 					<label class="lab">Gravado</label>
-					<input type="text" style="background-color:white !important;" class="form-control" placeholder="Gravado" name="Gravado" id="Gravado" disabled="disabled" value = "<?php echo $gravado; ?>">
+					<input type="text" style="background-color:white !important;" class="form-control" placeholder="Gravado" name="Gravado" id="Gravado" disabled="disabled" value = "<?php echo number_format($gravado,2, ',', '.'); ?>">
 				</div>
 				
 				<div class="col-md-3">
 					<label class="lab">Impuestos</label>
-					<input type="text" style="background-color:white !important;" class="form-control" placeholder="Impuestos" name="Impuestos" id="Impuestos" disabled="disabled" value = "<?php echo $impuestos; ?>">
+					<input type="text" style="background-color:white !important;" class="form-control" placeholder="Impuestos" name="Impuestos" id="Impuestos" disabled="disabled" value = "<?php echo number_format($impuestos,2, ',', '.'); ?>">
 				</div>
 				
 				<div class="col-md-3">
 					<label class="lab">Total $</label>
-					<input type="text" style="background-color:white !important;" class="form-control" placeholder="Total $" name="Total" id="Total" disabled="disabled" value = "<?php echo $importe_pesos; ?>">
+					<input type="text" style="background-color:white !important;" class="form-control" placeholder="Total $" name="Total" id="Total" disabled="disabled" value = "<?php echo number_format($importe_pesos,2, ',', '.'); ?>">
 				</div>
 				
 				<div class="col-md-3">
 					<label class="lab">Saldo</label>
-					<input type="text" style="background-color:white !important;" class="form-control" placeholder="Saldo" name="Saldo" id="Saldo" disabled="disabled" value = "<?php echo $saldo; ?>">
+					<input type="text" style="background-color:white !important;" class="form-control" placeholder="Saldo" name="Saldo" id="Saldo" disabled="disabled" value = "<?php echo number_format($saldo,2, ',', '.'); ?>">
 				</div>
 			</div>
 			
 			<div class="row">
 				<div class="col-md-3">
 					<label class="lab">Exento</label>
-					<input type="text" style="background-color:white !important;" class="form-control" placeholder="Exento" name="Exento" id="Exento" disabled="disabled" value = "<?php echo $exento; ?>">
+					<input type="text" style="background-color:white !important;" class="form-control" placeholder="Exento" name="Exento" id="Exento" disabled="disabled" value = "<?php echo number_format($exento,2, ',', '.'); ?>">
 				</div>
 				
 				<div class="col-xs-3 col-md-1">
 					<label class="lab">Descuento</label>
-					<input type="text" style="background-color:white !important;" class="form-control" placeholder="%" name="Descuento" id="Descuento" disabled="disabled" value = "<?php echo $descuento_porc; ?>">
+					<input type="text" style="background-color:white !important;" class="form-control" placeholder="%" name="Descuento" id="Descuento" disabled="disabled" value = "<?php echo number_format($descuento_porc,2, ',', '.'); ?>">
 				</div>
 				
 				<div class="col-xs-9 col-md-2">
 					<label class="lab"><br></label>
-					<input type="text" style="background-color:white !important;" class="form-control" placeholder="Descuento" name="Descuento1" id="Descuento1" disabled="disabled" value = "<?php echo $descuento_numero; ?>">
+					<input type="text" style="background-color:white !important;" class="form-control" placeholder="Descuento" name="Descuento1" id="Descuento1" disabled="disabled" value = "<?php echo number_format($descuento_numero,2, ',', '.'); ?>">
 				</div>
 				
 				<div class="col-md-3">
 					<label class="lab">Total U$S</label>
-					<input type="text" style="background-color:white !important;" class="form-control" placeholder="Total U$S" name="TotalDol" id="TotalDol" disabled="disabled" value = "<?php echo $importe_dol; ?>">
+					<input type="text" style="background-color:white !important;" class="form-control" placeholder="Total U$S" name="TotalDol" id="TotalDol" disabled="disabled" value = "<?php echo number_format($importe_dol,2, ',', '.'); ?>">
 				</div>
 			</div>
 		</div>

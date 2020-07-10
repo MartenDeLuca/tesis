@@ -155,6 +155,23 @@ class Seguimiento extends CI_Controller {
 					$clase_div_datos_adicionales = "";
 				}
 
+				$cliente_venc = json_decode($this->seguimientoModel->getVencidoNoVencidoCliente($id, $empresa, $dominio),true);
+				$vencida = 0;
+				$no_vencida = 0;
+				if(count($cliente_venc) > 0){
+					if((float) $cliente_venc[0]["deuda"] > 0){
+						$vencida = number_format((((float) $cliente_venc[0]["vencido"]*100) / ((float) $cliente_venc[0]["deuda"])), 2, '.', '');
+					}else{
+						$vencida = 100;
+					}
+					
+					$no_vencida = number_format((100 - $vencida), 2, '.', '');
+				}
+				$cliente_cumplimiento = json_decode($this->seguimientoModel->getCumplimientoCliente($id, $empresa, $dominio),true);
+				$cumplimiento = 0;
+				if(count($cliente_cumplimiento) > 0){
+					$cumplimiento = number_format($cliente_cumplimiento[0]["cumplimiento"],2, ',', '.');
+				}
 				$array_asignados = $this->seguimientoModel->getArrayAsignados();		
 				$comprobantes = json_decode($this->seguimientoModel->seleccionarComprobante($id, $empresa, $dominio), true);
 				$actividades_pendientes = $this->seguimientoModel->actividadesPendientes($id, $array_asignados);
@@ -162,8 +179,11 @@ class Seguimiento extends CI_Controller {
 				$actividades_realizadas = $this->seguimientoModel->actividadRealizada($id, $array_asignados, $actividades_pendientes["cont"], 'exists', '', '');
 
 				$data["cliente"] = $cliente[0];
+				$data["vencida"] = $vencida;
+				$data["no_vencida"] = $no_vencida;
+				$data["cumplimiento"] = $cumplimiento;
 				$data["id"] = $id;
-				$data["comprobantes"] = $comprobantes;				
+				$data["comprobantes"] = $comprobantes;
 				$data["array_asignados"] = $array_asignados;
 				$data["actividades_pendientes"] = $actividades_pendientes["html"];
 				$data["actividades_realizadas"] = $actividades_realizadas["html"];

@@ -54,9 +54,7 @@ $descripcion_dropdown = "";
 	</div>
 	<div class="col-md-2">
 		<label class="lab">Cod. Cliente</label>
-		<div class="input-group">
-			<input type="text" style="background-color:white !important;" style="background-color:white !important;" class="form-control" placeholder="Cod. Cliente" name="Cod_Cliente" id="Cod_Cliente" disabled="disabled" value = "<?php echo htmlspecialchars($cod_cliente); ?>">
-		</div>
+		<input type="text" style="background-color:white !important;" style="background-color:white !important;" class="form-control" placeholder="Cod. Cliente" name="Cod_Cliente" id="Cod_Cliente" disabled="disabled" value = "<?php echo htmlspecialchars($cod_cliente); ?>">
 	</div>
 	<div class="col-md-2">
 		<label class="lab">Fecha</label>
@@ -69,8 +67,11 @@ $descripcion_dropdown = "";
 	</div>
 	
 	<div class="col-md-2">
-		<div class="hidden-sm"><br><br></div>
-		<input type="checkbox" style="background-color:white !important;" name="monedaLocal" value="monedaLocal" <?php if($moneda === '1') echo "checked"; ?> disabled="disabled"> Moneda Local		
+		<div class="hidden-sm">Moneda</div>
+		<select disabled style="background-color:white !important;" name="monedaLocal" class="form-control">
+			<option <?php if($moneda === '1') echo "selected"; ?>>Corriente</option>
+			<option <?php if($moneda === '0') echo "selected"; ?>>Extranjera</option>
+		</select>
 	</div>
 </div>
 
@@ -145,30 +146,26 @@ $descripcion_dropdown = "";
 <div class="hidden-xs">
 	<!-- DETALLES ES PARA TODOS IGUAL -->
 	<?php 
-	$url = "onclick=\"detalles('".$t_comp."','".$n_comp."')\"";
-	$descripcion = "Detalles"; 
-	?>
-	<a <?php echo $url; ?> class="btn btn-primary btn-form"><?php echo $descripcion; ?></a>
-	<?php 
-	$li .=
-	'<li role="presentation" '.$active.'>
-		<a id="detalle" aria-controls="detalle" role="tab" '.$url.'>'.$descripcion.'</a>
-	</li>';
+	if($t_comp !== 'REC'){
+		$url = "onclick=\"detalles('".$t_comp."','".$n_comp."')\"";
+		$descripcion = "Detalles"; 
+		?>
+		<a <?php echo $url; ?> class="btn btn-primary btn-form"><?php echo $descripcion; ?></a>
+		<?php 
+		$li .=
+		'<li role="presentation" '.$active.'>
+			<a id="detalle" aria-controls="detalle" role="tab" '.$url.'>'.$descripcion.'</a>
+		</li>';
+	}
 	?>
 	<!-- IMPUTACIONES VARIA DEPENDIEDO DEL TIPO -->
 	<?php 
 	$active = "";
 	$descripcion = "Imputaciones";
-	if($t_comp==='REC'){
-		$url =  "onclick=\"rec_imputaciones('".$t_comp."','".$n_comp."')\""; 
-	}
-	else if($t_comp==='FAC' || $t_comp_aux === 'F'){
-		$url =  "onclick=\"fac_imputaciones('".$t_comp."','".$n_comp."')\""; 
-	}else if($t_comp==='N/C' || $t_comp_aux === 'NC'){
-		$url =  "onclick=\"nc_imputaciones('".$t_comp."','".$n_comp."')\""; 
-	}
-	else if($t_comp==='N/D' || $t_comp_aux === 'ND'){
-		$url =  "onclick=\"nd_imputaciones('".$t_comp."','".$n_comp."')\""; 
+	if($t_comp==='FAC' || $t_comp_aux === 'F'){
+		$url =  "onclick=\"imputaciones('".$t_comp."','".$n_comp."', '_can')\""; 
+	}else if($t_comp==='N/C' || $t_comp_aux === 'NC' || $t_comp==='N/D' || $t_comp_aux === 'ND' || $t_comp === 'REC'){
+		$url =  "onclick=\"imputaciones('".$t_comp."','".$n_comp."', '')\""; 
 	}
 	?>
 	<a <?php echo $url; ?> id='boton_imputaciones' class="btn btn-primary btn-form"><?php echo $descripcion; ?></a>
@@ -181,14 +178,10 @@ $descripcion_dropdown = "";
 
 	<!-- RELACIONES VARIA DEPENDIEDO DEL TIPO -->
 	<?php 
-	if($t_comp==='REM' || $t_comp==='FAC' || $t_comp_aux === 'F'){	
+	if($t_comp==='FAC' || $t_comp_aux === 'F'){	
 		$active = "";
 		$descripcion = "Relaciones";
-		if($t_comp==='REM'){ 
-			$url =  "onclick=\"rem_relaciones('".$t_comp."','".$n_comp."')\""; 
-		}else if($t_comp==='FAC' || $t_comp_aux === 'F'){
-			$url =  "onclick=\"fac_relaciones('".$t_comp."','".$n_comp."')\"";
-		}
+		$url =  "onclick=\"fac_relaciones('".$t_comp."','".$n_comp."')\"";
 	?>	
 		<a <?php echo $url; ?> id='boton_relaciones' class="btn btn-primary btn-form"><?php echo $descripcion; ?></a>
 	<?php 
@@ -273,6 +266,16 @@ $descripcion_dropdown = "";
 <input id="id_cliente" type='hidden' value = "<?php echo $id_cliente; ?>">
 
 <script type="text/javascript">
+	$(document).ready(function(){
+		var t_comp = '<?php echo $t_comp;?>';
+		var n_comp = '<?php echo $n_comp;?>';
+		if(t_comp != "REC"){
+			detalles(t_comp, n_comp);	
+		}else{
+			imputaciones(t_comp, n_comp, '');	
+		}
+		
+	})
 	function detalles(t_comp, n_comp){
 		$.ajax({
 			url: "<?php echo $this->session->userdata('dominio') ?>/api/comprobante_detalles",
@@ -287,23 +290,35 @@ $descripcion_dropdown = "";
 							<th>C&oacute;digo</th>
 							<th>Descripci&oacute;n</th>
 							<th>Cantidad</th>
-							<th>Equiv</th>
+							<th>UM</th>
 							<th>Precio</th>
 							<th>Descuento</th>
 							<th>Importe</th>
 						</tr>`;
 				var tamano = respuesta.length;
+				var descripcion = "";
 				if(tamano > 0){
 					for(var i = 0; i < tamano; i++){
+						pos = i;
+						descripcion = respuesta[i]["DESCRIPCION"]+respuesta[i]["DESC_ADIC"];
+						for(var j = i+1; j < tamano; j++){
+							if(respuesta[j]["COD_ARTICU"] == ""){
+								descripcion += " " + respuesta[j]["DESCRIPCION"]+respuesta[j]["DESC_ADIC"];
+								i = j;
+							}else{
+								j = tamano;
+							}
+						}
+
 						html += 
 						`<tr>
-							<td>${respuesta[i]["CODIGO"]}</td>
-							<td>${respuesta[i]["DESCRIPCION"]}</td>
-							<td>${respuesta[i]["CANTIDAD"]}</td>
-							<td>${respuesta[i]["EQUIV"]}</td>
-							<td>${respuesta[i]["PRECIO"]}</td>
-							<td>${respuesta[i]["DESCUENTO"]}</td>
-							<td>${respuesta[i]["IMPORTE"]}</td>
+							<td>${respuesta[pos]["COD_ARTICU"]}</td>
+							<td>${descripcion}</td>
+							<td>${respuesta[pos]["CANTIDAD"]}</td>
+							<td>${respuesta[pos]["SIGLA_MEDIDA"]}</td>
+							<td>${formatearNumero(respuesta[pos]["PRECIO"])}</td>
+							<td>${formatearNumero(respuesta[pos]["DESCUENTO"])}</td>
+							<td>${formatearNumero(respuesta[pos]["IMPORTE"])}</td>
 						</tr>`;
 					}
 				}
@@ -315,11 +330,11 @@ $descripcion_dropdown = "";
 		});
 	}
 
-	function rec_imputaciones(t_comp, n_comp){
+	function imputaciones(t_comp, n_comp, tipo){
 		$.ajax({
-			url: "<?php echo $this->session->userdata('dominio') ?>/api/comprobante_rec_imputaciones",
+			url: "<?php echo $this->session->userdata('dominio') ?>/api/comprobante_imputaciones",
 			type: "POST",
-			data:{n_comp, t_comp, empresa},
+			data:{n_comp, t_comp, tipo, empresa},
 			dataType: "json",
 			success: function(respuesta){
 				var html = 
@@ -328,7 +343,11 @@ $descripcion_dropdown = "";
 						<tr>
 							<th>Tipo</th>
 							<th>N&uacute;mero</th>
-							<th>Importe</th>
+							<th>Fecha vencimiento</th>
+							<th>Fecha de pago</th>
+							<th>Importe a pagar</th>
+							<th>Importe pagado</th>
+							<th>Importe pendiente pagar</th>
 						</tr>`;
 				var tamano = respuesta.length;
 				if(tamano > 0){
@@ -337,143 +356,11 @@ $descripcion_dropdown = "";
 						`<tr>
 							<td>${respuesta[i]["t_comp"]}</td>
 							<td><a href="<?php echo base_url(); ?>detalle-comprobante?t_comp=${respuesta[i]["t_comp"]}&n_comp=${respuesta[i]["n_comp"]}">${respuesta[i]["n_comp"]}</a></td>
-							<td>${respuesta[i]["importe_can"]}</td>
-						</tr>`;
-					}
-				}
-				html += 
-					`</table>
-				</div>`;
-				$("#div_detalle").html(html);
-			}
-		});
-	}
-
-	function fac_imputaciones(t_comp, n_comp){
-		$.ajax({
-			url: "<?php echo $this->session->userdata('dominio') ?>/api/comprobante_fac_imputaciones",
-			type: "POST",
-			data:{n_comp, t_comp, empresa},
-			dataType: "json",
-			success: function(respuesta){
-				var html = 
-				`<div class="table-responsive">
-					<table class="table table-hover">
-						<tr>
-							<th>Tipo</th>
-							<th>N&uacute;mero</th>
-							<th>Importe</th>
-						</tr>`;
-				var tamano = respuesta.length;
-				if(tamano > 0){
-					for(var i = 0; i < tamano; i++){
-						html += 
-						`<tr>
-							<td>${respuesta[i]["t_comp_can"]}</td>
-							<td><a href="<?php echo base_url(); ?>detalle-comprobante?t_comp=${respuesta[i]["t_comp_can"]}&n_comp=${respuesta[i]["n_comp_can"]}">${respuesta[i]["n_comp_can"]}</a></td>
-							<td>${respuesta[i]["import_can"]}</td>
-						</tr>`;
-					}
-				}
-				html += 
-					`</table>
-				</div>`;
-				$("#div_detalle").html(html);
-			}
-		});
-	}
-
-	function nc_imputaciones(t_comp, n_comp){
-		$.ajax({
-			url: "<?php echo $this->session->userdata('dominio') ?>/api/comprobante_nc_imputaciones",
-			type: "POST",
-			data:{n_comp, t_comp, empresa},
-			dataType: "json",
-			success: function(respuesta){
-				var html = 
-				`<div class="table-responsive">
-					<table class="table table-hover">
-						<tr>
-							<th>Tipo</th>
-							<th>N&uacute;mero</th>
-							<th>Importe</th>
-						</tr>`;
-				var tamano = respuesta.length;
-				if(tamano > 0){
-					for(var i = 0; i < tamano; i++){
-						html += 
-						`<tr>
-							<td>${respuesta[i]["t_comp_can"]}</td>
-							<td><a href="<?php echo base_url(); ?>detalle-comprobante?t_comp=${respuesta[i]["t_comp_can"]}&n_comp=${respuesta[i]["n_comp_can"]}">${respuesta[i]["n_comp_can"]}</a></td>
-							<td>${respuesta[i]["import_can"]}</td>
-						</tr>`;
-					}
-				}
-				html += 
-					`</table>
-				</div>`;
-				$("#div_detalle").html(html);
-			}
-		});
-	}
-
-	function nd_imputaciones(t_comp, n_comp){
-		$.ajax({
-			url: "<?php echo $this->session->userdata('dominio') ?>/api/comprobante_nd_imputaciones",
-			type: "POST",
-			data:{n_comp, t_comp, empresa},
-			dataType: "json",
-			success: function(respuesta){
-				var html = 
-				`<div class="table-responsive">
-					<table class="table table-hover">
-						<tr>
-							<th>Tipo</th>
-							<th>N&uacute;mero</th>
-							<th>Importe</th>
-						</tr>`;
-				var tamano = respuesta.length;
-				if(tamano > 0){
-					for(var i = 0; i < tamano; i++){
-						html += 
-						`<tr>
-							<td>${respuesta[i]["t_comp_can"]}</td>
-							<td><a href="<?php echo base_url(); ?>detalle-comprobante?t_comp=${respuesta[i]["t_comp_can"]}&n_comp=${respuesta[i]["n_comp_can"]}">${respuesta[i]["n_comp_can"]}</a></td>
-							<td>${respuesta[i]["import_can"]}</td>
-						</tr>`;
-					}
-				}
-				html += 
-					`</table>
-				</div>`;
-				$("#div_detalle").html(html);
-			}
-		});
-	}
-
-	function rem_relaciones(t_comp, n_comp){
-		$.ajax({
-			url: "<?php echo $this->session->userdata('dominio') ?>/api/comprobante_rem_relaciones",
-			type: "POST",
-			data:{n_comp, t_comp, empresa},
-			dataType: "json",
-			success: function(respuesta){
-				var html = 
-				`<div class="table-responsive">
-					<table class="table table-hover">
-						<tr>
-							<th>Talonario</th>
-							<th>Tipo</th>
-							<th>N&uacute;mero</th>
-						</tr>`;
-				var tamano = respuesta.length;
-				if(tamano > 0){
-					for(var i = 0; i < tamano; i++){
-						html += 
-						`<tr>
-							<td>${respuesta[i]["TALON_PED"]}</td>
-							<td>${respuesta[i]["PEDIDO"]}</td>
-							<td>${respuesta[i]["NRO_PEDIDO"]}</td>
+							<td>${respuesta[i]["fecha_vto"]}</td>
+							<td>${respuesta[i]["f_comp_can"]}</td>
+							<td>${formatearNumero(respuesta[i]["import_vt"])}</td>
+							<td>${formatearNumero(respuesta[i]["import_can"])}</td>
+							<td>${formatearNumero(respuesta[i]["pendiente"])}</td>
 						</tr>`;
 					}
 				}
@@ -496,18 +383,26 @@ $descripcion_dropdown = "";
 				`<div class="table-responsive">
 					<table class="table table-hover">
 						<tr>
-							<th>Talonario</th>
 							<th>Tipo</th>
 							<th>N&uacute;mero</th>
+							<th>Fecha</th>
 						</tr>`;
 				var tamano = respuesta.length;
+				var inicio_etiqueta_a = "";
+				var fin_etiqueta_a = "";
 				if(tamano > 0){
 					for(var i = 0; i < tamano; i++){
+						inicio_etiqueta_a = "";
+						fin_etiqueta_a = "";
+						if(respuesta[i]["Tipo"] == "REC"){
+							inicio_etiqueta_a = `<a href="<?php echo base_url(); ?>detalle-comprobante?t_comp=${respuesta[i]["Tipo"]}&n_comp=${respuesta[i]["Numero"]}">`;
+							fin_etiqueta_a = "</a>";
+						}
 						html += 
-						`<tr>
-							<td>${respuesta[i]["Orden"]}</td>
+						`<tr>							
 							<td>${respuesta[i]["Tipo"]}</td>
-							<td>${respuesta[i]["Numero"]}</td>
+							<td>${inicio_etiqueta_a+respuesta[i]["Numero"]+fin_etiqueta_a}</td>
+							<td>${respuesta[i]["Fecha"]}</td>
 						</tr>`;
 					}
 				}
@@ -518,6 +413,98 @@ $descripcion_dropdown = "";
 			}
 		});
 	}
+
+	function fac_vencimientos(t_comp, n_comp){
+		$.ajax({
+			url: "<?php echo $this->session->userdata('dominio') ?>/api/comprobante_fac_vencimiento",
+			type: "POST",
+			data:{n_comp, t_comp, empresa},
+			dataType: "json",
+			success: function(respuesta){
+				var html = 
+				`<div class="table-responsive">
+					<table class="table table-hover">
+						<tr>
+							<th>Fecha Vto</th>
+							<th>Dias</th>
+							<th>Estado</th>
+							<th>Dias Vencidos</th>
+							<th>Importe a pagar</th>
+							<th>Importe pagado</th>
+							<th>Importe pendiente pagar</th>
+							<th>Tipo de pago</th>
+							<th>Comprobante de pago</th>
+							<th>Fecha de pago</th>
+						</tr>`;
+				var tamano = respuesta.length;
+				if(tamano > 0){
+					for(var i = 0; i < tamano; i++){
+						html += 
+						`<tr>
+							<td>${respuesta[i]["FECHA_VTO"]}</td>
+							<td>${respuesta[i]["DIAS"]}</td>
+							<td>${respuesta[i]["ESTADO"]}</td>
+							<td>${respuesta[i]["DIAS_VENCIDOS"]}</td>
+							<td>${formatearNumero(respuesta[i]["IMPORTE A PAGAR"])}</td>
+							<td>${formatearNumero(respuesta[i]["IMPORTE PAGADO"])}</td>
+							<td>${formatearNumero(respuesta[i]["IMPORTE PENDIENTE A PAGAR"])}</td>
+							<td>${respuesta[i]["TIPO DE COMPROBANTE DE PAGO"]}</td>
+							<td><a href="<?php echo base_url(); ?>detalle-comprobante?t_comp=${respuesta[i]["TIPO DE COMPROBANTE DE PAGO"]}&n_comp=${respuesta[i]["NRO COMPROBANTE DE PAGO"]}">${respuesta[i]["NRO COMPROBANTE DE PAGO"]}</a></td>
+							<td>${respuesta[i]["FECHA DE COMPROBANTE DE PAGO"]}</td>
+						</tr>`;
+					}
+				}
+				html += 
+					`</table>
+				</div>`;
+				$("#div_detalle").html(html);
+			}
+		});
+	}
+
+	function rec_cheques(t_comp, n_comp){
+		$.ajax({
+			url: "<?php echo $this->session->userdata('dominio') ?>/api/comprobante_rec_cheques",
+			type: "POST",
+			data:{n_comp, t_comp, empresa},
+			dataType: "json",
+			success: function(respuesta){
+				var html = 
+				`<div class="table-responsive">
+					<table class="table table-hover">
+						<tr>
+							<th>Banco</th>
+							<th>Numero</th>
+							<th>Fecha</th>
+							<th>Importe</th>
+							<th>Estado</th>
+							<th>Fecha Salida</th>
+							<th>Proveedor</th>
+							<th>Nro Interno</th>
+						</tr>`;
+				var tamano = respuesta.length;
+				if(tamano > 0){
+					for(var i = 0; i < tamano; i++){
+						html += 
+						`<tr>
+							<td>${respuesta[i]['cod_banco']} - ${respuesta[i]['desc_banco']}</td>
+							<td>${respuesta[i]['n_cheque']}</td>
+							<td>${respuesta[i]['fecha_cheq']}</td>
+							<td>${respuesta[i]['importe_ch']}</td>
+							<td>${respuesta[i]['descripcio']}</td>
+							<td>${respuesta[i]['fecha_sal']}</td>
+							<td>${respuesta[i]['proveedor']}</td>
+							<td>${respuesta[i]['N_INTERNO']}</td>
+						</tr>`;
+					}
+				}
+				html += 
+					`</table>
+				</div>`;
+				$("#div_detalle").html(html);
+			}
+		});
+	}		
 
 	function actividades(t_comp, n_comp){
 		$.ajax({
@@ -589,4 +576,19 @@ $descripcion_dropdown = "";
 		</div>`;
 		$("#div_detalle").html(html);
 	}
+
+	function formatearNumero(valor, cant_decimal = 2, decimal = ",", miles = ".") {
+	  try {
+	    cant_decimal = Math.abs(cant_decimal);
+	    cant_decimal = isNaN(cant_decimal) ? 2 : cant_decimal;
+
+	    const signo_negativo = valor < 0 ? "-" : "";
+
+	    let i = parseInt(valor = Math.abs(Number(valor) || 0).toFixed(cant_decimal)).toString();
+	    let j = (i.length > 3) ? i.length % 3 : 0;
+
+	    return signo_negativo + (j ? i.substr(0, j) + miles : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + miles) + (cant_decimal ? decimal + Math.abs(valor - i).toFixed(cant_decimal).slice(2) : "");
+	  } catch (e) {
+	  }
+	}	
 </script>

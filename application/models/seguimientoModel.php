@@ -1160,6 +1160,46 @@ class SeguimientoModel extends CI_Model{
 	    return $result;
 	}
 
+	function getVencidoNoVencidoCliente($id_cliente, $empresa, $dominio){
+		$curl = curl_init();
+		$url = $dominio."/api/getVencidoNoVencidoCliente";
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_POST, TRUE);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+		curl_setopt($curl, CURLOPT_POSTFIELDS, 'id='.$id_cliente.'&empresa='.$empresa);
+	    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
+	    curl_setopt($curl, CURLOPT_TIMEOUT, 2); 
+	    curl_setopt($curl, CURLOPT_HEADER, 0);
+	    //tuve que poner true aca porque sino hacia echo y no lo guardaba en la variable result
+	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+	    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+	    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
+	    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
+	    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+	    $result = curl_exec($curl);
+	    return $result;
+	}
+
+	function getCumplimientoCliente($id_cliente, $empresa, $dominio){
+		$curl = curl_init();
+		$url = $dominio."/api/getCumplimientoCliente";
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_POST, TRUE);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+		curl_setopt($curl, CURLOPT_POSTFIELDS, 'id='.$id_cliente.'&empresa='.$empresa);
+	    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
+	    curl_setopt($curl, CURLOPT_TIMEOUT, 2); 
+	    curl_setopt($curl, CURLOPT_HEADER, 0);
+	    //tuve que poner true aca porque sino hacia echo y no lo guardaba en la variable result
+	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+	    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+	    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
+	    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
+	    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+	    $result = curl_exec($curl);
+	    return $result;
+	}	
+
 	function seleccionarComprobante($id_cliente, $empresa, $dominio){
 		$curl = curl_init();
 		$url = $dominio."/api/seleccionarComprobante";

@@ -544,7 +544,7 @@ $config['actividades_key'] = array("asunto", "fecha", "estado", "cliente", "cont
 $config['actividades_tipo_columna'] = array('string', 'date', 'string', 'string', 'string', 'string', 'date');
 
 
-$config['clientes_array_columna'] = array('Razon Social', 'Cant. Facturas', 'Deuda', 'No Vencido', 'Vencido', 'Cumplimiento');
-$config['clientes_sql_columna'] = array("razon_soci", "count(gva12.id_gva12)", "sum(gva46.importe_vt)", "sum((case when DATEDIFF(DD, GETDATE(), GVA46.FECHA_VTO) >= 0 then '0' else gva46.importe_vt end))", "sum((case when DATEDIFF(DD, GETDATE(), GVA46.FECHA_VTO) < 0 then '0' else gva46.importe_vt end))", "razon_soci");
-$config['clientes_key'] = array("razon_soci", "cant_facturas", "deuda", "no_vencido", "vencido", "razon_soci");
-$config['clientes_tipo_columna'] = array('string', 'int', 'float', 'float', 'float', 'float');
+$config['clientes_array_columna'] = array('Razon Social', 'Vendedor', 'Cant. Facturas', 'Deuda', 'No Vencido', 'Vencido', 'Cumplimiento');
+$config['clientes_sql_columna'] = array("razon_soci", "nombre_ven", "count(gva12.id_gva12)", "sum(gva46.importe_vt)", "sum((case when DATEDIFF(DD, GETDATE(), GVA46.FECHA_VTO) >= 0 then '0' else gva46.importe_vt end))", "sum((case when DATEDIFF(DD, GETDATE(), GVA46.FECHA_VTO) < 0 then '0' else gva46.importe_vt end))", "razon_soci");
+$config['clientes_key'] = array("razon_soci", "nombre_ven", "cant_facturas", "deuda", "no_vencido", "vencido", "razon_soci");
+$config['clientes_tipo_columna'] = array('string', 'string', 'int', 'float', 'float', 'float', 'float');
