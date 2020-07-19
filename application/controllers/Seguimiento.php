@@ -3,6 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Seguimiento extends CI_Controller {
 	
+	//DETALLE Y GRILLA DEL CLIENTE
 	public function vista_cliente(){
 		$id_cliente = substr($this->config->item('url_normal'), strripos($this->config->item('url_normal'), 'id=')+3, strripos($this->config->item('url_normal'), 'id=')+3-strripos($this->config->item('url_normal'), '&id_em=')-7);
 		$id_cliente = decrypt_url($id_cliente);
@@ -15,7 +16,6 @@ class Seguimiento extends CI_Controller {
 			$data["vista_cliente"] = "1";
 			$dominio = $configuracion[0]["dominio"];
 			$empresa = $configuracion[0]["empresa"];
-			log_message("error", $id_cliente);
 			$data["comprobantes"] = json_decode($this->seguimientoModel->seleccionarComprobante($id_cliente, $empresa, $dominio), true);			
 			$this->load->view('cliente/vista_cliente', $data);
 		}
@@ -357,7 +357,9 @@ class Seguimiento extends CI_Controller {
 			echo json_encode($this->seguimientoModel->buscarActividades($consulta, $opcion, $cliente));
 		}
 	}
+	
 	////////////////////////////////////////////////////////////////////////////
+	//SEGUIMIENTO GENERAL
 
 	public function index(){
 		if ($this->session->userdata('id_usuario')){

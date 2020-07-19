@@ -2,7 +2,8 @@
   	<section class="content-header">
       <h1 id="h1_tablero">
         Clientes
-      </h1>
+        <small>Deudores</small>
+      </h1>      
       <ol class="breadcrumb">
         <li class="active">Datos</li>
       </ol>
@@ -27,7 +28,7 @@
 								<th>Cant. Facturas</th>
 								<th>Deuda</th>
 								<th>Venc/No Venc</th>
-								<th>Cumplimiento</th>
+								<th>Ponderado de pago</th>
 							</tr>
 						</thead>
 						<tbody>

@@ -9,8 +9,8 @@
             $id_actividad = $fila['id_actividad'];
             $estado = $fila['estado'];
             $estadoSpan = '<span class="time"><small class="label pull-right bg-red">Pendiente</small></span>';
-            if ($estado == 'Realizado'){
-              $estadoSpan ='<span class="time"><small class="label pull-right bg-green">Realizado</small></span>';
+            if ($estado == 'Realizada'){
+              $estadoSpan ='<span class="time"><small class="label pull-right bg-green">Realizada</small></span>';
             }
             if($fecha_anterior != $fila["fecha"]){
           ?>

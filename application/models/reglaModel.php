@@ -14,7 +14,7 @@ class ReglaModel extends CI_Model{
 
 	function getReglas(){
 		$id_empresa = $this->session->userdata('id_empresa');
-		$sql = "select *, DATE_FORMAT(fecha, '%d/%m/%Y %T') fecha2 from reglas where id_empresa = ?";
+		$sql = "select *, DATE_FORMAT(fecha, '%d/%m/%Y %T') fecha2 from reglas where id_empresa = ? order by id_regla";
 		$stmt = $this->db->query($sql, array($id_empresa));
 		$reglas = $stmt->result_array();
 		return $reglas;
@@ -31,6 +31,7 @@ class ReglaModel extends CI_Model{
 		if(count($data) > 0){
 			$data = $data[0];
 			$intervalo = $data["intervalo"];
+			$data["intervalo_minutos"] = $intervalo;
 			$tipoIntervalo = $data["tipoIntervalo"];
 			if ($tipoIntervalo == "Horas"){
 				$intervalo = $intervalo / 60;
@@ -251,7 +252,8 @@ class ReglaModel extends CI_Model{
 		"INSERT INTO reglas_accion 
 		(id_regla, destinatario_columnas, destinatario_fijos, asunto_mail, asunto_actividad, cliente, comprobantes, asignados_actividad, cliente_mail, comprobantes_mail) 
 		VALUES 
-		(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", array($id_regla, $destinatario_columnas, $destinatario_fijos, $asunto_mail, $asunto_actividad, $cliente, $comprobantes, $asignados_actividad, $cliente_mail, $comprobantes_mail));
+		(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+		array($id_regla, $destinatario_columnas, $destinatario_fijos, $asunto_mail, $asunto_actividad, $cliente, $comprobantes, $asignados_actividad, $cliente_mail, $comprobantes_mail));
 		if(!$tm){
     		$error = $this->db->error();
     		$this->db->trans_rollback();
@@ -444,11 +446,13 @@ class ReglaModel extends CI_Model{
 		if(count($data) > 0){
 			$id_empresa = $data["id_empresa"];
 			$cliente = $data["cliente"];
+			$cliente_fijo = $cliente;
 			$comprobantes = $data["comprobantes"];
 			$cliente_mail = $data["cliente_mail"];
+			$cliente_mail_fijo = $cliente_mail;
 			$comprobantes_mail = $data["comprobantes_mail"];
 			$asunto = $data["asunto"];
-			$intervalo = $data["intervalo"];
+			$intervalo = $data["intervalo_minutos"];
 			$accion = $data["accion"]; 
 			$estado = $data["estado"];
 			$consulta = $data["consulta"];
@@ -464,6 +468,7 @@ class ReglaModel extends CI_Model{
 			$asunto_mail_fijo = $asunto_mail;
 			$contenido_mail_fijo = $contenido_mail;
 			$descripcion_actividad_fijo = $descripcion_actividad;
+			$asunto_actividad_fijo = $asunto_actividad;
 			$asignados_actividad_fijo = $asignados_actividad;
 			$destinatarios_columnas_fijo = $destinatarios_columnas;
 			if(!empty($consulta)){
@@ -495,9 +500,13 @@ class ReglaModel extends CI_Model{
 					foreach($sql_columnas as $sql_columna){
 						$asunto_mail = $asunto_mail_fijo;
 						$contenido_mail = $contenido_mail_fijo;
+						$asunto_actividad = $asunto_actividad_fijo;
 						$descripcion_actividad = $descripcion_actividad_fijo;
 						$asignados_actividad = $asignados_actividad_fijo;
 						$destinatarios_columnas = $destinatarios_columnas_fijo;
+						$destinatarios_columnas = $destinatarios_columnas_fijo;
+						$cliente = $cliente_fijo;
+						$cliente_mail = $cliente_mail_fijo;
 
 						/*modifico el email_contenido y email_asunto para obtener los valores de verdad */
 						for($i = 0; $i < $cantidad_key; $i++){
@@ -506,71 +515,144 @@ class ReglaModel extends CI_Model{
 							$descripcion_actividad = str_replace("[^*COLUMNA_".$keys[$i]."^*]", $sql_columna[$keys[$i]], $descripcion_actividad);
 							$asunto_actividad = str_replace("[^*COLUMNA_".$keys[$i]."^*]", $sql_columna[$keys[$i]], $asunto_actividad);
 							$cliente = str_replace("[^*COLUMNA_".$keys[$i]."^*]", $sql_columna[$keys[$i]], $cliente);
-							$contacto = str_replace("[^*COLUMNA_".$keys[$i]."^*]", $sql_columna[$keys[$i]], $contacto);
+							$cliente_mail = str_replace("[^*COLUMNA_".$keys[$i]."^*]", $sql_columna[$keys[$i]], $cliente_mail);
 							$destinatarios_columnas = str_replace("[^*COLUMNA_".$keys[$i]."^*]", $sql_columna[$keys[$i]], $destinatarios_columnas);
 						}
 
-						if(strpos($accion, "Actividad") !== false){
-							if(!empty($descripcion_actividad)){
-								$nombre_cliente = "";
-								$nombre_contacto = "";
-								$array_cliente = json_decode($this->seguimientoModel->seleccionarCliente($cliente, $empresa, $dominio), true);
-								if(count($array_cliente) > 0){
-									$nombre_cliente = $array_cliente[0]["cliente"];
-																	
-									$tm = $this->db->query(
-									"INSERT INTO actividades 
-									(id_regla, descripcion, asunto, estado, fecha, id_cliente, cliente, id_empresa, origen) 
-									VALUES 
-									(?, ?, ?, 'Pendiente', NOW(), ?, ?, ?, ?, ?, 'Automatico')", array($id_regla, $descripcion_actividad, $asunto_actividad, $cliente, $nombre_cliente, $id_empresa));
-									if(!$tm){
-							    		$error = $this->db->error();
-							    		return $error['message'];
-							    	}
-							    	$id_actividad = $this->db->insert_id();
 
-									$html_tabla_comprobantes = "";
-									if($comprobantes_mail == "1"){
-										$array_comprobantes = json_decode($this->seguimientoModel->seleccionarComprobante($cliente, $empresa, $dominio), true);
+						$hagoAccion = false;
+						$esCliente = false;
+						$array_cliente = json_decode($this->seguimientoModel->seleccionarCliente($cliente_mail, $empresa, $dominio), true);
+						if(count($array_cliente) == 0){							
+							$array_cliente = json_decode($this->seguimientoModel->seleccionarCliente($cliente, $empresa, $dominio), true);
+							if(count($array_cliente) > 0){		
+								$esCliente = true;
+								$cliente_mirar = $cliente;
+							}
+						}else{
+							$esCliente = true;
+							$cliente_mirar = $cliente_mail;
+						}
+						if($esCliente){
+							$hagoAccion = true;
+							$array_comprobantes = json_decode($this->seguimientoModel->seleccionarComprobante($cliente_mirar, $empresa, $dominio), true);
 
-										$html_tabla_comprobantes = $this->reglaModel->guardarComprobantes('actividades', 'actividad', $id_actividad, $array_comprobantes);
+							foreach ($array_comprobantes as $comp) {
+								$where_extra = " and act.id_regla = '$id_regla'";
+								$array_parametros = array($id_empresa, $comp["comprobante"], $comp["tipo"], $comp["vencimiento"]);
+								$sql = 
+							    "SELECT *
+						        FROM actividades act
+						        INNER JOIN actividades_comprobantes comp on act.id_actividad = comp.id_actividad
+						        WHERE act.id_empresa = ?
+						        and comp.comprobante = ? and comp.tipo = ? and comp.vencimiento = ?";
+								$stmt = $this->db->query($sql.$where_extra, $array_parametros);
+								$validaciones = $stmt->result_array();
+								if(count($validaciones) > 0){
+									$hagoAccion = false;
+								}else{
+									$stmt = $this->db->query($sql, $array_parametros);
+									$validaciones = $stmt->result_array();
+									foreach ($validaciones as $fila_val) {
+										$fecha_pago = intval(str_replace("-", "", $fila_val["fecha_pago"]));
+										$fecha_actual = intval(date("Ymd"));
+										if($fecha_pago <= $fecha_actual){
+											$hagoAccion = false;
+										}
 									}
+								}
 
-									if(strpos($descripcion_actividad, '[^*TABLA_COMPROBANTES^*]') !== false){
-										$descripcion_actividad = str_replace('[^*TABLA_COMPROBANTES^*]', $html_tabla_comprobantes, $descripcion_actividad);
+								$where_extra = " and mails.id_regla = '$id_regla'";
+								$sql = 
+							    "SELECT *
+						        FROM mails
+						        INNER JOIN mails_comprobantes comp on mails.id_mail = comp.id_mail
+						        WHERE mails.id_empresa = ?
+						        and comp.comprobante = ? and comp.tipo = ? and comp.vencimiento = ?";
+								$stmt = $this->db->query($sql.$where_extra, $array_parametros);
+								$validaciones = $stmt->result_array();								
+								if(count($validaciones) > 0){
+									$hagoAccion = false;
+								}else{
+									$stmt = $this->db->query($sql, $array_parametros);
+									$validaciones = $stmt->result_array();
+									foreach ($validaciones as $fila_val) {
+										$fecha_pago = intval(str_replace("-", "", $fila_val["fecha_pago"]));
+										$fecha_actual = intval(date("Ymd"));
+										if($fecha_pago <= $fecha_actual){
+											$hagoAccion = false;
+										}
+									}
+								}
 
-										$tm = $this->db->query("UPDATE actividades SET descripcion = ? WHERE id_actividad = ?", array($descripcion_actividad, $id_actividad));
+							}
+						}						
+						if($hagoAccion){							
+							if(strpos($accion, "Actividad") !== false){
+								if(!empty($descripcion_actividad)){
+									$nombre_cliente = "";
+									$array_cliente = json_decode($this->seguimientoModel->seleccionarCliente($cliente, $empresa, $dominio), true);
+									if(count($array_cliente) > 0){
+										$nombre_cliente = $array_cliente[0]["cliente"];
+																		
+										$tm = $this->db->query(
+										"INSERT INTO actividades 
+										(id_regla, descripcion, asunto, estado, fecha, id_cliente, cliente, id_empresa, origen) 
+										VALUES 
+										(?, ?, ?, 'Pendiente', NOW(), ?, ?, ?, 'Automatico')", array($id_regla, $descripcion_actividad, $asunto_actividad, $cliente, $nombre_cliente, $id_empresa));
 										if(!$tm){
 								    		$error = $this->db->error();
 								    		return $error['message'];
 								    	}
-									}
+								    	$id_actividad = $this->db->insert_id();
 
-							    	if(!empty($asignados_actividad)){
-							    		$asignados_actividad = explode("***", $asignados_actividad);
-							    		foreach ($asignados_actividad as $fila) {
-								    		$this->asociacion_actividad($id_actividad, $fila);
+										$html_tabla_comprobantes = "";
+										if($comprobantes_mail == "1"){
+											$array_comprobantes = json_decode($this->seguimientoModel->seleccionarComprobante($cliente, $empresa, $dominio), true);
+
+											$html_tabla_comprobantes = $this->reglaModel->guardarComprobantes('actividades', 'actividad', $id_actividad, $array_comprobantes);
+										}
+
+										if(strpos($descripcion_actividad, '[^*TABLA_COMPROBANTES^*]') !== false){
+											$descripcion_actividad = str_replace('[^*TABLA_COMPROBANTES^*]', $html_tabla_comprobantes, $descripcion_actividad);
+
+											$tm = $this->db->query("UPDATE actividades SET descripcion = ? WHERE id_actividad = ?", array($descripcion_actividad, $id_actividad));
+											if(!$tm){
+									    		$error = $this->db->error();
+									    		return $error['message'];
+									    	}
+										}
+
+								    	if(!empty($asignados_actividad)){
+								    		$asignados_actividad = explode("***", $asignados_actividad);
+								    		foreach ($asignados_actividad as $fila) {
+									    		$this->asociacion_actividad($id_actividad, $fila);
+									    	}
+								    	}else{
+								    		$asignados_actividad = $this->getUsuariosParaSelect();
+								    		foreach ($asignados_actividad as $fila) {
+									    		$this->asociacion_actividad($id_actividad, $fila["id_usuario"]);
+									    	}
 								    	}
-							    	}else{
-							    		$asignados_actividad = $this->getUsuariosParaSelect();
-							    		foreach ($asignados_actividad as $fila) {
-								    		$this->asociacion_actividad($id_actividad, $fila["id_usuario"]);
-								    	}
-							    	}
+									}
 								}
 							}
-						}
 
-						if(strpos($accion, "Correo") !== false){
-							if(!empty($puerto) && !empty($host) && !empty($correo) && !empty($contrasena)){
-								$carpeta = $_SERVER['DOCUMENT_ROOT'].$this->config->item('carpeta_principal').'Plugin/archivos/'.$id_regla.'/';
-								
-								$this->mandarMail(
-									$id_regla, $id_empresa, $cliente_mail, $nombre_cliente_mail,
-									$asunto_mail, $contenido_mail, 'Automatico',
-									$empresa, $dominio, $puerto, $host, $correo, $contrasena, $certificado_ssl,
-									$carpeta, $adjuntos, $destinatarios_columnas, $destinatarios_fijos, $comprobantes_mail, array()
-								);
+							if(strpos($accion, "Correo") !== false){
+								if(!empty($puerto) && !empty($host) && !empty($correo) && !empty($contrasena)){
+									$carpeta = $_SERVER['DOCUMENT_ROOT'].$this->config->item('carpeta_principal').'Plugin/archivos/'.$id_regla.'/';
+									$nombre_cliente = "";
+									$array_cliente = json_decode($this->seguimientoModel->seleccionarCliente($cliente_mail, $empresa, $dominio), true);
+									if(count($array_cliente) > 0){
+										$nombre_cliente_mail = $array_cliente[0]["cliente"];
+										$this->mandarMail(
+											$id_regla, $id_empresa, $cliente_mail, $nombre_cliente_mail,
+											$asunto_mail, $contenido_mail, 'Automatico',
+											$empresa, $dominio, $puerto, $host, $correo, $contrasena, $certificado_ssl,
+											$carpeta, $adjuntos, $destinatarios_columnas, $destinatarios_fijos, $comprobantes_mail, array()
+										);
+									}
+								}
 							}
 						}
 					}
@@ -586,14 +668,12 @@ class ReglaModel extends CI_Model{
 	    		return $error['message'];
 	    	}
 
-	    	$tm = $this->db->query("update reglas set estado='Pausada' where fecha > fechaExpiracion and estado <>'Pausada'");
+	    	$tm = $this->db->query("update reglas set estado='Pausada' where fecha > fechaExpiracion and fechaExpiracion <> '1969-12-31 09:00:00' and estado <>'Pausada'");
 			if(!$tm){
 	    		$error = $this->db->error();
 	    		$this->db->trans_rollback();
 	    		return $error['message'];
-	    	}			
-
-	    	
+	    	}			    	
 		}else{			
 			$tm = $this->db->query("UPDATE REGLAS
 					SET estado = 'Pausada'
@@ -641,9 +721,7 @@ class ReglaModel extends CI_Model{
 
 			$html_tabla_comprobantes = "";
 			if($comprobantes_mail == "1" || $comprobantes_mail == "2"){
-				if($comprobantes_mail == "1"){
-					$array_comprobantes = json_decode($this->seguimientoModel->seleccionarComprobante($cliente_mail, $empresa, $dominio), true);
-				}
+				$array_comprobantes = json_decode($this->seguimientoModel->seleccionarComprobante($cliente_mail, $empresa, $dominio), true);
 				$html_tabla_comprobantes = $this->reglaModel->guardarComprobantes('mails', 'mail', $id_correo_bd, $array_comprobantes);
 			}
 
@@ -784,7 +862,7 @@ class ReglaModel extends CI_Model{
 	}
 
 	function guardarComprobantes($tipo, $tipo_singular, $id, $array_comprobantes){
-		$html_tabla_comprobantes = "";		
+		$html_tabla_comprobantes = "";
 		if(count($array_comprobantes) > 0){
 			$html_tabla_comprobantes = 
 			"<table>
@@ -806,7 +884,8 @@ class ReglaModel extends CI_Model{
 				if(isset($comp["dias"])){
 					unset($comp["dias"]);
 				}
-				$tm = $this->db->insert($tipo."_comprobantes", $comp);				
+				$tm = $this->db->insert($tipo."_comprobantes", $comp);
+
 			}
 			$html_tabla_comprobantes .= "</table>";
 		}
@@ -823,8 +902,7 @@ class ReglaModel extends CI_Model{
 		foreach ($licencias as $licencia) {
 			$dominio = $licencia["dominio"];
 			$empresa = $licencia["empresa"];
-			$id_empresa = $licencia["id_empresa"];
-			log_message("error", $dominio. " ".$empresa);
+			$id_empresa = $licencia["id_empresa"];			
 			$curl = curl_init();
 			$url = $dominio."/api/comprobantesTodos";
 			curl_setopt($curl, CURLOPT_URL, $url);

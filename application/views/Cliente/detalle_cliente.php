@@ -221,7 +221,7 @@ $seguimientoModel = new seguimientoModel;
 									<?php 
 									}
 									?>
-									<label class="lab">Cumplimiento: <b><?php echo $cumplimiento; ?> días</b></label><br>
+									<label class="lab">Ponderado de pago: <b><?php echo $cumplimiento; ?> días</b></label><br>
 									<label class="lab" <?php if($total > 0){ ?> style="color:red" <?php } ?>>Deuda: <?php echo number_format($total,2,',','.'); ?></label><br>
 									<?php 
 									if($no_vencida != 0 && $vencida != 0){

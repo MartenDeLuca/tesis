@@ -203,7 +203,7 @@ foreach  ($empresas as $fila){
 						</div>
 						<div class="pull-left info">
 							<p>Usuario</p>
-							<input type="radio" class="radio-button minimal" id="menuFijo" <?php echo $menuFijoRadioCheck; ?>> <label for="menuFijo" style="font-weight: normal;"> Menu Fijo <label>
+							<a href="#"><i class="fa fa-circle text-success"></i> En Linea</a>
 							<input type="hidden" id="menuFijoHidden" value="<?php echo $menuFijo; ?>">
 						</div>
 					</div>
@@ -277,7 +277,8 @@ foreach  ($empresas as $fila){
 			<input type="hidden" id="base_url" value="<?php echo htmlspecialchars(base_url()); ?>">
 			<input type="hidden" id="current_url_hidden" value= "<?php echo $current_url; ?>">
 		
-			<?php $this->load->view('menu/js.php') ?>
+			<?php 
+			$this->load->view('menu/js.php') ?>
 			<script>				
 				$(document).on('click',".content-wrapper",(function(){
 					if($("#menuFijoHidden").val() == "No"){						
@@ -286,23 +287,6 @@ foreach  ($empresas as $fila){
 				}));
 
 				$(".main-sidebar").click(function(){$('.fixed').removeClass('sidebar-collapse'); });
-
-				$('.radio-button').on("click", function(event){
-					if($(this).val() == "Si"){
-						var menuFijo = "No";
-						$(this).val(menuFijo);
-						$("#menuFijoHidden").val(menuFijo);
-						$(this).prop('checked', false);			
-						$("body").removeClass("sidebar-collapse");			
-					}else if($(this).val() == "No"){
-						var menuFijo = "Si";
-						$(this).val(menuFijo);
-						$("#menuFijoHidden").val(menuFijo);
-						$(this).prop('checked', true);
-						$("body").addClass("sidebar-collapse");
-					}
-					cambiar_menu('menu_fijo', menuFijo);
-				});	
 
 				function cambiar_menu(columna, valor){
 					$.ajax({

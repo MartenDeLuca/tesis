@@ -55,6 +55,25 @@ class TableroModel extends CI_Model{
 		return $registros;
 	}
 
+	function sel_objetivos_graficos($id_grafico, $cantidad){
+		$sql_select = "select * from graficos_objetivos where ifnull(desde, -9999999999) <= $cantidad and ifnull(hasta, 9999999999) >= $cantidad and id_grafico = $id_grafico";
+		$stmt = $this->db->query($sql_select);
+		$registros = $stmt->result_array();
+		if (count($registros) > 0){
+			return $registros[0]['color'];
+		} else {
+			return '';
+		}
+		
+	}
+
+	function get_objetivos_graficos($id_grafico){
+		$sql_select = "select * from graficos_objetivos where id_grafico = $id_grafico";
+		$stmt = $this->db->query($sql_select);
+		$registros = $stmt->result_array();
+		return $registros;
+	}
+
 	function getCarpetaPorId($id_carpeta){
 		$id_usuario = $this->session->userdata('id_usuario');
 		$id_licencia = $this->session->userdata('id_licencia');
@@ -73,6 +92,19 @@ class TableroModel extends CI_Model{
 			$registros = $stmt->result_array();
 		}
 		return $registros;
+	}
+
+	function guardar_objetivos_graficos($datos, $id_grafico){
+		$tm = $this->db->query("delete from  graficos_objetivos where id_grafico =?", array($id_grafico));
+		foreach ($datos as $fila) {
+			$tm = $this->db->query("insert into graficos_objetivos (id_grafico, desde, hasta, color) values (?,?,?,?)", array($fila['id_grafico'],$fila['desde'], $fila['hasta'], $fila['color']));
+			if(!$tm){
+	    		$error = $this->db->error();
+	    		$this->db->trans_rollback();
+	    		return $error['message'];
+	    	}	
+		}
+		
 	}
 
 	function crear_carpeta($carpeta, $id_padre){

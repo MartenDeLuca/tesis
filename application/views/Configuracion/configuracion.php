@@ -19,6 +19,13 @@
 	}
 </style>
 <?php
+$menuFijo = $this->session->userdata('menu_fijo');
+$menuFijoClase = "sidebar-collapse";
+$menuFijoRadioCheck = "value='No'";
+if($menuFijo == "Si"){
+	$menuFijoClase = "";
+	$menuFijoRadioCheck = "value='Si' checked";
+}
 $cantidad_decimales = "2";
 $separador_decimales = "";
 $separador_miles = "";
@@ -94,6 +101,11 @@ if(isset($mails[0])){
 									<div style="text-align:left;">Menu <span style="float:right;"><span id="icon0" class="glyphicon glyphicon glyphicon-chevron-down"></span></span></div>
 								</label>
 								<div class="acordeon__contenido">
+									<div class="row">
+										<div class="col-md-12">
+											<label for="menuFijo"> Menu Fijo <label> <input type="radio" class="radio-button minimal" id="menuFijo" <?php echo $menuFijoRadioCheck; ?>>
+										</div>
+									</div>
 									<div class="row">
 										<div class="col-md-6">
 											<ul class="list-unstyled clearfix">
@@ -674,4 +686,21 @@ if(isset($mails[0])){
 			}
 		}
 	}	
+
+	$('.radio-button').on("click", function(event){		
+		if($(this).val() == "Si"){
+			var menuFijo = "No";
+			$(this).val(menuFijo);
+			$("#menuFijoHidden").val(menuFijo);
+			$(this).prop('checked', false);			
+			$("body").addClass("sidebar-collapse");
+		}else if($(this).val() == "No"){
+			var menuFijo = "Si";
+			$(this).val(menuFijo);
+			$("#menuFijoHidden").val(menuFijo);
+			$(this).prop('checked', true);
+			$("body").removeClass("sidebar-collapse");
+		}
+		cambiar_menu('menu_fijo', menuFijo);
+	});
 </script>

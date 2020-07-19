@@ -456,40 +456,6 @@
 
 		var tipo = $("#accion").val();
 		if(tipo.indexOf("Correo") > -1){
-			var correo = $("#correo").val();
-			var contrasena = $("#contrasena").val();
-			var host = $("#host").val();
-			var puerto = $("#puerto").val();
-			if(correo != ""){
-				if(!validoEmail(correo)){
-					ok = false;
-					if(tab == "") {tab = "correo_tab";}
-					marcarError("correo", "El correo esta escrito incorrectamente");
-				}
-			}else{
-				ok = false;
-				if(tab == "") {tab = "correo_tab";}
-				marcarError("correo", "El correo esta escrito incorrectamente");
-			}
-			if(contrasena == ""){
-				ok = false;
-				if(tab == "") {tab = "correo_tab";}
-				marcarError("contrasena", "Campo obligatorio");
-			}
-			if(host == ""){
-				ok = false;
-				if(tab == "") {tab = "correo_tab";}
-				marcarError("host", "Campo obligatorio");
-			}
-			if(puerto == ""){
-				ok = false;
-				if(tab == "") {tab = "correo_tab";}
-				marcarError("puerto", "Campo obligatorio");
-			}else if (!Number.isInteger(parseInt(puerto))){
-				ok = false;
-				if(tab == "") {tab = "correo_tab";}
-				marcarError("puerto", "Debe ser un numero");
-			}
 			var contenido_mail = CKEDITOR.instances["contenido_mail"].getData();
 			if(contenido_mail == ""){
 				ok = false;

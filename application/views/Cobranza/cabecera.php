@@ -208,18 +208,26 @@ $descripcion_dropdown = "";
 	}
 	?>
 
-	<!-- CHEQUES SOLO ES CON RECIBO -->
 	<?php 
 	if($t_comp==='REC'){
 		$active = "";
-		$descripcion = "Cheques";
-		$url =  "onclick=\"rec_cheques('".$t_comp."','".$n_comp."')\"";
+		$descripcion = "Valores";
+		$url =  "onclick=\"rec_valores('".$t_comp."','".$n_comp."')\"";
 	?>
-		<a <?php echo $url; ?> id='boton_cheques' class="btn btn-primary btn-form"><?php echo $descripcion; ?></a>
+		<a <?php echo $url; ?> id='boton_rec_valores' class="btn btn-primary btn-form"><?php echo $descripcion; ?></a>
 	<?php 
 		$li .=
 		'<li role="presentation" '.$active.'>
-			<a id="cheques" aria-controls="cheques" role="tab" '.$url.'>'.$descripcion.'</a>
+			<a id="rec_valores" aria-controls="rec_valores" role="tab" '.$url.'>'.$descripcion.'</a>
+		</li>';
+		$descripcion = "Retenciones";
+		$url =  "onclick=\"rec_retenciones('".$t_comp."','".$n_comp."')\"";
+	?>
+		<a <?php echo $url; ?> id='boton_retenciones' class="btn btn-primary btn-form"><?php echo $descripcion; ?></a>
+	<?php 
+		$li .=
+		'<li role="presentation" '.$active.'>
+			<a id="retenciones" aria-controls="retenciones" role="tab" '.$url.'>'.$descripcion.'</a>
 		</li>';
 	}
 	?>	
@@ -264,6 +272,24 @@ $descripcion_dropdown = "";
 <div id="div_detalle"></div>
 
 <input id="id_cliente" type='hidden' value = "<?php echo $id_cliente; ?>">
+
+<div class="modal fade in" id="modal_cheques" tabindex="-1" role="dialog" aria-labelledby="formBuscar" aria-hidden="true">
+	<div class="modal-dialog modal-lg"  style="width: 100% !important;">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span></button>
+				<h4 class="modal-title" id="modal_cheques-title">Cheques</h4> 
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-md-12">
+						<div id="modal_cheques_div"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
 
 <script type="text/javascript">
 	$(document).ready(function(){
@@ -349,18 +375,26 @@ $descripcion_dropdown = "";
 							<th>Importe pagado</th>
 							<th>Importe pendiente pagar</th>
 						</tr>`;
-				var tamano = respuesta.length;
+				var tamano = respuesta.length;				
 				if(tamano > 0){
+					var importe_pendiente = 0;
+					var import_can = 0;
+					var import_vt = respuesta[0]["import_vt"];					
 					for(var i = 0; i < tamano; i++){
+						if(i > 0){
+							import_vt = importe_pendiente;
+						}
+						import_can = respuesta[i]["import_can"];
+						importe_pendiente = import_vt + import_can;
 						html += 
 						`<tr>
 							<td>${respuesta[i]["t_comp"]}</td>
 							<td><a href="<?php echo base_url(); ?>detalle-comprobante?t_comp=${respuesta[i]["t_comp"]}&n_comp=${respuesta[i]["n_comp"]}">${respuesta[i]["n_comp"]}</a></td>
 							<td>${respuesta[i]["fecha_vto"]}</td>
 							<td>${respuesta[i]["f_comp_can"]}</td>
-							<td>${formatearNumero(respuesta[i]["import_vt"])}</td>
-							<td>${formatearNumero(respuesta[i]["import_can"])}</td>
-							<td>${formatearNumero(respuesta[i]["pendiente"])}</td>
+							<td>${formatearNumero(import_vt)}</td>
+							<td>${formatearNumero(import_can)}</td>
+							<td>${formatearNumero(importe_pendiente)}</td>
 						</tr>`;
 					}
 				}
@@ -462,9 +496,57 @@ $descripcion_dropdown = "";
 		});
 	}
 
-	function rec_cheques(t_comp, n_comp){
+	function rec_cheques(t_comp, n_comp, cod_cta){
 		$.ajax({
 			url: "<?php echo $this->session->userdata('dominio') ?>/api/comprobante_rec_cheques",
+			type: "POST",
+			data:{n_comp, t_comp, cod_cta, empresa},
+			dataType: "json",
+			success: function(respuesta){
+				var html = 
+				`<h4>${t_comp} | ${n_comp} | ${cod_cta}</h4>
+				<div class="table-responsive">
+					<table class="table table-hover">
+						<tr>
+							<th>Numero</th>
+							<th>Fecha del cheque</th>
+							<th>Tipo</th>
+							<th>Nro. Interno</th>
+							<th>Banco</th>
+							<th>Importe</th>
+							<th>Fecha de emisión</th>
+							<th>Fecha Salida</th>
+							<th>Proveedor</th>
+						</tr>`;
+				var tamano = respuesta.length;
+				if(tamano > 0){
+					for(var i = 0; i < tamano; i++){
+						html += 
+						`<tr>
+							<td>${respuesta[i]['Nro. de cheque']}</td>
+							<td>${respuesta[i]['Fecha del cheque']}</td>
+							<td>${respuesta[i]['Tipo de cheque']}</td>
+							<td>${respuesta[i]['Nro. interno']}</td>
+							<td>${respuesta[i]['Nombre de banco']}</td>
+							<td>${formatearNumero(respuesta[i]['Total Origen'])}</td>
+							<td>${respuesta[i]['Fecha de emision']}</td>
+							<td>${respuesta[i]['fecha_sal']}</td>
+							<td>${respuesta[i]['NOM_PROVEE']}</td>
+						</tr>`;
+					}
+				}
+				html += 
+					`</table>
+				</div>`;
+				$("#modal_cheques_div").html(html);
+				$("#modal_cheques").modal("show");
+			}
+		});
+	}	
+
+	function rec_valores(t_comp, n_comp){
+		$.ajax({
+			url: "<?php echo $this->session->userdata('dominio') ?>/api/comprobante_rec_valores",
 			type: "POST",
 			data:{n_comp, t_comp, empresa},
 			dataType: "json",
@@ -473,28 +555,49 @@ $descripcion_dropdown = "";
 				`<div class="table-responsive">
 					<table class="table table-hover">
 						<tr>
-							<th>Banco</th>
-							<th>Numero</th>
-							<th>Fecha</th>
-							<th>Importe</th>
-							<th>Estado</th>
-							<th>Fecha Salida</th>
-							<th>Proveedor</th>
-							<th>Nro Interno</th>
+							<th>Cuenta</th>
+							<th>Tipo</th>
+							<th>Descripción</th>
+							<th>Debe (CTE)</th>
+							<th>Haber (CTE)</th>
+							<th>Debe (EXT)</th>
+							<th>Haber (EXT)</th>
 						</tr>`;
 				var tamano = respuesta.length;
+				var monto_debe = "";
+				var monto_haber = "";
+				var monto_debe_ext = "";
+				var monto_haber_ext = "";
+				var inicio_etiqueta_a = "";
+				var fin_etiqueta_a = "";
 				if(tamano > 0){
 					for(var i = 0; i < tamano; i++){
+						if(respuesta[i]["D_H"] == "D"){
+							monto_debe = respuesta[i]["MONTO"];
+							monto_haber = "0";
+							monto_debe_ext = respuesta[i]["MONTO"];
+							monto_haber_ext = "0";
+						}else{
+							monto_debe = "0";
+							monto_haber = respuesta[i]["UNIDADES"];
+							monto_debe_ext = "0";
+							monto_haber_ext = respuesta[i]["UNIDADES"];
+						}
+						inicio_etiqueta_a = "";
+						fin_etiqueta_a = "";
+						if(respuesta[i]["tipo"] == "Cartera"){
+							inicio_etiqueta_a = `<a onclick='rec_cheques("${t_comp}", "${n_comp}", "${respuesta[i]["COD_CTA"]}")'>`;
+							fin_etiqueta_a = "</a>";
+						}
 						html += 
 						`<tr>
-							<td>${respuesta[i]['cod_banco']} - ${respuesta[i]['desc_banco']}</td>
-							<td>${respuesta[i]['n_cheque']}</td>
-							<td>${respuesta[i]['fecha_cheq']}</td>
-							<td>${respuesta[i]['importe_ch']}</td>
-							<td>${respuesta[i]['descripcio']}</td>
-							<td>${respuesta[i]['fecha_sal']}</td>
-							<td>${respuesta[i]['proveedor']}</td>
-							<td>${respuesta[i]['N_INTERNO']}</td>
+							<td>${inicio_etiqueta_a+respuesta[i]["COD_CTA"]+fin_etiqueta_a}</td>
+							<td>${respuesta[i]["tipo"]}</td>
+							<td>${respuesta[i]["DESCRIPCIO"]}</td>
+							<td>${formatearNumero(monto_debe)}</td>
+							<td>${formatearNumero(monto_haber)}</td>
+							<td>${formatearNumero(monto_debe_ext)}</td>
+							<td>${formatearNumero(monto_haber_ext)}</td>
 						</tr>`;
 					}
 				}
@@ -504,7 +607,53 @@ $descripcion_dropdown = "";
 				$("#div_detalle").html(html);
 			}
 		});
-	}		
+	}
+
+	function rec_retenciones(t_comp, n_comp){
+		$.ajax({
+			url: "<?php echo $this->session->userdata('dominio') ?>/api/comprobante_rec_retenciones",
+			type: "POST",
+			data:{n_comp, t_comp, empresa},
+			dataType: "json",
+			success: function(respuesta){
+				var html = 
+				`<div class="table-responsive">
+					<table class="table table-hover">
+						<tr>
+							<th>Retención</th>
+							<th>Tipo</th>
+							<th>Certificado</th>
+							<th>Fecha</th>
+							<th>Fecha Contable</th>
+							<th>Importe</th>
+							<th>Certificado relacionado</th>
+						</tr>`;
+				var tamano = respuesta.length;
+				var monto_debe = "";
+				var monto_haber = "";
+				var monto_debe_ext = "";
+				var monto_haber_ext = "";
+				if(tamano > 0){
+					for(var i = 0; i < tamano; i++){
+						html += 
+						`<tr>
+							<td>${respuesta[i]["Retencion"]}</td>
+							<td>${respuesta[i]["Tipo"]}</td>
+							<td>${respuesta[i]["Nro. Certificado"]}</td>
+							<td>${respuesta[i]["Fecha"]}</td>
+							<td>${respuesta[i]["Fecha contable"]}</td>
+							<td>${respuesta[i]["Importe"]}</td>
+							<td>${respuesta[i]["Certificado relacionado"]}</td>
+						</tr>`;
+					}
+				}
+				html += 
+					`</table>
+				</div>`;
+				$("#div_detalle").html(html);
+			}
+		});
+	}
 
 	function actividades(t_comp, n_comp){
 		$.ajax({

@@ -143,10 +143,11 @@ class Regla extends CI_Controller {
 
 				$fechaInicio = $_POST['fechaInicio'];
 				if($fechaInicio != ""){
-					$fechaInicio = date('Y-m-d h:i:s', strtotime($fechaInicio));
+					$fechaInicio = date('Y-m-d H:i:s', strtotime($fechaInicio));
 				}else{
-					$fechaInicio = date('Y-m-d h:i:s', strtotime(date("Y-m-d h:i:s")));
-				}				
+					$fechaInicio = date('Y-m-d H:i:s', strtotime(date("Y-m-d h:i:s")));
+				}
+
 				$fechaExpiracion = $_POST['fechaExpiracion'];
 				if($fechaInicio != ""){
 					$fechaExpiracion = date('Y-m-d h:i:s', strtotime($fechaExpiracion));

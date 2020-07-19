@@ -1,4 +1,5 @@
 <!-- jQuery 3 --> 
+	<script src="https://cdn.jsdelivr.net/npm/gridstack@1.1.1/dist/gridstack.all.js"></script>
 	<script src="<?php echo base_url('plugin') ?>/bower_components/jquery/dist2/jquery.min.js"></script>
 	<!-- jQuery UI 1.11.4 -->
 	<!--<script src="<?php echo base_url('plugin') ?>/bower_components/jquery-ui/jquery-ui.min.js"></script>-->

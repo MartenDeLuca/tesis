@@ -1,40 +1,11 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@1.1.1/dist/gridstack.min.css" />
 <div class="content-wrapper" style="background: white !important;">
-  <section class="content-header">
-      <h1 id="h1_tablero">
-        Tablero - <?php echo $carpeta["nombre"]; ?>
-      </h1>
-      <ol class="breadcrumb">
-        <li class="active">Tablero</li>
-      </ol>
-	</section>
+  <section class="content-header" style="">
+      <div class="box-header with-border" style="/*position:fixed !important;  width:100% !important;z-index:10 !important;*/background-color: #d6d8d9;color: #1b1e21;" >
+        <h3 class="box-title" id="tituloCliente" ></h3>
+      </div>
+  </section>
 	<section class="content">
-    
-    <?php if($carpeta["id_padre"] != "0"){ ?>
-      <a class="btn btn-primary btn-form hidden-xs" onclick="renombrar_carpeta()">Renombrar carpeta</a> 
-      <a class="btn btn-primary btn-form hidden-xs" onclick="mover_carpeta()">Mover carpeta</a> 
-      <?php if($array_usuarios != "<option></option>"){ ?>
-      <a class="btn btn-primary btn-form hidden-xs" onclick="compartir_carpeta()">Compartir carpeta</a> 
-      <?php } ?>
-      <a class="btn btn-danger btn-form hidden-xs" onclick="eliminar_carpeta()">Eliminar carpeta</a> 
-    <?php } ?>
-    <a class="btn btn-success btn-form hidden-xs" onclick="crear_carpeta()">Crear Carpeta</a> 
-    <div class="dropdown" style="display:inline;">
-      <button class="btn btn-default btn-form dropdown-toggle visible-xs" type="button" data-toggle="dropdown">Acciones <span class="caret"></span></button>
-      <ul class="dropdown-menu">
-          <li><a onclick="crear_carpeta()">Crear Carpeta</a></li>
-          <?php if($carpeta["id_padre"] != "0"){ ?>
-            <li><a onclick="renombrar_carpeta()">Renombrar carpeta</a></li>
-            <li><a onclick="mover_carpeta()">Mover carpeta</a></li>
-            <?php if($array_usuarios != "<option></option>"){ ?>
-            <li><a onclick="compartir_carpeta()">Compartir carpeta</a></li>
-            <?php } ?>
-            <li><a style="background: #dd4b39; color: #fff" onclick="eliminar_carpeta()">Eliminar carpeta</a></li>
-          <?php } ?>
-      </ul>
-    </div>
-    <br>
-    <br>
     <div class="grid-stack">
         <?php
         foreach ($graficos as $filaGraficos) {
@@ -42,24 +13,87 @@
           $y = $filaGraficos['y'];
           $ancho = $filaGraficos['ancho'];
           $alto = $filaGraficos['alto'];
+          $nombreParaGrafico = str_replace(' ', '_', $filaGraficos['nombre']);
+          $tipoGrafico = $filaGraficos['tipo'];
         ?>
             <div class="grid-stack-item" data-gs-id="<?php echo $filaGraficos['id_grafico'] ?>" data-gs-x="<?php echo $x ?>" data-gs-y="<?php echo $y ?>" data-gs-width="<?php echo $ancho ?>" data-gs-height="<?php echo $ancho ?>">
-              <div class="grid-stack-item-content">
+              <div class="grid-stack-item-content"  style="overflow: hidden  !important;" >
+                <?php if ($tipoGrafico == 'grafico'){ ?>
                 <div class="box" id="<?php echo $filaGraficos['id_grafico'] ?>">
                   <div class="box-header with-border" >
-                    <h3 class="box-title"><?php echo $filaGraficos['nombre'] ?></h3>
+                    <h3 class="box-title" id="<?php echo strtolower($nombreParaGrafico.'_'.$tipoGrafico).'_titulo' ?>"><?php echo $filaGraficos['nombre'] ?></h3>
                     <div class="box-tools pull-right">
                       <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
                     </div>
                   </div>
                   <div class="box-body">
-                    <div class="row">
-                      <div class="col-md-12">
-                          
-                      </div>            
-                    </div>
+                      <div id="<?php echo strtolower($nombreParaGrafico.'_'.$tipoGrafico) ?>" align="center" style="width: 100%;height: 300px;"><img src="<?php echo base_url() ?>plugin/imagenes/Preloader_2.gif"></div>
                   </div>        
                 </div>
+              <?php } else if ($tipoGrafico == 'indicador'){ 
+                    $id_grafico_sin_titulo = strtolower($nombreParaGrafico.'_'.$tipoGrafico);
+                    $id_grafico_titulo = strtolower($nombreParaGrafico.'_'.$tipoGrafico).'_titulo';
+                    $id_grafico = $filaGraficos['id_grafico'];
+                ?>
+                  <div id="<?php echo strtolower($nombreParaGrafico.'_'.$tipoGrafico) ?>" style="border-style: groove;" class="small-box">
+                    <div class="inner" align="center">
+                      <h3 id="<?php echo $id_grafico_titulo ?>" data-id="<?php echo $id_grafico ?>"><img width="30%" src="<?php echo base_url() ?>plugin/imagenes/Preloader_2.gif"></h3>
+                      <p><?php echo $filaGraficos['nombre'];  ?></p>
+                    </div>
+                    <a style="cursor:pointer;" onclick="modalObjetivos('<?php echo $id_grafico ?>', '<?php echo $id_grafico_sin_titulo ?>')" class="small-box-footer">Objetivos <i class="fa fa-arrow-circle-right"></i></a>
+                  </div>
+              <?php } else if ($tipoGrafico == 'tabla'){ ?>
+                <div class="box" id="<?php echo $filaGraficos['id_grafico'] ?>">
+                  <div class="box-header with-border" >
+                    <h3 class="box-title" id="<?php echo strtolower($nombreParaGrafico.'_'.$tipoGrafico).'_titulo' ?>"><?php echo $filaGraficos['nombre'] ?></h3>
+                    <div class="box-tools pull-right">
+                      <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                    </div>
+                  </div>
+                  <div class="box-body">
+                  <div>
+                  <table  class="table table-bordered dt-responsive " id="tabla_data" style="width:100% !important;">
+                    <thead>
+                      <tr>
+                        <th>Codigo cliente</th>
+                        <th>Razon social</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php
+                      $idGva14 =''; 
+                      $cant_facturas ='';
+                      $codigoCliente = '';
+                      $razonSocial = '';
+                      if (count($clientes) > 0){
+                        $idGva14 =$clientes[0]['id_gva14']; 
+                        $cant_facturas =$clientes[0]['cant_facturas'];
+                        $codigoCliente = $clientes[0]['cod_client']; 
+                        $razonSocial = $clientes[0]['razon_soci']; 
+                        foreach ($clientes as $fila) {
+                          $cod =$fila["cod_client"];
+                          $razon =$fila["razon_soci"];
+                          $cant =$fila["cant_facturas"];
+                          $id_gva14 =$fila["id_gva14"];
+                        ?>
+                        <tr class="filas" <?php $color='white'; if ($id_gva14 == $idGva14){ $color = '#6dd66d'; } ?>style="cursor: pointer; background-color:<?php echo $color; ?>"  onclick="cambioCliente(this, '<?php echo $id_gva14 ?>','<?php echo $cod ?>','<?php echo $razon ?>','<?php echo $cant ?>')">
+                          <td><?php echo $cod ?></td>
+                          <td><?php echo $razon; ?></td>
+                        </tr>
+                        <?php 
+                        }
+                      }
+                      ?>  
+                    </tbody>
+                  </table>
+                  </div>
+                  <input type="hidden" id="idGva14" value="<?php echo $idGva14 ?>">
+                  <input type="hidden" id="codigoCliente" value="<?php echo $codigoCliente ?>">
+                  <input type="hidden" id="razonSocial" value="<?php echo $razonSocial ?>">
+                  <input type="hidden" id="cant_facturas" value="<?php echo $cant_facturas ?>">
+                  </div>        
+                </div>
+              <?php } ?>
               </div>
             </div>
         <?php }
@@ -168,16 +202,65 @@
   </div>
 </div>
 
+<div class="modal fade" id="modalObjetivos" tabindex="-1" role="dialog" aria-labelledby="modalObjetivos" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Objetivos</h4>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="id_grafico_objetivo" >
+        <input type="hidden" id="id_grafico_objetivo_titulo" >
+        <input type="hidden" id="contador_objetivos" >
+        
+         <div class="pull-right">
+          <a onclick="agregarFilaObjetivos()" class="btn btn-primary btn-form">Agregar</a>
+          <a onclick="guardarObjetivos()" class="btn btn-primary btn-form">Guardar</a>
+          <a class="btn btn-danger btn-form" data-dismiss="modal">Cancelar</a> 
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <table id="tablaObjetivos" class="table">
+                <thead>
+                  <tr>
+                    <td>Desde</td>
+                    <td>Hasta</td>
+                    <td>Valor</td>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+                </tbody>
+              </table>
+            </div>
+          </div>
+  
+      </div>
+    </div>
+  </div>
+</div>
+
 <input type="hidden" id="carpeta_hidden" value="<?php echo $carpeta["nombre"]; ?>">
 <input type="hidden" id="es_padre_hidden" value="<?php echo $carpeta["es_padre"]; ?>">
 <input type="hidden" id="id_carpeta_hidden" value="<?php echo $carpeta["id_carpeta"]; ?>">
-<script src="https://cdn.jsdelivr.net/npm/gridstack@1.1.1/dist/gridstack.all.js"></script>
+
+<script src="<?php echo base_url('plugin') ?>/amcharts/amcharts.js"></script>
+<script src="<?php echo base_url('plugin') ?>/amcharts/plugins/dataloader/dataloader.min.js" type="text/javascript"></script>
+<script src="<?php echo base_url('plugin') ?>/amcharts/serial.js"></script>
+<script src="<?php echo base_url('plugin') ?>/amcharts/funnel.js"></script>
+<script src="<?php echo base_url('plugin') ?>/amcharts/pie.js"></script>
+<script src="<?php echo base_url('plugin') ?>/amcharts/plugins/export/export.min.js"></script>
+<link href="<?php echo base_url('plugin') ?>/amcharts/plugins/export/export.css" type="text/css" media="all" rel="stylesheet"/>
+<script src="<?php echo base_url('plugin') ?>/amcharts/themes/light.js"></script>
+<script src="https://www.amcharts.com/lib/4/core.js"></script>
+<script src="https://www.amcharts.com/lib/4/charts.js"></script>
+<script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
 <script type="text/javascript">
   var grid = GridStack.init();
   grid.on('change', function(event, items) {
     for (let i=0; i< items.length; i++){
       var element = items[i];
-      console.log(element);
       let x = element.x;
       let id_grafico = element.id;
       let y = element.y;
@@ -236,6 +319,127 @@
         }
       });
     } 
+  }
+
+  function agregarFilaObjetivos(){
+      var i = $('#contador_objetivos').val();
+      var fila = `
+          <tr id='fila_obj_${i}'>
+            <td>
+              <a onclick="eliminarFila(${i})"><span class="glyphicon glyphicon-trash"></span></a>
+            </td>
+            <td>
+              <input id='desde_${i}' type='text' class='form-control' value=''>
+            </td>
+            <td>
+              <input id='hasta_${i}' type='text' class='form-control' value=''>
+            </td>
+            <td>
+              <select id='color_${i}' type='text' class='form-control'>
+                <option selected value='Rojo'>Rojo</option>
+                <option value='Verde'>Verde</option>
+                <option value='Naranja'>Naranja</option>
+                <option value='Azul'>Azul</option>
+              </select>
+            </td>
+          </tr>`;
+      $('#tablaObjetivos tbody').append(fila);
+  }
+
+  function sel_indicador(id_cantidad_grafico){
+    var id_grafico = $('#'+id_cantidad_grafico+'_titulo').data('id');
+    let cantidad_grafico = $('#'+id_cantidad_grafico+'_titulo').text();
+    cantidad_grafico =cantidad_grafico.replace('$', '');
+    $.ajax({
+      url:"<?php echo base_url() ?>tablero/sel_objetivos_graficos",
+      type:"POST",
+      data:{id_grafico, cantidad_grafico},
+      success: function(respuesta){
+        debugger;
+        $('#'+id_cantidad_grafico).removeClass();
+        $('#'+id_cantidad_grafico).addClass('small-box');
+        if (respuesta == 'Rojo'){
+          $('#'+id_cantidad_grafico).removeClass();
+          $('#'+id_cantidad_grafico).addClass('small-box');
+          $('#'+id_cantidad_grafico).addClass('bg-red');
+        } else if (respuesta == 'Verde'){
+          $('#'+id_cantidad_grafico).removeClass();
+          $('#'+id_cantidad_grafico).addClass('small-box');
+          $('#'+id_cantidad_grafico).addClass('bg-green');
+        } else if (respuesta == 'Naranja'){
+          $('#'+id_cantidad_grafico).removeClass();
+          $('#'+id_cantidad_grafico).addClass('small-box');
+          $('#'+id_cantidad_grafico).addClass('bg-yellow');
+        } else if (respuesta == 'Azul'){
+          $('#'+id_cantidad_grafico).addClass('bg-aqua');
+        } 
+      }
+    });
+  }
+
+  function guardarObjetivos(){
+    let id_grafico = $('#id_grafico_objetivo').val();
+    let id_grafico_titulo = $('#id_grafico_objetivo_titulo').val();
+    var datos = new Array();
+    $("#tablaObjetivos tbody tr").each(function(){
+      let id = this.id;
+      let cont = id.substr(9,id.length);
+      datos.push({id_grafico:id_grafico, desde:$('#desde_'+cont).val(), hasta:$('#hasta_'+cont).val(), color:$('#color_'+cont).val()});
+    });
+    $.ajax({
+      url:"<?php echo base_url() ?>tablero/guardar_objetivos_graficos",
+      type:"POST",
+      data:{datos: JSON.stringify(datos), id_grafico:id_grafico},
+      success: function(respuesta){
+          $('#modalObjetivos').modal('hide');
+          sel_indicador(id_grafico_titulo);
+      }
+    });
+  }
+
+  function eliminarFila(cont){
+    $('#fila_obj_'+cont).remove();
+  }
+
+  function modalObjetivos(id_grafico, id_grafico_titulo){
+    $('#id_grafico_objetivo').val(id_grafico);
+    $('#id_grafico_objetivo_titulo').val(id_grafico_titulo);
+    $.ajax({
+      url:"<?php echo base_url() ?>tablero/get_objetivos_graficos",
+      type:"POST",
+      dataType: "json",
+      data:{id_grafico},
+      success: function(respuesta){
+        $('#tablaObjetivos tbody tr').remove();
+        for (var i =0; i < respuesta.length; i++) {
+          var fila = `
+          <tr id='fila_obj_${i}'>
+            <td>
+              <a onclick="eliminarFila(${i})"><span class="glyphicon glyphicon-trash"></span></a>
+            </td>
+            <td>
+              <input id='desde_${i}' type='text' class='form-control' value='${respuesta[i]['desde']}'>
+            </td>
+            <td>
+              <input id='hasta_${i}' type='text' class='form-control' value='${respuesta[i]['hasta']}'>
+            </td>
+            <td>
+              <select id='color_${i}' type='text' class='form-control'>
+                <option selected value='Rojo'>Rojo</option>
+                <option value='Verde'>Verde</option>
+                <option value='Naranja'>Naranja</option>
+                <option value='Azul'>Azul</option>
+              </select>
+            </td>
+          </tr>`;
+          $('#tablaObjetivos tbody').append(fila);
+          $('#color_'+i).val(respuesta[i]['color']);
+        }
+         $('#contador_objetivos').val(i);
+        $('#modalObjetivos').modal('show');
+      }
+    });
+    
   }
 
   function renombrar_carpeta(){    
@@ -441,4 +645,186 @@
     reset(tree);
     tree.clearSearch();
   });
+
+  function graficoTorta(id, dataGrafico){
+    var chart = am4core.create("vencido_vs_no_vencido_grafico", am4charts.PieChart);
+    chart.data = dataGrafico;
+    var series = chart.series.push(new am4charts.PieSeries());
+    series.dataFields.value = "valor";
+    series.dataFields.category = "categoria"; 
+  }
+
+  function graficoBarras(id, dataGrafico){
+    var chart = am4core.create(id, am4charts.XYChart);
+    chart.hiddenState.properties.opacity = 0; // this creates initial fade-in
+    chart.data = dataGrafico;
+
+    var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+    categoryAxis.renderer.grid.template.location = 0;
+    categoryAxis.dataFields.category = "categoria";
+    categoryAxis.renderer.minGridDistance = 40;
+    categoryAxis.fontSize = 11;
+
+    var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+    valueAxis.min = 0;
+    /*valueAxis.max = 1000;*/
+    valueAxis.strictMinMax = true;
+    valueAxis.renderer.minGridDistance = 30;
+    
+    var series = chart.series.push(new am4charts.ColumnSeries());
+    series.dataFields.categoryX = "categoria";
+    series.dataFields.valueY = "valor";
+    series.columns.template.tooltipText = "{valueY.value}";
+    series.columns.template.tooltipY = 0;
+    series.columns.template.strokeOpacity = 0;
+
+    // as by default columns of the same series are of the same color, we add adapter which takes colors from chart.colors color set
+    series.columns.template.adapter.add("fill", function(fill, target) {
+      return chart.colors.getIndex(target.dataItem.index);
+    });
+  }
+
+  $(document).ready(function() {
+     $("#tabla_data").DataTable({
+      "pageLength": 25, 
+      "language": { "info": "_START_ a _END_ de _TOTAL_ registros", "zeroRecords": "", "emptyTable": "", "search": "", "searchPlaceholder": "Buscar...", "paginate": { "previous": "<", "next": ">"}, "sLengthMenu": "_MENU_" }
+    }); 
+    cargarGraficos(); 
+
+  });
+
+  function cambioCliente(obj, id_gva14,cod,razon,cant){
+    $('.filas').css('background-color', 'white');
+    $(obj).css('background-color', '#6dd66d');
+    $('#idGva14').val(id_gva14);
+    $('#cant_facturas').val(cant);
+    $('#codigoCliente').val(cod);
+    $('#razonSocial').val(razon);
+    let texto = cod+' - '+razon+' - '+cant+' facturas';
+    $('#tituloCliente').text(texto);
+    cargarGraficos();
+  }
+
+  function cargarGraficos(){
+    let idGva14 = $('#idGva14').val();
+    let cant_facturas = $('#cant_facturas').val();
+    let codigoCliente = $('#codigoCliente').val();
+    let razonSocial = $('#razonSocial').val();
+    let texto = codigoCliente+' - '+razonSocial+' - '+cant_facturas+' facturas';
+    $('#tituloCliente').text(texto);
+     if ($('#vencido_vs_no_vencido_grafico').length > 0){
+      
+      $.ajax({
+        url: "<?php echo $this->session->userdata('dominio') ?>/api/getVencidoNoVencidoCliente",
+        type: "POST",
+        data:{id:idGva14, empresa:"<?php echo $this->session->userdata('empresa') ?>"},
+        dataType: "json",
+        success: function(respuesta){
+          let deuda = respuesta[0]['deuda'];
+          let vencido = respuesta[0]['vencido'];
+          let no_vencido = respuesta[0]['no_vencido'];
+         /* if (deuda == undefined){
+            deuda = 0;
+          }
+          if (vencido == undefined){
+            vencido = 0;
+          }
+          if (no_vencido == undefined){
+            no_vencido = 0;
+          }*/
+          $('#total_deuda_indicador_titulo').text('$'+deuda);
+          sel_indicador('total_deuda_indicador');
+          $('#deuda_vencida_indicador_titulo').text('$'+vencido);
+          sel_indicador('deuda_vencida_indicador');
+          $('#deuda_a_vencer_indicador_titulo').text('$'+no_vencido);
+          sel_indicador('deuda_a_vencer_indicador');
+          var dataGrafico = [
+            {categoria: "Vencido",valor: vencido},
+            {categoria: "No Vencido", valor: no_vencido}
+          ];
+          graficoTorta('vencido_vs_no_vencido_grafico', dataGrafico);
+        }
+      });
+    }
+
+    if ($('#distribucion_por_dias_de_vencimiento_grafico').length > 0){
+      $.ajax({
+        url: "<?php echo $this->session->userdata('dominio') ?>/api/grafico_distribucion_dias_venc",
+        type: "POST",
+        data:{empresa:"<?php echo $this->session->userdata('empresa') ?>"},
+        dataType: "json",
+        success: function(respuesta){
+          console.log(respuesta);
+          graficoBarras('distribucion_por_dias_de_vencimiento_grafico', respuesta);
+        }
+      });
+      
+    }
+
+    if ($('#dias_vs_meses_grafico').length > 0){
+      $.ajax({
+        url: "<?php echo $this->session->userdata('dominio') ?>/api/grafico_ponderado_de_pago",
+        type: "POST",
+        data:{empresa:"<?php echo $this->session->userdata('empresa') ?>"},
+        dataType: "json",
+        success: function(respuesta){
+          graficoBarras('dias_vs_meses_grafico', respuesta);
+        }
+      });
+    }
+
+    if ($('#ponderado_de_pago_grafico').length > 0){
+      $.ajax({
+        url: "<?php echo $this->session->userdata('dominio') ?>/api/grafico_ponderado_de_pago",
+        type: "POST",
+        data:{empresa:"<?php echo $this->session->userdata('empresa') ?>"},
+        dataType: "json",
+        success: function(respuesta){
+          graficoBarras('ponderado_de_pago_grafico', respuesta);
+        }
+      });
+    }
+
+
+    if ($('#ponderado_de_pago_indicador').length > 0){
+      $.ajax({
+        url: "<?php echo $this->session->userdata('dominio') ?>/api/get_ponderado_de_pago",
+        type: "POST",
+        data:{empresa:"<?php echo $this->session->userdata('empresa') ?>"},
+        dataType: "json",
+        success: function(respuesta){
+          $('#ponderado_de_pago_indicador_titulo').text(respuesta[0]['ponderado_de_pago']);
+          sel_indicador('ponderado_de_pago_indicador');
+        }
+      });
+    }
+
+    if ($('#antiguedad_de_deuda_indicador').length > 0){
+      $.ajax({
+        url: "<?php echo $this->session->userdata('dominio') ?>/api/get_antiguedad_de_pago",
+        type: "POST",
+        data:{empresa:"<?php echo $this->session->userdata('empresa') ?>"},
+        dataType: "json",
+        success: function(respuesta){
+          $('#antiguedad_de_deuda_indicador_titulo').text(respuesta[0]['antiguedad_de_pago']);
+          sel_indicador('antiguedad_de_deuda_indicador');
+        }
+      });
+    }
+
+    if ($('#dias_de_mora_indicador').length > 0){
+      $.ajax({
+        url: "<?php echo $this->session->userdata('dominio') ?>/api/get_dias_de_mora",
+        type: "POST",
+        data:{empresa:"<?php echo $this->session->userdata('empresa') ?>"},
+        dataType: "json",
+        success: function(respuesta){
+          $('#dias_de_mora_indicador_titulo').text(respuesta[0]['dias_de_mora']);
+          sel_indicador('dias_de_mora_indicador');
+        }
+      });
+    }
+
+  }
+
 </script>
