@@ -11,7 +11,7 @@
     <div class="login-logo">
       <img width='162px' src="<?php echo base_url('plugin') ?>/imagenes/logo.png">
       <br>
-      <b style="text-shadow: 2px 0 0 #fff, -2px 0 0 #fff, 0 2px 0 #fff, 0 -2px 0 #fff, 1px 1px #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff; font-size:50px">SIMPLAPP</b>
+      <b style="text-shadow: 2px 0 0 #fff, -2px 0 0 #fff, 0 2px 0 #fff, 0 -2px 0 #fff, 1px 1px #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff; font-size:50px">PrediCob</b>
     </div>
     <!-- /.login-logo -->
 

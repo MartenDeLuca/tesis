@@ -71,7 +71,7 @@ foreach  ($empresas as $fila){
 		</style>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<title><?php if ($cantidad_actividades > 0) { echo "(".$cantidad_actividades.") "; } ?> Simplapp</title>
+		<title><?php if ($cantidad_actividades > 0) { echo "(".$cantidad_actividades.") "; } ?> PrediCob</title>
 		<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
 		<?php $this->load->view('menu/css') ?>
 	</head>
@@ -80,7 +80,7 @@ foreach  ($empresas as $fila){
 			<header class="main-header">
 				<a href="<?php echo base_url() ?>tablero" class="logo">
 					<span style="font-family:Lato:400,900 !important;" class="logo-mini"><b><span><img width='70%' src="<?php echo base_url('plugin') ?>/imagenes/logo.png"></span></b></span>
-					<span style="font-family:Lato:400,900 !important;" class="logo-lg"><b><span>SIMPLAPP</span></b></span>
+					<span style="font-family:Lato:400,900 !important;" class="logo-lg"><b><span>PrediCob</span></b></span>
 				</a>
 				<nav class="navbar navbar-static-top">
 					<a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
@@ -486,7 +486,7 @@ foreach  ($empresas as $fila){
 				      data: {},
 				    }).done(function(respuesta){
 				      	if (respuesta == 'OK'){
-					        document.title = "Simplapp";
+					        document.title = "PrediCob";
 					        $('.cantidad_actividades').hide();
 					    }
 				    });

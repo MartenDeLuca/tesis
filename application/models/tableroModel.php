@@ -4,6 +4,24 @@ class TableroModel extends CI_Model{
 		parent::__construct();
 	}
 
+	public function getConfiguracionUsuario(){
+		$id_usuario = $this->session->userdata('id_usuario');
+		$sql_select = "select * from graficos_configuracion where id_usuario = ? ";
+		$stmt = $this->db->query($sql_select, array($id_usuario));
+		$conf = $stmt->result_array();
+		return $conf;
+	}
+
+	function guardar_configuracion_usuario($params, $id_usuario){
+		$tm = $this->db->query("DELETE FROM graficos_configuracion WHERE id_usuario = ?", array($id_usuario));
+		if(!$tm){
+    		$error = $this->db->error();
+    		$this->db->trans_rollback();
+    		return $error['message'];
+    	}
+
+    	$tm = $this->db->insert("graficos_configuracion", $params);
+	}
 	function getCarpetas(){
 		$id_usuario = $this->session->userdata('id_usuario');
 		$id_carpeta = $this->session->userdata('id_carpeta');
@@ -97,7 +115,16 @@ class TableroModel extends CI_Model{
 	function guardar_objetivos_graficos($datos, $id_grafico){
 		$tm = $this->db->query("delete from  graficos_objetivos where id_grafico =?", array($id_grafico));
 		foreach ($datos as $fila) {
-			$tm = $this->db->query("insert into graficos_objetivos (id_grafico, desde, hasta, color) values (?,?,?,?)", array($fila['id_grafico'],$fila['desde'], $fila['hasta'], $fila['color']));
+			$desde =$fila['desde'];
+			if ($desde == ''){
+				$desde =null;
+			}
+
+			$hasta =$fila['hasta'];
+			if ($hasta == ''){
+				$hasta =null;
+			}
+			$tm = $this->db->query("insert into graficos_objetivos (id_grafico, desde, hasta, color) values (?,?,?,?)", array($fila['id_grafico'],$desde, $hasta, $fila['color']));
 			if(!$tm){
 	    		$error = $this->db->error();
 	    		$this->db->trans_rollback();

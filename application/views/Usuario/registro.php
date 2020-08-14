@@ -10,7 +10,7 @@
     <div class="login-logo">
       <img width='162px' src="<?php echo base_url('plugin') ?>/imagenes/logo.png">
       <br>
-      <b style="text-shadow: 2px 0 0 #fff, -2px 0 0 #fff, 0 2px 0 #fff, 0 -2px 0 #fff, 1px 1px #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff; font-size:50px">SIMPLAPP</b>
+      <b style="text-shadow: 2px 0 0 #fff, -2px 0 0 #fff, 0 2px 0 #fff, 0 -2px 0 #fff, 1px 1px #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff; font-size:50px">PrediCob</b>
     </div>
     <!-- /.login-logo -->
     <div class="login-box-body" style="border-radius: 10px;">
@@ -42,7 +42,7 @@
         </div>
         <div class="row">
           <div class="col-xs-12">
-            <button  style="width: 100%" onclick="registro()" id="boton_registro" class="btn btn-primary ">Registrarse</button>
+            <button  style="width: 100%;" onclick="registro()" id="boton_registro"  class="btn btn-primary ">Registrarse</button>
           </div>
         </div>
         <div class="row">

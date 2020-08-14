@@ -3,7 +3,7 @@
 <link rel="shortcut icon" href="<?php echo base_url('plugin') ?>/imagenes/logo.png">
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<title>SIMPLAPP</title>
+<title>PrediCob</title>
 <!-- Bootstrap 3.3.7 -->
 <link rel="stylesheet" href="<?php echo base_url('plugin') ?>/bower_components/bootstrap/dist2/css/bootstrap.min.css">
 <!-- Font Awesome -->

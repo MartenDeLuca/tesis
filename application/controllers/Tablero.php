@@ -2,6 +2,25 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Tablero extends CI_Controller {
+
+	public function guardar_configuracion_usuario(){
+		$idGva14 = $_POST['idGva14'];
+		$codigoCliente = $_POST['codigoCliente'];
+		$razonSocial = $_POST['razonSocial'];
+		$fecha_hasta = $_POST['fecha_hasta'];
+		$fecha_desde = $_POST['fecha_desde'];
+		$id_usuario = $this->session->userdata('id_usuario');
+		$params = array(
+			'id_usuario' =>  $id_usuario,
+			'id_gva14' => $idGva14,
+			'codigo_cliente' => $codigoCliente,
+			'razon_social' => $razonSocial, 
+			'fecha_desde' => $fecha_desde,
+			'fecha_hasta' => $fecha_hasta
+		);
+		$this->tableroModel->guardar_configuracion_usuario($params, $id_usuario);
+	}
+
 	public function index(){
 		if ($this->session->userdata('id_usuario')){
 			$id_carpeta = isset($_GET["id"])?$_GET["id"]:$this->session->userdata('id_carpeta');
@@ -14,6 +33,7 @@ class Tablero extends CI_Controller {
 				if(count($carpeta) > 0){
 					$data["carpeta"] = $carpeta[0];
 					$data["graficos"] = $graficos;
+					$data["conf"] = $this->tableroModel->getConfiguracionUsuario();
 					$data["clientes"] = $this->getClientes();
 					$data["array_usuarios"] = $this->usuarioModel->getUsuariosSelect();
 					$this->configuracionModel->getHeader($id_carpeta);
@@ -199,7 +219,6 @@ class Tablero extends CI_Controller {
 	public function guardar_objetivos_graficos(){
 		$datos = json_decode($_POST['datos'], true);
 		$id_grafico = $_POST['id_grafico'];
-		log_message('error', json_encode($datos));
 		echo $this->tableroModel->guardar_objetivos_graficos($datos, $id_grafico);
 	}
 

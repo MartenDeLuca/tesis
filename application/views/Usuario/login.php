@@ -10,9 +10,9 @@
 <body class="hold-transition login-page" style="background-image: url('<?php echo base_url('plugin') ?>/imagenes/fondo.jpg'); background-repeat: no-repeat;background-size: 100% 100%;">
   <div class="login-box" style="margin: 1% auto !important;">
     <div class="login-logo">
-      <img width='162px' src="<?php echo base_url('plugin') ?>/imagenes/logo.png">
+      <img width='190px' src="<?php echo base_url('plugin') ?>/imagenes/logo.png">
       <br>
-      <b style="text-shadow: 2px 0 0 #fff, -2px 0 0 #fff, 0 2px 0 #fff, 0 -2px 0 #fff, 1px 1px #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff; font-size:50px">SIMPLAPP</b>
+      <b style="text-shadow: 2px 0 0 #fff, -2px 0 0 #fff, 0 2px 0 #fff, 0 -2px 0 #fff, 1px 1px #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff; font-size:50px">PrediCob</b>
     </div>
     <div class="login-box-body" style="border-radius: 10px;">
         <input type="hidden" name="enviar_form" id="enviar_form" value="1">

@@ -1,8 +1,27 @@
+<?php 
+$idGva14 =''; 
+$cant_facturas ='';
+$codigoCliente = '';
+$razonSocial = ''; 
+if (count($conf) > 0){
+  $fecha_desde = $conf[0]['fecha_desde'];
+  $fecha_hasta = $conf[0]['fecha_hasta'];
+  $codigoCliente = $conf[0]['codigo_cliente'];
+  $idGva14 =$conf[0]['id_gva14'];
+  $razonSocial = $conf[0]['razon_social'];
+}
+
+?>
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridstack@1.1.1/dist/gridstack.min.css" />
 <div class="content-wrapper" style="background: white !important;">
   <section class="content-header" style="">
       <div class="box-header with-border" style="/*position:fixed !important;  width:100% !important;z-index:10 !important;*/background-color: #d6d8d9;color: #1b1e21;" >
-        <h3 class="box-title" id="tituloCliente" ></h3>
+        <h3 class="box-title" style="padding-top: 8px;" id="tituloCliente" ></h3>
+        <input type="date" class="form-control pull-right" placeholder="Fecha hasta" style="width: 200px"  id="fecha_hasta" value="<?php echo $fecha_hasta ?>">
+        <label style="padding-top: 8px;padding-right: 10px;padding-left: 10px;" class="pull-right">Hasta</label>
+        <input type="date" class="form-control pull-right" placeholder="Fecha desde" style="width: 200px"  id="fecha_desde" value="<?php echo $fecha_desde ?>">
+        <label style="padding-top: 8px;padding-right: 10px;padding-left: 10px;" class="pull-right">Desde</label>
       </div>
   </section>
 	<section class="content">
@@ -16,7 +35,7 @@
           $nombreParaGrafico = str_replace(' ', '_', $filaGraficos['nombre']);
           $tipoGrafico = $filaGraficos['tipo'];
         ?>
-            <div class="grid-stack-item" data-gs-id="<?php echo $filaGraficos['id_grafico'] ?>" data-gs-x="<?php echo $x ?>" data-gs-y="<?php echo $y ?>" data-gs-width="<?php echo $ancho ?>" data-gs-height="<?php echo $ancho ?>">
+            <div class="grid-stack-item" data-gs-id="<?php echo $filaGraficos['id_grafico'] ?>" data-gs-x="<?php echo $x ?>" data-gs-y="<?php echo $y ?>" data-gs-width="<?php echo $ancho ?>"  data-gs-height="<?php echo $alto ?>" id="<?php echo strtolower($nombreParaGrafico.'_'.$tipoGrafico).'_boxbody_grid' ?>">
               <div class="grid-stack-item-content"  style="overflow: hidden  !important;" >
                 <?php if ($tipoGrafico == 'grafico'){ ?>
                 <div class="box" id="<?php echo $filaGraficos['id_grafico'] ?>">
@@ -26,8 +45,8 @@
                       <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
                     </div>
                   </div>
-                  <div class="box-body">
-                      <div id="<?php echo strtolower($nombreParaGrafico.'_'.$tipoGrafico) ?>" align="center" style="width: 100%;height: 300px;"><img src="<?php echo base_url() ?>plugin/imagenes/Preloader_2.gif"></div>
+                  <div id="<?php echo strtolower($nombreParaGrafico.'_'.$tipoGrafico).'_boxbody' ?>" class="box-body">
+                      <div id="<?php echo strtolower($nombreParaGrafico.'_'.$tipoGrafico) ?>" align="center" style="width: 100%;height: 250px"><img src="<?php echo base_url() ?>plugin/imagenes/Preloader_2.gif"></div>
                   </div>        
                 </div>
               <?php } else if ($tipoGrafico == 'indicador'){ 
@@ -60,23 +79,18 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <?php
-                      $idGva14 =''; 
-                      $cant_facturas ='';
-                      $codigoCliente = '';
-                      $razonSocial = '';
-                      if (count($clientes) > 0){
-                        $idGva14 =$clientes[0]['id_gva14']; 
-                        $cant_facturas =$clientes[0]['cant_facturas'];
-                        $codigoCliente = $clientes[0]['cod_client']; 
-                        $razonSocial = $clientes[0]['razon_soci']; 
+                        <tr class="filas" <?php $color='white'; if ('' == $codigoCliente){ $color = '#6dd66d'; } ?> style="cursor: pointer; background-color:<?php echo $color; ?>"  onclick="cambioCliente(this, '','','','')">
+                            <td></td>
+                            <td>Todos</td>
+                          </tr>
+                      <?php if (count($clientes) > 0){
                         foreach ($clientes as $fila) {
                           $cod =$fila["cod_client"];
                           $razon =$fila["razon_soci"];
                           $cant =$fila["cant_facturas"];
                           $id_gva14 =$fila["id_gva14"];
                         ?>
-                        <tr class="filas" <?php $color='white'; if ($id_gva14 == $idGva14){ $color = '#6dd66d'; } ?>style="cursor: pointer; background-color:<?php echo $color; ?>"  onclick="cambioCliente(this, '<?php echo $id_gva14 ?>','<?php echo $cod ?>','<?php echo $razon ?>','<?php echo $cant ?>')">
+                        <tr class="filas" <?php $color='white'; if ($cod == $codigoCliente){   $cant_facturas =$cant; $color = '#6dd66d'; } ?>style="cursor: pointer; background-color:<?php echo $color; ?>"  onclick="cambioCliente(this, '<?php echo $id_gva14 ?>','<?php echo $cod ?>','<?php echo $razon ?>','<?php echo $cant ?>')">
                           <td><?php echo $cod ?></td>
                           <td><?php echo $razon; ?></td>
                         </tr>
@@ -224,6 +238,7 @@
               <table id="tablaObjetivos" class="table">
                 <thead>
                   <tr>
+                    <td></td>
                     <td>Desde</td>
                     <td>Hasta</td>
                     <td>Valor</td>
@@ -257,7 +272,9 @@
 <script src="https://www.amcharts.com/lib/4/charts.js"></script>
 <script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
 <script type="text/javascript">
-  var grid = GridStack.init();
+  var grid = GridStack.init({
+    "staticGrid":true
+  });
   grid.on('change', function(event, items) {
     for (let i=0; i< items.length; i++){
       var element = items[i];
@@ -355,7 +372,6 @@
       type:"POST",
       data:{id_grafico, cantidad_grafico},
       success: function(respuesta){
-        debugger;
         $('#'+id_cantidad_grafico).removeClass();
         $('#'+id_cantidad_grafico).addClass('small-box');
         if (respuesta == 'Rojo'){
@@ -647,7 +663,7 @@
   });
 
   function graficoTorta(id, dataGrafico){
-    var chart = am4core.create("vencido_vs_no_vencido_grafico", am4charts.PieChart);
+    var chart = am4core.create(id, am4charts.PieChart);
     chart.data = dataGrafico;
     var series = chart.series.push(new am4charts.PieSeries());
     series.dataFields.value = "valor";
@@ -686,7 +702,7 @@
 
   $(document).ready(function() {
      $("#tabla_data").DataTable({
-      "pageLength": 25, 
+      "pageLength": 10, 
       "language": { "info": "_START_ a _END_ de _TOTAL_ registros", "zeroRecords": "", "emptyTable": "", "search": "", "searchPlaceholder": "Buscar...", "paginate": { "previous": "<", "next": ">"}, "sLengthMenu": "_MENU_" }
     }); 
     cargarGraficos(); 
@@ -700,30 +716,55 @@
     $('#cant_facturas').val(cant);
     $('#codigoCliente').val(cod);
     $('#razonSocial').val(razon);
-    let texto = cod+' - '+razon+' - '+cant+' facturas';
-    $('#tituloCliente').text(texto);
     cargarGraficos();
   }
+
+  $("#fecha_desde, #fecha_hasta").change(function(){
+    cargarGraficos();
+  });
+  
 
   function cargarGraficos(){
     let idGva14 = $('#idGva14').val();
     let cant_facturas = $('#cant_facturas').val();
     let codigoCliente = $('#codigoCliente').val();
-    let razonSocial = $('#razonSocial').val();
-    let texto = codigoCliente+' - '+razonSocial+' - '+cant_facturas+' facturas';
+    let razonSocial = $('#razonSocial').val(); 
+    let fecha_desde = $('#fecha_desde').val(); 
+    let fecha_hasta = $('#fecha_hasta').val(); 
+    let arrayGraficos = {fecha_desde:fecha_desde,fecha_hasta:fecha_hasta, codigo_cliente:codigoCliente, empresa:"<?php echo $this->session->userdata('empresa') ?>"}
+    $.ajax({
+        url: "<?php echo base_url() ?>tablero/guardar_configuracion_usuario",
+        type: "POST",
+        data:{idGva14, codigoCliente, razonSocial, fecha_hasta, fecha_desde}
+      });
+
+    let texto = '';
+    if (idGva14 ==''){
+      if (cant_facturas > 1){
+        texto = 'Todos -'+cant_facturas+' Facturas';
+      } else {
+        texto = 'Todos -'+cant_facturas+' Factura';  
+      }
+      
+    } else {
+       if (cant_facturas > 1){
+        texto = codigoCliente+' - '+razonSocial+' - '+cant_facturas+' Facturas';
+       } else {
+          texto = codigoCliente+' - '+razonSocial+' - '+cant_facturas+' Factura';
+       }
+    }
     $('#tituloCliente').text(texto);
      if ($('#vencido_vs_no_vencido_grafico').length > 0){
-      
       $.ajax({
         url: "<?php echo $this->session->userdata('dominio') ?>/api/getVencidoNoVencidoCliente",
         type: "POST",
-        data:{id:idGva14, empresa:"<?php echo $this->session->userdata('empresa') ?>"},
+        data: arrayGraficos,
         dataType: "json",
         success: function(respuesta){
           let deuda = respuesta[0]['deuda'];
           let vencido = respuesta[0]['vencido'];
           let no_vencido = respuesta[0]['no_vencido'];
-         /* if (deuda == undefined){
+          if (deuda == undefined){
             deuda = 0;
           }
           if (vencido == undefined){
@@ -731,7 +772,7 @@
           }
           if (no_vencido == undefined){
             no_vencido = 0;
-          }*/
+          }
           $('#total_deuda_indicador_titulo').text('$'+deuda);
           sel_indicador('total_deuda_indicador');
           $('#deuda_vencida_indicador_titulo').text('$'+vencido);
@@ -751,7 +792,7 @@
       $.ajax({
         url: "<?php echo $this->session->userdata('dominio') ?>/api/grafico_distribucion_dias_venc",
         type: "POST",
-        data:{empresa:"<?php echo $this->session->userdata('empresa') ?>"},
+        data:arrayGraficos,
         dataType: "json",
         success: function(respuesta){
           console.log(respuesta);
@@ -763,9 +804,9 @@
 
     if ($('#dias_vs_meses_grafico').length > 0){
       $.ajax({
-        url: "<?php echo $this->session->userdata('dominio') ?>/api/grafico_ponderado_de_pago",
+        url: "<?php echo $this->session->userdata('dominio') ?>/api/grafico_dias_de_mora",
         type: "POST",
-        data:{empresa:"<?php echo $this->session->userdata('empresa') ?>"},
+        data:arrayGraficos,
         dataType: "json",
         success: function(respuesta){
           graficoBarras('dias_vs_meses_grafico', respuesta);
@@ -777,7 +818,7 @@
       $.ajax({
         url: "<?php echo $this->session->userdata('dominio') ?>/api/grafico_ponderado_de_pago",
         type: "POST",
-        data:{empresa:"<?php echo $this->session->userdata('empresa') ?>"},
+        data:arrayGraficos,
         dataType: "json",
         success: function(respuesta){
           graficoBarras('ponderado_de_pago_grafico', respuesta);
@@ -790,7 +831,7 @@
       $.ajax({
         url: "<?php echo $this->session->userdata('dominio') ?>/api/get_ponderado_de_pago",
         type: "POST",
-        data:{empresa:"<?php echo $this->session->userdata('empresa') ?>"},
+        data:arrayGraficos,
         dataType: "json",
         success: function(respuesta){
           $('#ponderado_de_pago_indicador_titulo').text(respuesta[0]['ponderado_de_pago']);
@@ -803,7 +844,7 @@
       $.ajax({
         url: "<?php echo $this->session->userdata('dominio') ?>/api/get_antiguedad_de_pago",
         type: "POST",
-        data:{empresa:"<?php echo $this->session->userdata('empresa') ?>"},
+        data:arrayGraficos,
         dataType: "json",
         success: function(respuesta){
           $('#antiguedad_de_deuda_indicador_titulo').text(respuesta[0]['antiguedad_de_pago']);
@@ -816,7 +857,7 @@
       $.ajax({
         url: "<?php echo $this->session->userdata('dominio') ?>/api/get_dias_de_mora",
         type: "POST",
-        data:{empresa:"<?php echo $this->session->userdata('empresa') ?>"},
+        data:arrayGraficos,
         dataType: "json",
         success: function(respuesta){
           $('#dias_de_mora_indicador_titulo').text(respuesta[0]['dias_de_mora']);
