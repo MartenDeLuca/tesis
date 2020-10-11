@@ -341,6 +341,25 @@
 		});
 	}
 
+	function buscarCondicionDeVenta(){
+		var consulta = $("#modal-buscar").val();
+		$.ajax({
+			url: "<?php echo $this->session->userdata('dominio') ?>/api/buscarCondicionDeVenta",
+			type: "POST",
+			data:{consulta, empresa},
+			dataType: "json",
+			success: function(respuesta){
+				var html = `<table class='table'><thead><tr><td>Codigo</td><td>Descripcion</td></tr></thead><tbody>`;
+				var tamano = respuesta.length;
+				for(var i = 0; i < tamano; i++){
+					html += `<tr style="cursor:pointer" onclick="seleccionarCondicionDeVenta(${respuesta[i]["COND_VTA"]})"><td>${respuesta[i]["COND_VTA"]}</td><td>${respuesta[i]["DESC_COND"]}</td></tr>`;
+				}
+				html += `</tbody></table>`;
+				$("#modal-datos").html(html);
+			}
+		});
+	}	
+
 	function htmlComprobantes(comprobantes, tamano, cont){
 		var html_comp = "";
 		for(var j = 0; j < tamano; j++){

@@ -402,7 +402,7 @@ class ReglaModel extends CI_Model{
 	    }
 	}
 
-	function reglas_a_ejecutar(){
+	function getReglasAEjecutar(){
 		$sql = 
 	    "SELECT id_regla
         FROM reglas

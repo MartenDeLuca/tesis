@@ -281,8 +281,8 @@ class Regla extends CI_Controller {
 		return $this->reglaModel->regla_bd_archivo($archivos_subidos, $id_regla);
 	}
 
-	public function reglas_a_ejecutar(){
-	    $registros = $this->reglaModel->reglas_a_ejecutar();
+	public function ejecutarReglas(){
+	    $registros = $this->reglaModel->getReglasAEjecutar();
 	    foreach($registros as $fila) {
 	    	$id_regla = $fila["id_regla"];
 	    	$this->reglaModel->ejecucion_regla_negocio($id_regla);

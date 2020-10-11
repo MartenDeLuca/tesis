@@ -3,6 +3,279 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Seguimiento extends CI_Controller {
 	
+	public function predecir(){
+		/*$post = [];
+		$condicion_de_venta = $_POST['condicion_de_venta'];
+		$monto=  $_POST['monto'];
+		$categoria_iva=  $_POST['categoria_iva'];
+		$antiguedad=  $_POST['antiguedad'];
+		$cantidad_empleados=  $_POST['cantidad_empleados'];
+		$rubro=  $_POST['rubro'];
+		$se_le_vendio=  $_POST['se_le_vendio'];
+		$situacion_entidad=  $_POST['situacion_entidad'];
+		$monto_entidad=  $_POST['monto_entidad'];
+		$importe_comp_vencidos_2_anos=  $_POST['importe_comp_vencidos_2_anos'];
+		$empresa=  $_POST['empresa'];
+
+		$post['condicion_de_venta'] = $condicion_de_venta;
+		$post['monto'] = $monto;
+		$post['categoria_iva'] = $categoria_iva;
+		$post['antiguedad'] = $antiguedad;
+		$post['cantidad_empleados'] = $cantidad_empleados;
+		$post['rubro'] = $rubro;
+		$post['se_le_vendio'] = $se_le_vendio;
+		$post['situacion_entidad'] = $situacion_entidad;
+		$post['monto_entidad'] = $monto_entidad;
+		$post['importe_comp_vencidos_2_anos'] = $importe_comp_vencidos_2_anos;
+		$post['empresa'] = $empresa;*/
+		$post = array('monto' => 'sdf2');
+		$curl = curl_init();
+		/*curl_setopt_array($curl, array(
+		  CURLOPT_URL => "http://192.168.89.222:5000/api/",
+		  CURLOPT_RETURNTRANSFER => true,
+		  CURLOPT_ENCODING => "",
+		  CURLOPT_MAXREDIRS => 10,
+		  CURLOPT_TIMEOUT => 0,
+		  CURLOPT_FOLLOWLOCATION => true,
+		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		  CURLOPT_CUSTOMREQUEST => "POST",
+		  CURLOPT_POSTFIELDS => $post,
+		));
+		log_message('error', json_encode($post));*/
+		$url = "http://192.168.89.222:5000/api/";
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_POST, TRUE);
+		curl_setopt($curl, CURLOPT_POSTFIELDS, $post);
+	    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
+	    curl_setopt($curl, CURLOPT_TIMEOUT, 2); 
+	    curl_setopt($curl, CURLOPT_HEADER, 0);
+	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+	    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+	    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
+	    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
+	    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+	    $response = curl_exec($curl);
+		if (curl_errno($curl)) {
+		    $error_msg = curl_error($curl);
+		}
+		curl_close($curl);
+
+		if (isset($error_msg)) {
+		    echo $error_msg;
+		}
+		$response = json_decode($response, true);
+		echo json_encode($response);
+
+	}
+
+	public function algoritmo(){
+		if ($this->session->userdata('id_usuario')){
+			$data = array();
+			$this->configuracionModel->getHeader();
+			$this->load->view('algoritmo/algoritmo', $data);
+			$this->load->view('menu/footer');
+		}else{
+			$this->session->set_flashdata('url',current_url());
+			redirect(base_url('login'));
+		}
+	}
+
+	public function obtenerDatosCliente(){
+		$cuit = isset($_POST["cuit"])?$_POST["cuit"]:"";
+		$id = isset($_POST["id"])?$_POST["id"]:"";
+		$id_empresa = $this->session->userdata('id_empresa');
+
+		$contrato_social = '';
+		$facturacion_estimada = '';
+		$cantidad_empleados = '';
+		$otros_datos = '';
+		$interaccion = '';
+		$tipoPersona = '';
+		$estadoClave = '';
+		$mesCierre = '';
+		$codPostal = '';
+		$idProvincia = '';
+		$nombreProvincia = '';
+		$localidad = '';
+		$direccion = '';
+		$categoria = '';
+		$idActividad = '';
+		$descActividad = '';
+
+		$cuit = str_replace("-", "", $cuit);
+		$context = stream_context_create(
+		  array(
+		    'http' => array(
+		      'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
+		    ),
+		));	
+		$urlEj='https://trade.nosis.com/es/INDARTUBO-SA/'.$cuit.'/1/p?cat=%2045619#.XxKLDShKjIV';
+		$pagina = file_get_contents($urlEj, false, $context);
+
+		$fecha_modificados = "";
+		$fecha_modificados_valor = "";
+		if($pagina === FALSE) { 
+			$file_headers = @get_headers($urlEj);
+			if(trim($file_headers[0]) == 'HTTP/1.1 403 Forbidden' || trim($file_headers[0]) == 'HTTP/1.1 302 Found' ) {
+				$link = "<script>window.open('".$urlEj."', 'width=710,height=555,left=160,top=170')</script>";
+				return $link;
+			    break;
+			}      	
+			if(trim($file_headers[0]) == "HTTP/1.1 410 Gone" || trim($file_headers[0]) == "HTTP/1.1 404 Not Found"){
+				$fecha_modificados = ", fecha_modificados";
+				$fecha_modificados_valor = ", '2020-01-01'";
+			}
+		}
+        $datos_generales = substr($pagina, strpos($pagina, "<!-- BEGIN Misc -->"), strpos($pagina, "<!-- END Misc -->")-strpos($pagina, "<!-- BEGIN Misc -->"));
+        $array = explode('div class="profile-info-row"', $datos_generales);
+        $otros_datos = "";
+        for($i = 0; $i < count($array); $i++){  
+            if(strpos($array[$i], 'div class="profile-info-name"') !== false){  
+                
+                $pos_ini_info = strpos($array[$i], 'div class="profile-info-name"')+strlen('div class="profile-info-name"')+1;
+                $pos_fin_info = strpos($array[$i], '/div')-1;
+                $pos_fin_info = $pos_fin_info - $pos_ini_info;
+                $info = trim(substr($array[$i], $pos_ini_info, $pos_fin_info));
+                $value = substr($array[$i], strpos($array[$i], '/div')+strlen('/div')+1);
+
+                $pos_ini_valor = strpos($value, 'div class="profile-info-value"')+strlen('div class="profile-info-value"')+1;
+                $pos_fin_valor = strpos($value, '/div')-1;
+                $pos_fin_valor = $pos_fin_valor - $pos_ini_valor;
+                
+                $value = trim(substr($value, $pos_ini_valor, $pos_fin_valor));
+
+                $pos_ini_valor = strpos($value, 'span')+strlen('span')+1;
+                $pos_fin_valor = strpos($value, '/span')-1;
+                $pos_fin_valor = $pos_fin_valor - $pos_ini_valor;
+                $value = trim(substr($value, $pos_ini_valor, $pos_fin_valor));
+                
+                if($info == "Fecha de Contrato Social"){
+                    $contrato_social = $value;
+                }else if($info == "Facturación Estimada"){
+                    $facturacion_estimada = $value;
+                }else if($info == "Cantidad de Empleados"){
+                    $cantidad_empleados = $value;
+                }
+            }   
+        }
+        $interaccion = substr($pagina,strpos($pagina, '<i class="ace-icon fa fa-eye bigger-150"></i>')+strlen('<i class="ace-icon fa fa-eye bigger-150"></i>'));
+        $interaccion = substr($interaccion, 0, strpos($interaccion, "</a>"));
+        if(is_numeric(trim($interaccion))){
+
+        }else{
+        	$interaccion = "";
+        }
+
+        $arrContextOptions=array(
+		    "ssl"=>array(
+		        "verify_peer"=>false,
+		        "verify_peer_name"=>false,
+		    ),
+		);  
+
+		$array = json_decode(file_get_contents('https://afip.tangofactura.com/Rest/GetContribuyenteFull?cuit=%20'.$cuit, false, stream_context_create($arrContextOptions)), true);
+
+        if(isset($array["Contribuyente"])){
+            $Contribuyente = $array["Contribuyente"];
+
+            $tipoPersona = $Contribuyente["tipoPersona"];
+            $estadoClave = $Contribuyente["estadoClave"];
+            $mesCierre = $Contribuyente["mesCierre"];
+
+            $domicilioFiscal = $Contribuyente["domicilioFiscal"];
+            $codPostal = $domicilioFiscal["codPostal"];
+            $idProvincia = $domicilioFiscal["idProvincia"];
+            $nombreProvincia = $domicilioFiscal["nombreProvincia"];
+            $localidad = $domicilioFiscal["localidad"];
+            $direccion = $domicilioFiscal["direccion"];
+
+            $categoria = "";
+            $EsRI = $Contribuyente["EsRI"];
+            if($EsRI){
+                $categoria = "EsRI";
+            }
+            $EsMonotributo = $Contribuyente["EsMonotributo"];
+            if($EsMonotributo){
+                $categoria = "EsMonotributo";
+            }
+            $EsExento = $Contribuyente["EsExento"];
+            if($EsExento){
+                $categoria = "EsExento";
+            }
+            $EsConsumidorFinal = $Contribuyente["EsConsumidorFinal"];
+            if($EsConsumidorFinal){
+                $categoria = "EsConsumidorFinal";
+            }
+            $idActividad = 0;
+            $descActividad = "";
+            if(count($Contribuyente["ListaActividades"]) > 0){
+                $ListaActividades = $Contribuyente["ListaActividades"][0];
+                $idActividad = $ListaActividades["idActividad"];
+                $descActividad = $ListaActividades["descActividad"];
+            }
+        }
+
+        $dominio = $this->session->userdata('dominio');
+		$empresa = $this->session->userdata('empresa');
+
+		$importe_comp_vencidos_2_anos = "0";
+		$curl = curl_init();		
+		$url = $dominio."/api/obtenerPromedioImporteComprobantesVencidos";
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_POST, TRUE);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+		curl_setopt($curl, CURLOPT_POSTFIELDS, 'id_cliente='.$id.'&empresa='.$empresa);
+	    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
+	    curl_setopt($curl, CURLOPT_TIMEOUT, 2); 
+	    curl_setopt($curl, CURLOPT_HEADER, 0);
+	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+	    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+	    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
+	    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
+	    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+	    $registros_comp = curl_exec($curl);	    
+	    $registros_comp = json_decode($registros_comp, true);
+	    foreach ($registros_comp as $fila) {
+	    	$importe_comp_vencidos_2_anos = $fila["importe"];
+	    }
+
+	    $rubro = "";
+	    $curl = curl_init();		
+		$url = $dominio."/api/obtenerRubro";
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_POST, TRUE);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+		curl_setopt($curl, CURLOPT_POSTFIELDS, 'cod_actividad='.$idActividad.'&empresa='.$empresa);
+	    curl_setopt($curl, CURLOPT_USERAGENT, 'api');
+	    curl_setopt($curl, CURLOPT_TIMEOUT, 2); 
+	    curl_setopt($curl, CURLOPT_HEADER, 0);
+	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+	    curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
+	    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 1);
+	    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 10); 
+	    curl_setopt($curl, CURLOPT_FRESH_CONNECT, true);
+	    $registros_comp = curl_exec($curl);	    
+	    $registros_comp = json_decode($registros_comp, true);
+	    foreach ($registros_comp as $fila) {
+	    	$rubro = $fila["rubro"];
+	    }
+
+	    if($contrato_social != ""){
+	        $d1 = new DateTime(substr($contrato_social, 6, 4).'-'.substr($contrato_social, 3, 2).'-'.substr($contrato_social, 0, 2));
+			$d2 = new DateTime();
+			$antiguedad = $d2->diff($d1);
+			$antiguedad = $antiguedad->y;
+		}else{
+			$antiguedad = "0";
+		}
+
+		if($cantidad_empleados != ""){
+			$cantidad_empleados = trim(substr($cantidad_empleados, strripos($cantidad_empleados, "/")+1));
+		}
+        $datos = array("antiguedad" => $antiguedad, "cantidad_empleados" => $cantidad_empleados, "categoria_iva" => $categoria, "actividad" => $descActividad, "rubro" => $rubro, "importe_comp_vencidos_2_anos" => $importe_comp_vencidos_2_anos);
+        echo json_encode($datos);
+	}
+
 	//DETALLE Y GRILLA DEL CLIENTE
 	public function vista_cliente(){
 		$id_cliente = substr($this->config->item('url_normal'), strripos($this->config->item('url_normal'), 'id=')+3, strripos($this->config->item('url_normal'), 'id=')+3-strripos($this->config->item('url_normal'), '&id_em=')-7);

@@ -246,7 +246,7 @@ foreach  ($empresas as $fila){
 
 			            <!--INTELIGENCIA ARTIFICIAL-->
 			            <li>
-			                <a href="#"><i class="fa fa-microchip"></i> <span>Algoritmos</span></a>
+			                <a href="<?php echo base_url() ?>algoritmo"><i class="fa fa-microchip"></i> <span>Algoritmos</span></a>
 			            </li>
 
 			            <?php if ($this->session->userdata('permiso') == 'administrador'){ ?>

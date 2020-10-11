@@ -22,6 +22,7 @@ class TableroModel extends CI_Model{
 
     	$tm = $this->db->insert("graficos_configuracion", $params);
 	}
+	
 	function getCarpetas(){
 		$id_usuario = $this->session->userdata('id_usuario');
 		$id_carpeta = $this->session->userdata('id_carpeta');

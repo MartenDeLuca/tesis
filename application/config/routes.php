@@ -16,6 +16,8 @@ $route['detalle-regla'] = 'Regla/detalle_regla';
 
 $route['actividades'] = 'Regla/actividades';
 
+$route['algoritmo'] = 'Seguimiento/algoritmo';
+
 $route['seguimiento'] = 'Seguimiento';
 $route['agregar-actividades'] = 'Seguimiento/agregar_actividad';
 $route['modificar-actividad'] = 'Seguimiento/modificar_actividad';
