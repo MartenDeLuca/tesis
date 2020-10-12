@@ -75,9 +75,9 @@ $query_builder = TRUE;
 
 $db['default'] = array(
 	'dsn'	=> '',
-	'hostname' => '127.0.0.1',
-	'username' => 'root',
-	'password' => '',
+	'hostname' => '192.168.0.211',
+	'username' => 'tesis',
+	'password' => 'neestor1',
 	'database' => 'tesis',
 	'dbdriver' => 'mysqli',
 	'dbprefix' => '',

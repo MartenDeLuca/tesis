@@ -49,12 +49,12 @@
                   <label class="lab">Peor situacion con entidad <a title="Ayuda" onclick="abrirAyudaBCRA()"><span class="glyphicon glyphicon-info-sign"></span></a></label>
                   <select class="form-control" id="situacion_entidad">
                     <option value=""></option>
-                    <option>1 | En situacion normal</option>
-                    <option>2 | Con seguimiento especial</option>
-                    <option>3 | Con problemas</option>
-                    <option>4 | Con alto riesgo de insolvencia</option>
-                    <option>5 | Irrecuperable</option>
-                    <option>6 | Irrecuperable por disposición tecnica</option>
+                    <option value ="1">1 | En situacion normal</option>
+                    <option value ="2">2 | Con seguimiento especial</option>
+                    <option value ="3">3 | Con problemas</option>
+                    <option value ="4">4 | Con alto riesgo de insolvencia</option>
+                    <option value ="5">5 | Irrecuperable</option>
+                    <option value ="6">6 | Irrecuperable por disposicion tecnica</option>
                   </select>
                   <div class="error_color" id="error_situacion_entidad"></div>
                 </div>
@@ -238,18 +238,21 @@
           data:{cuit, id, empresa},
           dataType: "json",
           success: function(datos){
-            console.log(datos);
+            
             var categoria_iva = datos['categoria_iva'];
-            $("#categoria_iva").val();
+            $("#categoria_iva").val(categoria_iva);
+            
             var rubro = datos['rubro'];
-            $("#rubro").val(datos['rubro']); 
+            $("#rubro").val(rubro); 
+            
             var cantidad_empleados = datos['cantidad_empleados'];         
             $("#cantidad_empleados").val(cantidad_empleados);
-            var antiguedad = datos['antiguedad'];
-            $("#antiguedad").val();
-            var importe_comp_vencidos_2_anos = datos['importe_comp_vencidos_2_anos'];
-            $("#importe_comp_vencidos_2_anos").val(importe_comp_vencidos_2_anos);
             
+            var antiguedad = datos['antiguedad'];
+            $("#antiguedad").val(antiguedad);
+            
+            var importe_comp_vencidos_2_anos = datos['importe_comp_vencidos_2_anos'];
+            $("#importe_comp_vencidos_2_anos").val(importe_comp_vencidos_2_anos);            
           }
         });
         $("#modal").modal("hide"); 
@@ -314,11 +317,14 @@
     var cantidad_empleados = $("#cantidad_empleados").val();
     var rubro = $("#rubro").val();
     var importe_comp_vencidos_2_anos = $("#importe_comp_vencidos_2_anos").val();
+    if(importe_comp_vencidos_2_anos == ''){
+      importe_comp_vencidos_2_anos = null;
+    }
 
     var se_le_vendio = $("#se_le_vendio").val();
     var situacion_entidad = $("#situacion_entidad").val();
     if(1 == situacion_entidad){
-      situacion_entidad = "En situación normal";
+      situacion_entidad = "En situacion normal";
     } else if(2 == situacion_entidad){
       situacion_entidad = "Con seguimiento especial";
     } else if(3 == situacion_entidad){
@@ -328,9 +334,9 @@
     } else if(5 == situacion_entidad){
       situacion_entidad = "Irrecuperable";
     } else if(6 == situacion_entidad){
-      situacion_entidad = "Irrecuperable por disposición técnica";
+      situacion_entidad = "Irrecuperable por disposicion tecnica";
     } else {
-      situacion_entidad = "En situación normal";
+      situacion_entidad = "En situacion normal";
     }
     var monto_entidad = $("#monto_entidad").val(); 
     if(monto_entidad != ""){
@@ -341,23 +347,20 @@
       monto_entidad = 1;
     } 
 
-    console.log('condicion_de_venta: '+condicion_de_venta,
-    'monto:'+ monto,
-    'categoria_iva:'+ categoria_iva,
-    'antiguedad:'+ antiguedad,
-    'cantidad_empleados:'+ cantidad_empleados,
-    'rubro:'+ rubro,
-    'se_le_vendio:'+ se_le_vendio,
-    'situacion_entidad:'+ situacion_entidad,
-    'monto_entidad:'+ monto_entidad,
-    'importe_comp_vencidos_2_anos:'+ importe_comp_vencidos_2_anos);
+    var objeto = {importe_comp_vencidos_2_anos, ponderado_cuotas, promedio_importe_comp_2_anos:monto, situacion:situacion_entidad, monto:monto_entidad, se_le_vendio, cantidad_empleados, antiguedad, rubro, categoria_iva};
+
     if(ok){  
       $.ajax({
         url: "<?php echo base_url() ?>seguimiento/predecir",
         type: "POST",
         dataType: 'json',
-        data:{condicion_de_venta, monto, categoria_iva, antiguedad, cantidad_empleados, rubro, se_le_vendio, situacion_entidad, monto_entidad, importe_comp_vencidos_2_anos, empresa},
+        data:{objeto: JSON.stringify(objeto)},
         success: function(respuesta){
+          if(respuesta['respuesta'] == ""){
+
+          }else{
+            
+          }
           console.log(respuesta);
          $("#div_prediccion").html(respuesta);
          $("#predecir").html("Predecir comportamiento de pago");

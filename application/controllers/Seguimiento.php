@@ -4,45 +4,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Seguimiento extends CI_Controller {
 	
 	public function predecir(){
-		/*$post = [];
-		$condicion_de_venta = $_POST['condicion_de_venta'];
-		$monto=  $_POST['monto'];
-		$categoria_iva=  $_POST['categoria_iva'];
-		$antiguedad=  $_POST['antiguedad'];
-		$cantidad_empleados=  $_POST['cantidad_empleados'];
-		$rubro=  $_POST['rubro'];
-		$se_le_vendio=  $_POST['se_le_vendio'];
-		$situacion_entidad=  $_POST['situacion_entidad'];
-		$monto_entidad=  $_POST['monto_entidad'];
-		$importe_comp_vencidos_2_anos=  $_POST['importe_comp_vencidos_2_anos'];
-		$empresa=  $_POST['empresa'];
-
-		$post['condicion_de_venta'] = $condicion_de_venta;
-		$post['monto'] = $monto;
-		$post['categoria_iva'] = $categoria_iva;
-		$post['antiguedad'] = $antiguedad;
-		$post['cantidad_empleados'] = $cantidad_empleados;
-		$post['rubro'] = $rubro;
-		$post['se_le_vendio'] = $se_le_vendio;
-		$post['situacion_entidad'] = $situacion_entidad;
-		$post['monto_entidad'] = $monto_entidad;
-		$post['importe_comp_vencidos_2_anos'] = $importe_comp_vencidos_2_anos;
-		$post['empresa'] = $empresa;*/
-		$post = array('monto' => 'sdf2');
+		$post = json_decode($_POST["objeto"], true);
+		log_message("error", json_encode($post));
 		$curl = curl_init();
-		/*curl_setopt_array($curl, array(
-		  CURLOPT_URL => "http://192.168.89.222:5000/api/",
-		  CURLOPT_RETURNTRANSFER => true,
-		  CURLOPT_ENCODING => "",
-		  CURLOPT_MAXREDIRS => 10,
-		  CURLOPT_TIMEOUT => 0,
-		  CURLOPT_FOLLOWLOCATION => true,
-		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-		  CURLOPT_CUSTOMREQUEST => "POST",
-		  CURLOPT_POSTFIELDS => $post,
-		));
-		log_message('error', json_encode($post));*/
-		$url = "http://192.168.89.222:5000/api/";
+		$url = "http://localhost:5000/api/";
 		curl_setopt($curl, CURLOPT_URL, $url);
 		curl_setopt($curl, CURLOPT_POST, TRUE);
 		curl_setopt($curl, CURLOPT_POSTFIELDS, $post);
@@ -65,7 +30,6 @@ class Seguimiento extends CI_Controller {
 		}
 		$response = json_decode($response, true);
 		echo json_encode($response);
-
 	}
 
 	public function algoritmo(){
