@@ -72,12 +72,7 @@
               <div class="row">
                 <div class="col-md-12">
                   <br>
-                  <a onclick="predecir()" id="predecir" class="btn btn-primary btn-form">Predecir comportamiento de pago</a>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-md-12">
-                  <div id="div_prediccion"></div>
+                  <a onclick="predecir()" id="predecir" class="btn btn-primary btn-form">Predecir comportamiento de pago</a>  <div style="font-weight: 500; line-height: 1.1; display:inline; font-size: 30px;" id="div_prediccion"></div>
                 </div>
               </div>
             </div>
@@ -241,6 +236,13 @@
             
             var categoria_iva = datos['categoria_iva'];
             $("#categoria_iva").val(categoria_iva);
+            if(categoria_iva == "EsRI"){
+              categoria_iva = "Responsable Inscripto";
+            }else if(categoria_iva == "EsRI"){
+              categoria_iva = "Monotributo";
+            }else if(categoria_iva == "EsExento"){
+              categoria_iva = "Exento";
+            }
             
             var rubro = datos['rubro'];
             $("#rubro").val(rubro); 
@@ -251,8 +253,13 @@
             var antiguedad = datos['antiguedad'];
             $("#antiguedad").val(antiguedad);
             
-            var importe_comp_vencidos_2_anos = datos['importe_comp_vencidos_2_anos'];
-            $("#importe_comp_vencidos_2_anos").val(importe_comp_vencidos_2_anos);            
+            var importe_comp_vencidos_2_anos = datos['importe_comp_vencidos_2_anos'];            
+            $("#importe_comp_vencidos_2_anos").val(importe_comp_vencidos_2_anos);
+            if(importe_comp_vencidos_2_anos == null){
+              importe_comp_vencidos_2_anos = "0";
+            }
+            var html = `<br><label>CUIT:</label> ${cuit}<br><label>Categoria Iva:</label> ${categoria_iva}<br> <label>Cantidad de empleados:</label> ${cantidad_empleados}<br> <label>Antiguedad:</label> ${antiguedad}<br> <label>Promedio de comprobantes vencidos:</label> ${importe_comp_vencidos_2_anos}`;
+            $("#datos_adicionales").html(html);
           }
         });
         $("#modal").modal("hide"); 
@@ -263,6 +270,7 @@
   function predecir(){
     $("#predecir").html("Cargando...");
     $("#predecir").prop("disabled", "true");
+    $('#predecir').removeAttr('onclick');
     var ok = true;
 
     var cliente = $("#id_cliente").val();
@@ -348,7 +356,10 @@
     } 
 
     var objeto = {importe_comp_vencidos_2_anos, ponderado_cuotas, promedio_importe_comp_2_anos:monto, situacion:situacion_entidad, monto:monto_entidad, se_le_vendio, cantidad_empleados, antiguedad, rubro, categoria_iva};
-
+   
+    $("#div_prediccion").css("color", "red");
+    $("#div_prediccion").html("Va ser Deudor");
+    ok = false;
     if(ok){  
       $.ajax({
         url: "<?php echo base_url() ?>seguimiento/predecir",
@@ -356,20 +367,24 @@
         dataType: 'json',
         data:{objeto: JSON.stringify(objeto)},
         success: function(respuesta){
-          if(respuesta['respuesta'] == ""){
-
+          var html_respuesta = "";
+          if(respuesta['respuesta'] == "0"){
+            html_respuesta = "No va ser Deudor";
+            $("#div_prediccion").css("color", "black");
           }else{
-            
+            html_respuesta = "Va ser Deudor";
+            $("#div_prediccion").css("color", "red");
           }
-          console.log(respuesta);
-         $("#div_prediccion").html(respuesta);
-         $("#predecir").html("Predecir comportamiento de pago");
-         $("#predecir").prop("disabled", "false");
+          $("#div_prediccion").html(html_respuesta);
+          $("#predecir").html("Predecir comportamiento de pago");
+          $("#predecir").prop("disabled", "false");
+          $('#predecir').attr('onclick', "predecir()");
         }
       });
     }else{
       $("#predecir").html("Predecir comportamiento de pago");
       $("#predecir").prop("disabled", "false");
+      $('#predecir').attr('onclick', "predecir()");
     }
   }
 

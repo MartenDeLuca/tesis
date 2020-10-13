@@ -14,6 +14,7 @@ class ReglaModel extends CI_Model{
 
 	function getReglas(){
 		$id_empresa = $this->session->userdata('id_empresa');
+		log_message("error", $id_empresa);
 		$sql = "select *, DATE_FORMAT(fecha, '%d/%m/%Y %T') fecha2 from reglas where id_empresa = ? order by id_regla";
 		$stmt = $this->db->query($sql, array($id_empresa));
 		$reglas = $stmt->result_array();

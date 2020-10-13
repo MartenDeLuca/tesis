@@ -33,32 +33,6 @@ class ConfiguracionModel extends CI_Model{
 		$this->session->set_userdata($columna, $valor);		
 	}
 
-	function cambiar_configuracion($columna, $valor){
-		$id_usuario = $this->session->userdata('id_usuario');
-		$sql_select = "select id_configuracion from usuarios_config where id_usuario = ?";
-		$stmt = $this->db->query($sql_select, array($id_usuario));
-		$registros = $stmt->result_array();
-		if(count($registros) > 0){
-			$tm = $this->db->query("update usuarios_config set $columna = ? where id_usuario = ?", array($valor, $id_usuario));
-		}else{
-			$objeto["cantidad_decimales"] = "2";
-			$objeto["separador_decimales"] = ",";
-			$objeto["formato_negativo"] = "1";
-			$objeto["ubicacion_unidad"] = "D";
-			$objeto["unidad"] = "$";
-			$objeto["tamano_texto"] = "G";
-			$objeto["alineacion_texto"] = "I";
-			$objeto["tamano_fecha"] = "G";
-			$objeto["alineacion_fecha"] = "I";
-			$objeto["formato_fecha"] = "d m Y";
-			$objeto["separador_fecha"] = "/";
-			$objeto["formato_hora"] = "H:i:s";
-			$objeto["id_usuario"] = $id_usuario;
-			$objeto[$columna] = $valor;
-			$tm = $this->db->insert("usuarios_config", $objeto);
-		}
-	}
-
 	function configuracion_mail($columna, $valor){
 		$id_empresa = $this->session->userdata('id_empresa');
 		$sql_select = "select id_configuracion from mails_config where id_empresa = ?";
@@ -88,18 +62,6 @@ class ConfiguracionModel extends CI_Model{
     	return "OK";
 	}
 
-	function getConfiguracion(){
-		$id_usuario = $this->session->userdata('id_usuario');
-		$id_empresa = $this->session->userdata('id_empresa');
-		$sql_select = 
-		"select *
-		from usuarios_config 
-		where id_usuario = ?";
-		$stmt = $this->db->query($sql_select, array($id_usuario));
-		$configuracion = $stmt->result_array();
-		return $configuracion;
-	}
-
 	function getConfiguracionMail(){
 		$id_empresa = $this->session->userdata('id_empresa');
 		$sql_select = 
@@ -110,26 +72,5 @@ class ConfiguracionModel extends CI_Model{
 		$configuracion = $stmt->result_array();
 		return $configuracion;
 	}	
-
-	/*FUNCIONES GENERICAS DE CONFIGURACION*/
-	function formato_fecha($fecha){
-		$fecha = date_create($fecha);
-		
-		$formato_fecha = "d m Y";
-		$separador_fecha = "/";
-		$formato_fecha = str_replace(" ", $separador_fecha, $formato_fecha);
-		$formato_hora = "H:i:s";	
-		$formato = trim($formato_fecha." ".$formato_hora);	
-		
-		return date_format($fecha, $formato);
-	}
-
-	function formato_decimal($decimal){
-		$cantidad_decimales = "2";
-		$separador_decimales = ",";
-		$separador_miles = ".";
-		
-		return number_format($decimal, $cantidad_decimales, $separador_decimales, $separador_miles);
-	}
 }
 ?>
