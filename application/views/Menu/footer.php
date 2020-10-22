@@ -163,11 +163,16 @@
 	}
 
 	function seleccionarPlantilla(id){
+		var tipo = "";
+		if($("#current_url_hidden").val().indexOf("-mail") > -1){
+			tipo = "sin_setear";
+		}
+
 		if(id != 0){	
 			$.ajax({
 				url: "<?php echo base_url() ?>plantilla/seleccionarPlantilla",
 				type: "POST",
-				data:{id, cliente:$("#id_cliente_mail").val()},
+				data:{id, cliente:$("#id_cliente_mail").val(), tipo},
 				dataType: "json",
 				success: function(respuesta){
 					if(respuesta["asunto_mail"]){

@@ -155,7 +155,7 @@ class Tablero extends CI_Controller {
 	}
 
 
-	public function modificarGrafico(){
+/*	public function modificarGrafico(){
 		$id_grafico = $_POST['id_grafico'];
 		$data = json_decode(isset($_POST["data"])?$_POST["data"]:"", true);
 		$this->tableroModel->modificarGrafico($id_grafico, $data);
@@ -210,7 +210,7 @@ class Tablero extends CI_Controller {
 			}
 		}
 	}	
-
+*/
 	public function get_objetivos_graficos(){
 		$id_grafico = $_POST['id_grafico'];
 		echo json_encode($this->tableroModel->get_objetivos_graficos($id_grafico));

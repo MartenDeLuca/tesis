@@ -5,7 +5,6 @@ class Seguimiento extends CI_Controller {
 	
 	public function predecir(){
 		$post = json_decode($_POST["objeto"], true);
-		log_message("error", json_encode($post));
 		$curl = curl_init();
 		$url = "http://localhost:5000/api/";
 		curl_setopt($curl, CURLOPT_URL, $url);
@@ -480,6 +479,11 @@ class Seguimiento extends CI_Controller {
 			$contenido_mail = $_POST['contenido_mail'];
 			$id_cliente = $_POST['id_cliente'];
 			$cliente = $_POST['cliente'];
+			
+			$tipo_formulario = $_POST['tipo_formulario'];
+			if($tipo_formulario == "formulario_mail"){
+				$contenido_mail = $this->plantillaModel->getContenidoMail($contenido_mail, $id_cliente);
+			}
 			
 			$destinatario_fijos = "";
 			if(isset($_POST['destinatario_fijos'])){

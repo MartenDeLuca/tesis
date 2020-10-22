@@ -139,14 +139,23 @@ class PlantillaModel extends CI_Model{
 		}    	
 	}
 
-	function seleccionarPlantilla($id, $cliente){
+	function seleccionarPlantilla($id, $cliente, $tipo){
+		
+		$data = $this->getPlantillaPorId($id);
+		
+		if(empty($tipo)){
+			$contenido_mail = $data["contenido_mail"]; 
+			$contenido_mail = $this->getContenidoMail($contenido_mail, $cliente);
+			$data["contenido_mail"] = $contenido_mail;
+		}
+		return $data;
+	}
+
+	function getContenidoMail($contenido_mail, $cliente){
 		$empresa = $this->session->userdata('empresa');
 		$id_empresa = $this->session->userdata('id_empresa');
 		$dominio = $this->session->userdata('dominio');
 
-		$data = $this->getPlantillaPorId($id);
-		
-		$contenido_mail = $data["contenido_mail"]; 
 		if(strpos($contenido_mail, "[^*COLUMNA_Cliente*^]") !== false){
 			$array_cliente = json_decode($this->seguimientoModel->seleccionarCliente($cliente, $empresa, $dominio), true);
 			$nombre_cliente = "";
@@ -184,7 +193,6 @@ class PlantillaModel extends CI_Model{
 			$id_empresa_url = encrypt_url($id_empresa);
 			$contenido_mail = str_replace("[^*COLUMNA_Link*^]", '<a href="'.base_url().'vista_cliente?id='.$id_cliente_url.'&id_em='.$id_empresa_url.'">Ver Comprobantes</a>', $contenido_mail);	
 		}
-		$data["contenido_mail"] = $contenido_mail;
-		return $data;
+		return $contenido_mail;
 	}
 }

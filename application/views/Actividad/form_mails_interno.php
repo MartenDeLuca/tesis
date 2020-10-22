@@ -12,6 +12,7 @@
 				<form method="post" enctype="multipart/form-data" id="formulario_mail">
 					<div style="display:none">
 						<textarea id="input_comprobantes" name="comprobantes"></textarea>
+						<input type="hidden" id="tipo_formulario" name="tipo_formulario">
 					</div>
 					<div class="acordeon">
 						<div class="acordeon__item">
@@ -259,6 +260,9 @@
 	    }
 
 		$("#input_comprobantes").val(JSON.stringify(comprobantes));
+		if($("#current_url_hidden").val().indexOf("-mail") > -1){
+			$("#tipo_formulario").val("formulario_mail");
+		}
 
 		if(ok){
 			var formData = new FormData(document.getElementById("formulario_mail"));
@@ -272,7 +276,7 @@
 				success: function (respuesta) {
 					if(respuesta[0] == "OK"){
 						if($("#current_url_hidden").val().indexOf("-mail") > -1){
-							location.href = "<?php echo base_url() ?>seguimiento";
+							location.href = "<?php echo base_url() ?>seguimiento?tipo=mails";
 						}else{
 							var d = new Date();
 					       	var fecha = 

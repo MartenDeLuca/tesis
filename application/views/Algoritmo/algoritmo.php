@@ -72,7 +72,7 @@
               <div class="row">
                 <div class="col-md-12">
                   <br>
-                  <a onclick="predecir()" id="predecir" class="btn btn-primary btn-form">Predecir comportamiento de pago</a>  <div style="font-weight: 500; line-height: 1.1; display:inline; font-size: 30px;" id="div_prediccion"></div>
+                  <a onclick="predecir()" id="predecir" class="btn btn-primary btn-form">Predecir comportamiento de pago</a>  <div align="center" style="/*font-weight: 50; display:inline;*/line-height: 1.1; font-size: 30px;" id="div_prediccion"></div>
                 </div>
               </div>
             </div>
@@ -357,8 +357,8 @@
 
     var objeto = {importe_comp_vencidos_2_anos, ponderado_cuotas, promedio_importe_comp_2_anos:monto, situacion:situacion_entidad, monto:monto_entidad, se_le_vendio, cantidad_empleados, antiguedad, rubro, categoria_iva};
    
-    $("#div_prediccion").css("color", "red");
-    $("#div_prediccion").html("Va ser Deudor");
+    $("#div_prediccion").css("color", "green");
+    $("#div_prediccion").html('<i class="fa fa-check-circle"></i> No sera deudor');
     ok = false;
     if(ok){  
       $.ajax({
@@ -369,10 +369,10 @@
         success: function(respuesta){
           var html_respuesta = "";
           if(respuesta['respuesta'] == "0"){
-            html_respuesta = "No va ser Deudor";
-            $("#div_prediccion").css("color", "black");
+            html_respuesta = '<i class="fa fa-check-circle"></i> No sera deudor';
+            $("#div_prediccion").css("color", "green");
           }else{
-            html_respuesta = "Va ser Deudor";
+            html_respuesta = "<i class='fa fa-exclamation-triangle'></i> Sera deudor";
             $("#div_prediccion").css("color", "red");
           }
           $("#div_prediccion").html(html_respuesta);

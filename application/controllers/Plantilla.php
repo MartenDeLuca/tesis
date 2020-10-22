@@ -27,7 +27,8 @@ class Plantilla extends CI_Controller {
 		if ($this->session->userdata('id_usuario')){
 			$id = isset($_POST["id"])?$_POST["id"]:"";
 			$cliente = isset($_POST["cliente"])?$_POST["cliente"]:"";
-			echo json_encode($this->plantillaModel->seleccionarPlantilla($id, $cliente));
+			$tipo = isset($_POST["tipo"])?$_POST["tipo"]:"";
+			echo json_encode($this->plantillaModel->seleccionarPlantilla($id, $cliente, $tipo));
 		}
 	}	
 

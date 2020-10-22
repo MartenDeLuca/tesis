@@ -3,6 +3,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Correo extends CI_Controller {
 
+	/*public function martin(){
+		$this->correoModel->enviarCorreo("prueba", "contenido", "martin@grupotesys.com.ar", "");
+	}*/
+
 	public function enviar(){
 		ini_set('memory_limit', '2048M');
 		ini_set('max_execution_time', 3000);
@@ -15,10 +19,10 @@ class Correo extends CI_Controller {
 			$host = $_POST['host'];	
 			$puerto = $_POST['puerto'];	
 		} else {
-			$correo = "crmflow2017@gmail.com";
+			$correo = "predicob@gmail.com";
 			$contra = "neestor1";
 			$nombre = 'SIMPLAPP';
-			$host ="smtp.gmail.com";
+			$host = "smtp.gmail.com";
 			$puerto = "25";
 		}
 		if(!isset($_POST['separador'])){
@@ -54,11 +58,9 @@ class Correo extends CI_Controller {
 
 		for($i = 0; $i < count($destinatarios); $i++) { 
 			$correos = $destinatarios[$i];
-			$result = true;//(false !== filter_var($correos, FILTER_VALIDATE_EMAIL));
-			//if ($result){
-				$mail->addAddress($correos, '');
-				$mail->addBcc($correos);
-			//}
+			$result = true;
+			$mail->addAddress($correos, '');
+			$mail->addBcc($correos);
 		}
 
 		if(isset($_POST['id_regla'])){
@@ -77,13 +79,11 @@ class Correo extends CI_Controller {
 
 		$mail->setFrom($correo, $nombre);
 		$mail->addReplyTo($correo, $nombre);
-		$mail->AddBCC($correo, $name = $nombre);
 		$mail->Sender = $correo;
 		$mail->Subject = $asunto;
 		$mail->msgHTML($contenido);
 		$mail->AltBody = $contenido;
 		$mail->CharSet = 'UTF-8';
-
 		if (!$mail->send()) {
 			echo 'error';
 		}else {

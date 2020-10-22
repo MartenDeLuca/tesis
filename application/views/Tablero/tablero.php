@@ -13,7 +13,6 @@ if (count($conf) > 0){
   if($fecha_hasta == "" || $fecha_hasta == "0000-00-00" || $fecha_hasta == "1800-01-01" || $fecha_hasta == "1900-01-01"){
     $fecha_hasta = $fecha_actual;
   } 
-  log_message("error", $fecha_hasta." ".$fecha_desde);
   $codigoCliente = $conf[0]['codigo_cliente'];
   $idGva14 = $conf[0]['id_gva14'];
   $razonSocial = $conf[0]['razon_social'];

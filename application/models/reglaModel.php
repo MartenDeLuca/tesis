@@ -14,7 +14,6 @@ class ReglaModel extends CI_Model{
 
 	function getReglas(){
 		$id_empresa = $this->session->userdata('id_empresa');
-		log_message("error", $id_empresa);
 		$sql = "select *, DATE_FORMAT(fecha, '%d/%m/%Y %T') fecha2 from reglas where id_empresa = ? order by id_regla";
 		$stmt = $this->db->query($sql, array($id_empresa));
 		$reglas = $stmt->result_array();
@@ -703,7 +702,7 @@ class ReglaModel extends CI_Model{
 			$destinatarios .= $destinatarios_fijos;
 		}
 		$id_correo_bd = "";
-
+		
 		if(!empty($destinatarios)){
 			$nombre_cliente_mail = "";
 			
@@ -784,7 +783,7 @@ class ReglaModel extends CI_Model{
 			$contenido_mail .= '<img src="http://190.210.127.181:2052/tesis/correo/correoLeido/[^*DEST_ID^*]/[^*DEST_DESTINATARIO^*]" onerror=\'this.style.display = "none"\' alt="imagen" />';
 			$contenido_mail = str_replace('[^*DEST_ID^*]', $id_correo_bd, $contenido_mail);
 			$destinatarios = explode('***', $destinatarios);
-			for($x = 0; $x < count($destinatarios); $x++) { 
+			for($x = 0; $x < count($destinatarios); $x++) {
 				$contenido_mail_particular = $contenido_mail; 
 				$dest = $destinatarios[$x];
 				$contenido_mail_particular = str_replace ('[^*DEST_DESTINATARIO^*]', urlencode($dest), $contenido_mail_particular);
@@ -959,7 +958,7 @@ class ReglaModel extends CI_Model{
 			$certificado_ssl = $fila_mail["certificado_ssl"];
 		}
 		if(empty($puerto) || empty($host) || empty($correo) || empty($contrasena)){
-			$correo = "crmflow2017@gmail.com";
+			$correo = "predicob@gmail.com";
 			$contrasena = "neestor1";
 			$host = "smtp.gmail.com";
 			$puerto = "25";

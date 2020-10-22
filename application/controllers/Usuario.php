@@ -536,7 +536,6 @@ class Usuario extends CI_Controller {
 	public function guardar_empresas(){
 		$id_usuario = $_POST['id_usuario'];
 		$empresas = $_POST['empresas'];
-		log_message('error', $id_usuario.' - '.json_encode($empresas));
 		echo $this->usuarioModel->guardar_empresas($id_usuario, $empresas);
 	}
 }
