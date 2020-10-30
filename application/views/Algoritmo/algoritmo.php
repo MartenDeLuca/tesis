@@ -357,9 +357,6 @@
 
     var objeto = {importe_comp_vencidos_2_anos, ponderado_cuotas, promedio_importe_comp_2_anos:monto, situacion:situacion_entidad, monto:monto_entidad, se_le_vendio, cantidad_empleados, antiguedad, rubro, categoria_iva};
    
-    $("#div_prediccion").css("color", "green");
-    $("#div_prediccion").html('<i class="fa fa-check-circle"></i> No sera deudor');
-    ok = false;
     if(ok){  
       $.ajax({
         url: "<?php echo base_url() ?>seguimiento/predecir",
